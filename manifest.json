@@ -1,0 +1,15 @@
+{
+  "name": "PharmaSaathi AI",
+  "short_name": "PharmaSaathi",
+  "description": "Bilingual medicine-safety app: dose reminders, prescription scanning, drug interaction checks, and caregiver calling.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FEFCF8",
+  "theme_color": "#EF9F1C",
+  "lang": "en",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

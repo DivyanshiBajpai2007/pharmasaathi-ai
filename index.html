@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#EF9F1C">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>PharmaSaathi AI</title>
+<style>
+  :root{
+    --bg:#FEFCF8;
+    --surface:#FFFFFF;
+    --surface-2:#F8F2E6;
+    --surface-3:#F3EBDA;
+    --text:#1C2333;
+    --text-muted:#847D6C;
+    --accent:#EF9F1C;
+    --accent-ink:#5B3A00;
+    --accent-soft:#FCEFD4;
+    --good:#2E8B62;
+    --good-soft:#E5F5EC;
+    --warn:#B5750A;
+    --warn-soft:#FCEFD4;
+    --risk:#C4483C;
+    --risk-soft:#FCE9E6;
+    --border:#EEE6D6;
+    --shadow:0 16px 34px -22px rgba(45,32,10,.22);
+    --shadow-sm:0 8px 16px -12px rgba(45,32,10,.18);
+    --font-display:'Fraunces',Georgia,'Times New Roman',serif;
+    --font-body:'Manrope',-apple-system,Segoe UI,Arial,sans-serif;
+    --font-mono:'JetBrains Mono',Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0A0F1E;
+      --surface:#141C30;
+      --surface-2:#1B2438;
+      --surface-3:#212C46;
+      --text:#F5F6FA;
+      --text-muted:#9AA4BF;
+      --accent:#F5A623;
+      --accent-ink:#241800;
+      --accent-soft:#3A2A0B;
+      --good:#3ECF8E;
+      --good-soft:#123526;
+      --warn:#F5A623;
+      --warn-soft:#3A2A0B;
+      --risk:#E8615D;
+      --risk-soft:#3A1613;
+      --border:#2A3550;
+      --shadow:0 18px 44px -20px rgba(0,0,0,.6);
+      --shadow-sm:0 10px 20px -14px rgba(0,0,0,.55);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0A0F1E;
+    --surface:#141C30;
+    --surface-2:#1B2438;
+    --surface-3:#212C46;
+    --text:#F5F6FA;
+    --text-muted:#9AA4BF;
+    --accent:#F5A623;
+    --accent-ink:#241800;
+    --accent-soft:#3A2A0B;
+    --good:#3ECF8E;
+    --good-soft:#123526;
+    --warn:#F5A623;
+    --warn-soft:#3A2A0B;
+    --risk:#E8615D;
+    --risk-soft:#3A1613;
+    --border:#2A3550;
+    --shadow:0 18px 44px -20px rgba(0,0,0,.6);
+    --shadow-sm:0 10px 20px -14px rgba(0,0,0,.55);
+  }
+
+  * { box-sizing:border-box; }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    padding-inline:16px;
+    padding-block:40px 56px;
+  }
+  h1,h2,h3{ font-family:var(--font-display); text-wrap:balance; margin:0; }
+  p{ margin:0; }
+  button{ font-family:inherit; }
+  .num{ font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+
+  /* ---------- page intro ---------- */
+  .intro{
+    max-width:760px;
+    margin:0 auto 28px;
+    text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+  }
+  .eyebrow{
+    font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--warn); background:var(--warn-soft); border:1px solid var(--border);
+    padding:6px 14px; border-radius:999px;
+  }
+  .intro h1{ font-size:clamp(2rem,5vw,2.9rem); font-weight:600; color:var(--text); }
+  .intro .tagline{ font-family:var(--font-display); font-style:italic; font-size:1.15rem; color:var(--accent-ink); background:var(--accent-soft); padding:4px 4px; }
+  .intro .desc{ color:var(--text-muted); font-size:1rem; max-width:560px; line-height:1.55; }
+  .legend{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:2px; }
+  .legend span{ display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:600; color:var(--text-muted); }
+  .legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  .langtoggle{ display:inline-flex; padding:4px; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; gap:2px; }
+  .langtoggle button{ border:none; background:transparent; color:var(--text-muted); font-weight:800; font-size:.82rem; padding:7px 16px; border-radius:9px; cursor:pointer; }
+  .langtoggle button[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); }
+
+  /* ---------- phone ---------- */
+  .stage{ display:flex; justify-content:center; }
+  .phone{
+    width:min(392px,100%);
+    background:var(--surface);
+    border:10px solid var(--surface-2);
+    outline:1px solid var(--border);
+    border-radius:40px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    display:flex; flex-direction:column;
+    height:min(820px,86vh);
+    position:relative;
+  }
+  .statusbar{
+    flex:0 0 auto;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 22px 4px;
+    font-size:.72rem; font-weight:700; color:var(--text);
+  }
+  .statusbar .dots{ display:flex; gap:4px; align-items:center; }
+  .statusbar .bar{ width:3px; background:var(--text); border-radius:1px; }
+  .statusbar .bar:nth-child(1){ height:5px; } .statusbar .bar:nth-child(2){ height:7px; }
+  .statusbar .bar:nth-child(3){ height:9px; } .statusbar .bar:nth-child(4){ height:11px; }
+  .statusbar .batt{ width:20px; height:10px; border:1.4px solid var(--text); border-radius:2px; position:relative; }
+  .statusbar .batt::after{ content:""; position:absolute; inset:1.5px; width:70%; background:var(--text); border-radius:1px; }
+
+  .appheader{
+    flex:0 0 auto;
+    display:flex; align-items:center; gap:10px;
+    padding:10px 18px 14px;
+    border-bottom:1px solid var(--border);
+  }
+  .appheader .back{
+    display:none; border:none; background:var(--surface-2); color:var(--text);
+    width:34px; height:34px; border-radius:10px; font-size:1rem; cursor:pointer;
+    align-items:center; justify-content:center; flex:0 0 auto;
+  }
+  .appheader.has-back .back{ display:flex; }
+  .appheader .titles{ flex:1 1 auto; min-width:0; }
+  .appheader h2{ font-size:1.2rem; font-weight:600; }
+  .appheader .sub{ font-size:.75rem; color:var(--text-muted); font-weight:600; }
+  .appheader .mini-lang{ flex:0 0 auto; display:flex; gap:3px; background:var(--surface-2); border:1px solid var(--border); border-radius:9px; padding:3px; }
+  .appheader .mini-lang button{ border:none; background:transparent; color:var(--text-muted); font-size:.66rem; font-weight:800; padding:4px 8px; border-radius:6px; cursor:pointer; }
+  .appheader .mini-lang button[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); }
+
+  .content{ flex:1 1 auto; overflow-y:auto; padding:16px 18px 26px; display:flex; flex-direction:column; gap:14px; }
+  .content::-webkit-scrollbar{ width:0; }
+
+  .tabbar{
+    flex:0 0 auto;
+    display:grid; grid-template-columns:repeat(5,1fr);
+    border-top:1px solid var(--border);
+    background:var(--surface);
+    padding:8px 4px calc(10px + env(safe-area-inset-bottom,0px));
+  }
+  .tabbar button{
+    border:none; background:none; color:var(--text-muted); cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-size:.64rem; font-weight:700; letter-spacing:.01em;
+    padding:4px 2px; border-radius:10px;
+  }
+  .tabbar button .ic{ font-size:1.15rem; }
+  .tabbar button[aria-current="true"]{ color:var(--accent-ink); background:var(--accent-soft); }
+
+  /* ---------- shared components ---------- */
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    padding:14px 16px; box-shadow:var(--shadow-sm);
+  }
+  .card.flat{ box-shadow:none; }
+  .card-title{ font-size:.95rem; font-weight:700; }
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .muted{ color:var(--text-muted); font-size:.82rem; }
+  .section-label{ font-size:.68rem; font-weight:800; letter-spacing:.11em; text-transform:uppercase; color:var(--text-muted); }
+
+  .badge{ display:inline-flex; align-items:center; gap:5px; font-size:.68rem; font-weight:800; letter-spacing:.03em; padding:4px 9px; border-radius:999px; white-space:nowrap; }
+  .badge.good{ background:var(--good-soft); color:var(--good); }
+  .badge.warn{ background:var(--warn-soft); color:var(--warn); }
+  .badge.risk{ background:var(--risk-soft); color:var(--risk); }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border-radius:13px; border:none; cursor:pointer; font-weight:700; font-size:.88rem;
+    min-height:46px; padding:0 18px; width:100%;
+  }
+  .btn.primary{ background:var(--accent); color:var(--accent-ink); }
+  .btn.ghost{ background:var(--surface-2); color:var(--text); }
+  .btn.outline{ background:transparent; color:var(--text); border:1.4px solid var(--border); }
+  .btn.sm{ min-height:36px; font-size:.78rem; padding:0 12px; width:auto; }
+  .btn:focus-visible, button:focus-visible, .medcard:focus-visible{ outline:2.5px solid var(--accent); outline-offset:2px; }
+
+  .medcard{ display:flex; align-items:center; gap:12px; text-align:left; width:100%; border:1px solid var(--border); background:var(--surface); border-radius:16px; padding:12px 14px; cursor:pointer; box-shadow:var(--shadow-sm); }
+  .medcard .pill-ic{ flex:0 0 auto; width:42px; height:42px; border-radius:12px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-size:1.25rem; }
+  .medcard .mid{ flex:1 1 auto; min-width:0; }
+  .medcard .mname{ font-weight:700; font-size:.94rem; }
+  .medcard .mdose{ font-size:.78rem; color:var(--text-muted); margin-top:2px; }
+  .medcard .chev{ color:var(--text-muted); font-size:1.1rem; }
+
+  .detail-block{ display:flex; flex-direction:column; gap:6px; }
+  .detail-block .h{ display:flex; align-items:center; gap:7px; font-weight:800; font-size:.82rem; }
+  .detail-block p, .detail-block li{ font-size:.86rem; line-height:1.55; color:var(--text); }
+  .detail-block ul{ margin:0; padding-left:18px; display:flex; flex-direction:column; gap:3px; }
+  .callout{ border-radius:12px; padding:10px 12px; font-size:.82rem; line-height:1.5; display:flex; gap:8px; }
+  .callout.risk{ background:var(--risk-soft); color:var(--risk); }
+  .callout.warn{ background:var(--warn-soft); color:var(--warn); }
+  .callout.good{ background:var(--good-soft); color:var(--good); }
+  .dosetable{ width:100%; border-collapse:collapse; font-size:.82rem; }
+  .dosetable th{ text-align:left; font-size:.66rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); padding-bottom:4px; }
+  .dosetable td{ padding:6px 0; border-top:1px solid var(--border); vertical-align:top; }
+  .dosetable td:first-child{ font-weight:700; width:34%; }
+
+  [hidden]{ display:none !important; }
+  .screen{ display:flex; flex-direction:column; gap:14px; }
+
+  .notif{ display:flex; gap:10px; padding:12px 13px; border-radius:14px; background:var(--risk-soft); border:1px solid var(--risk); align-items:flex-start; }
+  .notif .ic{ font-size:1.2rem; }
+  .notif .t{ font-weight:800; font-size:.85rem; color:var(--risk); }
+  .notif .d{ font-size:.78rem; color:var(--text); margin-top:2px; }
+  .notif .acts{ display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
+
+  .schedule-row{ display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--border); cursor:pointer; }
+  .schedule-row:first-of-type{ border-top:none; }
+  .schedule-row .time{ font-family:var(--font-mono); font-size:.8rem; width:56px; color:var(--text-muted); }
+  .schedule-row .dot{ width:9px; height:9px; border-radius:50%; background:var(--good); flex:0 0 auto; }
+  .schedule-row.pending .dot{ background:var(--border); }
+  .schedule-row.missed .dot{ background:var(--risk); }
+  .schedule-row.missed .name{ color:var(--risk); font-weight:700; }
+  .schedule-row .name{ flex:1 1 auto; font-size:.86rem; font-weight:600; }
+
+  .listenbtn{ display:flex; align-items:center; gap:12px; background:var(--surface-2); border-radius:16px; padding:12px 14px; }
+  .listenbtn .orb{ flex:0 0 auto; width:46px; height:46px; border-radius:50%; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:none; cursor:pointer; }
+  .wave{ display:flex; align-items:center; gap:2px; height:22px; flex:1 1 auto; }
+  .wave i{ width:3px; background:var(--accent); border-radius:2px; }
+
+  .report-doc{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; font-size:.82rem; line-height:1.6; }
+  .report-doc h3{ font-size:.95rem; margin-bottom:6px; }
+  .report-doc .meta{ display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; margin:10px 0; font-size:.78rem; }
+  .report-doc .meta div span{ display:block; color:var(--text-muted); font-size:.66rem; text-transform:uppercase; letter-spacing:.05em; }
+  .report-doc hr{ border:none; border-top:1px dashed var(--border); margin:10px 0; }
+
+  .call-ui{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 10px; background:var(--surface-2); border-radius:16px; }
+  .call-ui .avatar{ width:58px; height:58px; border-radius:50%; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-size:1.6rem; }
+  .transcript{ display:flex; flex-direction:column; gap:8px; }
+  .bubble{ max-width:82%; padding:9px 12px; border-radius:14px; font-size:.82rem; line-height:1.45; opacity:0; transform:translateY(6px); animation:rise .45s ease forwards; }
+  @media (prefers-reduced-motion: reduce){ .bubble{ animation:none; opacity:1; transform:none; } }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+  .bubble.ai{ background:var(--surface-3); align-self:flex-start; border-bottom-left-radius:4px; }
+  .bubble.user{ background:var(--accent-soft); color:var(--accent-ink); align-self:flex-end; border-bottom-right-radius:4px; font-weight:700; }
+
+  .future-card{ display:flex; gap:12px; padding:13px 14px; border-radius:16px; border:1.4px dashed var(--border); background:var(--surface-2); }
+  .future-card .ic{ font-size:1.3rem; }
+  .future-card h3{ font-size:.9rem; font-weight:700; margin-bottom:2px; }
+  .future-card p{ font-size:.78rem; color:var(--text-muted); line-height:1.45; }
+
+  .cg-patient{ display:flex; align-items:center; gap:12px; }
+  .cg-patient .av{ width:48px; height:48px; border-radius:50%; background:var(--accent); color:var(--accent-ink); font-weight:800; display:flex; align-items:center; justify-content:center; font-size:1.1rem; }
+  .adherence-bar{ height:8px; border-radius:5px; background:var(--surface-3); overflow:hidden; }
+  .adherence-bar>i{ display:block; height:100%; background:var(--good); border-radius:5px; }
+
+  .scan-drop{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; border:1.6px dashed var(--border); border-radius:18px; padding:32px 18px; text-align:center; background:var(--surface-2); cursor:pointer; }
+  .scan-drop .ic{ font-size:1.8rem; }
+  .scan-drop .hint{ font-size:.78rem; color:var(--text-muted); }
+  .scan-preview{ display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .scan-preview img{ max-width:100%; max-height:220px; border-radius:14px; border:1px solid var(--border); object-fit:contain; }
+  .spinner{ width:26px; height:26px; border-radius:50%; border:3px solid var(--border); border-top-color:var(--accent); animation:spin .8s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .spinner{ animation-duration:1.6s; } }
+  .extract-field{ display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px solid var(--border); font-size:.84rem; }
+  .extract-field:first-child{ border-top:none; }
+  .extract-field span:first-child{ color:var(--text-muted); }
+  .extract-field span:last-child{ font-weight:700; text-align:right; }
+
+  .scan-check{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border); border-radius:14px; background:var(--surface); cursor:pointer; }
+  .scan-check input{ width:18px; height:18px; accent-color:var(--accent); flex:0 0 auto; }
+  .scan-check .mid{ flex:1 1 auto; }
+  .scan-check .mname{ font-weight:700; font-size:.88rem; }
+  .scan-check .mdose{ font-size:.76rem; color:var(--text-muted); }
+
+  .alarm-overlay{ position:absolute; inset:0; z-index:50; background:rgba(10,8,4,.6); display:flex; align-items:center; justify-content:center; padding:22px; }
+  .alarm-card{ background:var(--surface); border-radius:22px; padding:26px 20px; width:100%; max-width:300px; text-align:center; box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .alarm-card .bell{ font-size:2.2rem; display:inline-block; animation:ring 1s ease-in-out infinite; }
+  @keyframes ring{ 0%,100%{ transform:rotate(0); } 20%{ transform:rotate(14deg); } 40%{ transform:rotate(-14deg); } 60%{ transform:rotate(9deg); } 80%{ transform:rotate(-9deg); } }
+  @media (prefers-reduced-motion: reduce){ .alarm-card .bell{ animation:none; } }
+  .alarm-card h3{ font-size:1.05rem; }
+  .alarm-card .time{ font-family:var(--font-mono); font-size:1.6rem; font-weight:700; color:var(--accent-ink); background:var(--accent-soft); padding:4px 16px; border-radius:10px; }
+  .alarm-card .actions{ display:flex; flex-direction:column; gap:8px; width:100%; margin-top:6px; }
+
+  .footnote{ max-width:600px; margin:34px auto 0; text-align:center; font-size:.8rem; color:var(--text-muted); line-height:1.6; }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<div class="intro">
+  <span class="eyebrow" id="i_eyebrow">Interactive Prototype · v2</span>
+  <h1>PharmaSaathi AI</h1>
+  <span class="tagline" id="i_tagline">&ldquo;If you can&rsquo;t read it, PharmaSaathi speaks.&rdquo;</span>
+  <p class="desc" id="i_desc">A working mock-up of the medicine-safety app.</p>
+  <div class="langtoggle" role="group" aria-label="Language">
+    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" data-lang="hi" aria-pressed="false">हिंदी</button>
+  </div>
+  <div class="legend" id="i_legend"></div>
+</div>
+
+<div class="stage">
+  <div class="phone">
+    <div class="statusbar">
+      <span class="num">9:41</span>
+      <div class="dots">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span><span class="bar"></span>
+        <span class="batt"></span>
+      </div>
+    </div>
+    <div class="appheader" id="appheader">
+      <button class="back" id="backBtn" type="button" aria-label="Back">←</button>
+      <div class="titles">
+        <h2 id="headerTitle">Home</h2>
+        <div class="sub" id="headerSub">Namaste, Rajesh ji</div>
+      </div>
+      <div class="mini-lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang="hi" aria-pressed="false">हि</button>
+      </div>
+    </div>
+
+    <div class="content" id="content">
+
+      <!-- HOME -->
+      <section class="screen" id="screen-home">
+        <div class="notif" id="missedDoseNotif" hidden>
+          <span class="ic">⏰</span>
+          <div style="flex:1">
+            <div class="t" id="h_notifTitle">Missed dose alert</div>
+            <div class="d" id="h_notifDesc"></div>
+            <div class="acts">
+              <button class="btn primary sm" id="markTakenBtn" type="button"></button>
+              <a class="btn outline sm" id="h_notifNotify" href="#"></a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card flat" id="reminderPermCard" style="background:var(--surface-2)" hidden>
+          <span class="card-title" id="rp_title">🔔 Turn on dose reminders</span>
+          <p class="muted" style="margin-top:4px" id="rp_desc"></p>
+          <button class="btn primary sm" type="button" id="rp_enableBtn" style="margin-top:8px;width:auto"></button>
+        </div>
+
+        <div class="card">
+          <div class="row" style="margin-bottom:8px">
+            <span class="card-title" id="h_scheduleTitle">Today&rsquo;s schedule</span>
+            <span class="badge good" id="h_scheduleBadge">4 of 6 taken</span>
+          </div>
+          <div id="scheduleList"></div>
+          <button class="btn outline sm" type="button" id="testAlarmBtn" style="margin-top:10px;width:100%"></button>
+        </div>
+
+        <div class="listenbtn">
+          <button class="orb" id="listenBtn" type="button" aria-label="Listen to today's guidance">🔊</button>
+          <div class="wave" id="homeWave"></div>
+          <span class="muted" style="font-size:.72rem" id="h_listenLabel">Listen</span>
+        </div>
+
+        <button class="btn primary" type="button" onclick="startScan()" id="h_scanBtn">📷&nbsp; Scan a new prescription</button>
+
+        <div class="card flat" style="background:var(--surface-2)">
+          <div class="row">
+            <span class="card-title" id="h_safetyTitle">Overall safety status</span>
+            <span class="badge warn" id="h_safetyBadge">1 needs attention</span>
+          </div>
+          <p class="muted" style="margin-top:6px" id="h_safetyDesc"></p>
+        </div>
+      </section>
+
+      <!-- MEDICINES LIST -->
+      <section class="screen" id="screen-medicines" hidden>
+        <p class="section-label" id="m_count">4 active medicines</p>
+        <div id="medList" style="display:flex;flex-direction:column;gap:10px"></div>
+      </section>
+
+      <!-- SCAN PRESCRIPTION -->
+      <section class="screen" id="screen-scan" hidden>
+        <input type="file" id="scanFileInput" accept="image/*" capture="environment" hidden>
+        <div id="scanBody"></div>
+      </section>
+
+      <!-- MEDICINE DETAIL (populated by JS) -->
+      <section class="screen" id="screen-med-detail" hidden>
+        <div id="medDetail" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- REPORTS HUB -->
+      <section class="screen" id="screen-reports" hidden>
+        <button class="medcard" type="button" onclick="go('lab')">
+          <span class="pill-ic">🧪</span>
+          <span class="mid"><span class="mname" id="r_labName">Lab report &amp; diagnosis</span><span class="mdose" id="r_labSub">Kidney function test · 12 Sep 2026</span></span>
+          <span class="chev">›</span>
+        </button>
+        <button class="medcard" type="button" onclick="go('adr')">
+          <span class="pill-ic">📋</span>
+          <span class="mid"><span class="mname" id="r_adrName">ADR report</span><span class="mdose" id="r_adrSub">1 adverse reaction logged</span></span>
+          <span class="chev">›</span>
+        </button>
+        <button class="medcard" type="button" onclick="go('ivr')">
+          <span class="pill-ic">📞</span>
+          <span class="mid"><span class="mname" id="r_ivrName">IVR side-effect check-in</span><span class="mdose" id="r_ivrSub">Automated call for low-literacy users</span></span>
+          <span class="chev">›</span>
+        </button>
+      </section>
+
+      <!-- LAB REPORT -->
+      <section class="screen" id="screen-lab" hidden>
+        <div id="labBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- ADR REPORT -->
+      <section class="screen" id="screen-adr" hidden>
+        <div id="adrBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- IVR -->
+      <section class="screen" id="screen-ivr" hidden>
+        <div class="call-ui">
+          <div class="avatar">📞</div>
+          <div style="font-weight:800;font-size:.92rem" id="iv_title">PharmaSaathi automated check-in</div>
+          <div class="muted" id="callStatus">Ready to simulate call</div>
+          <button class="btn primary sm" id="callBtn" type="button" style="margin-top:6px"></button>
+        </div>
+        <div class="transcript" id="transcript"></div>
+        <p class="muted" id="iv_desc"></p>
+      </section>
+
+      <!-- CAREGIVER -->
+      <section class="screen" id="screen-caregiver" hidden>
+        <div id="cgBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- FUTURE -->
+      <section class="screen" id="screen-future" hidden>
+        <div id="futureBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+    </div>
+
+    <nav class="tabbar" id="tabbar">
+      <button data-tab="home" aria-current="true" type="button"><span class="ic">🏠</span><span class="tb-label">Home</span></button>
+      <button data-tab="medicines" type="button"><span class="ic">💊</span><span class="tb-label">Medicines</span></button>
+      <button data-tab="reports" type="button"><span class="ic">📄</span><span class="tb-label">Reports</span></button>
+      <button data-tab="caregiver" type="button"><span class="ic">👪</span><span class="tb-label">Caregiver</span></button>
+      <button data-tab="future" type="button"><span class="ic">✨</span><span class="tb-label">Future</span></button>
+    </nav>
+
+    <div class="alarm-overlay" id="alarmOverlay" hidden>
+      <div class="alarm-card" id="alarmCard"></div>
+    </div>
+  </div>
+</div>
+
+<p class="footnote" id="footnote"></p>
+
+<script>
+(function(){
+
+  /* ================= DATA ================= */
+  var MEDS = [
+    { id:'metformin', icon:'💊', status:'good',
+      en:{ name:'Metformin 500mg', use:'Type 2 diabetes', doseLine:'1 tablet · twice daily · after food',
+        adultDose:'1 tablet (500mg), twice daily, with food',
+        childDose:'Not usually prescribed under 10 yrs. Ages 10–16 (extended-release only): specialist-guided, mg/kg basis.',
+        liquid:'No standard liquid formulation.',
+        moa:'Lowers glucose production by the liver and improves how muscle tissue responds to insulin.',
+        antidote:'No specific antidote. Overdose risk is lactic acidosis — treated with IV sodium bicarbonate and, in severe cases, hemodialysis.',
+        contraindications:['Severe kidney impairment (eGFR below 30)','Metabolic acidosis','Acute or unstable heart failure'],
+        interactionText:'Space at least 2 hours from calcium or iron supplements. Avoid alcohol — raises lactic-acidosis risk.' },
+      hi:{ name:'Metformin 500mg', use:'टाइप 2 डायबिटीज़', doseLine:'1 टैबलेट · दिन में दो बार · भोजन के बाद',
+        adultDose:'1 टैबलेट (500mg), दिन में दो बार, भोजन के साथ',
+        childDose:'आमतौर पर 10 वर्ष से कम उम्र में नहीं दी जाती। 10–16 वर्ष (केवल एक्सटेंडेड-रिलीज़): विशेषज्ञ की सलाह अनुसार, वज़न (mg/kg) के आधार पर।',
+        liquid:'कोई मानक तरल (सिरप) रूप उपलब्ध नहीं है।',
+        moa:'लिवर द्वारा ग्लूकोज़ उत्पादन को कम करता है और मांसपेशियों की इंसुलिन के प्रति प्रतिक्रिया को बेहतर बनाता है।',
+        antidote:'कोई विशेष प्रतिविष (एंटीडोट) नहीं है। अधिक मात्रा से लैक्टिक एसिडोसिस का खतरा — IV सोडियम बाइकार्बोनेट से उपचार, गंभीर मामलों में हीमोडायलिसिस।',
+        contraindications:['गंभीर किडनी रोग (eGFR 30 से कम)','मेटाबॉलिक एसिडोसिस','तीव्र या अस्थिर हृदय विफलता (हार्ट फेलियर)'],
+        interactionText:'कैल्शियम या आयरन सप्लीमेंट से कम से कम 2 घंटे का अंतर रखें। शराब से बचें — लैक्टिक एसिडोसिस का खतरा बढ़ता है।' } },
+
+    { id:'amoxicillin', icon:'💊', status:'risk',
+      en:{ name:'Amoxicillin 500mg', use:'Bacterial infection', doseLine:'1 capsule · 3× daily · 8 hrs apart',
+        adultDose:'1 capsule (500mg) every 8 hours, complete the full course',
+        childDose:'25–45 mg/kg/day, split into 2–3 doses. Confirm exact dose with pediatrician.',
+        liquid:'Liquid syrup 125mg/5ml — e.g. a 15kg child ≈ 5ml, three times daily (example only).',
+        moa:'Breaks down the bacterial cell wall, causing susceptible bacteria to rupture and die.',
+        antidote:'No antidote required for normal use. For a severe allergic reaction (anaphylaxis): antihistamines and epinephrine.',
+        contraindications:['Known penicillin allergy','Caution in infectious mononucleosis (rash risk)'],
+        attentionNote:'Flagged interaction with Ibuprofen — see Medicines for details.' },
+      hi:{ name:'Amoxicillin 500mg', use:'बैक्टीरियल संक्रमण', doseLine:'1 कैप्सूल · दिन में 3 बार · 8 घंटे के अंतर पर',
+        adultDose:'1 कैप्सूल (500mg) हर 8 घंटे में, पूरा कोर्स ज़रूर लें',
+        childDose:'25–45 mg/kg/दिन, 2–3 खुराकों में बाँटकर। सटीक खुराक बाल रोग विशेषज्ञ से पुष्टि करें।',
+        liquid:'तरल सिरप 125mg/5ml — उदाहरण: 15kg के बच्चे को ≈ 5ml, दिन में तीन बार (केवल उदाहरण)।',
+        moa:'बैक्टीरिया की कोशिका भित्ति को तोड़ता है, जिससे संवेदनशील बैक्टीरिया फटकर नष्ट हो जाते हैं।',
+        antidote:'सामान्य उपयोग में किसी प्रतिविष की आवश्यकता नहीं। गंभीर एलर्जी प्रतिक्रिया (एनाफिलैक्सिस) में: एंटीहिस्टामिन और एपिनेफ्रिन।',
+        contraindications:['पेनिसिलिन से ज्ञात एलर्जी','इन्फेक्शियस मोनोन्यूक्लिओसिस में सावधानी (रैश का खतरा)'],
+        attentionNote:'Ibuprofen के साथ इंटरैक्शन चिह्नित — विवरण के लिए दवाइयाँ देखें।' } },
+
+    { id:'levothyroxine', icon:'💊', status:'good',
+      en:{ name:'Levothyroxine 50mcg', use:'Hypothyroidism', doseLine:'1 tablet · once daily · empty stomach',
+        adultDose:'1 tablet (50mcg), once daily, 30–60 min before breakfast',
+        childDose:'Weight-based (mcg/kg/day) — set by pediatric endocrinologist.',
+        liquid:'Tablet can be crushed into a small amount of water for infants; do not mix with soy or iron.',
+        moa:'Synthetic thyroid hormone (T4) that replaces what the thyroid gland is not producing enough of.',
+        antidote:'No specific antidote for overdose. Beta-blockers are used to manage cardiac symptoms in acute toxicity.',
+        contraindications:['Untreated adrenal insufficiency','Recent acute heart attack','Uncontrolled hyperthyroidism'],
+        interactionText:'Leave at least 4 hours between Levothyroxine and Calcium or Iron supplements — they bind to it and block absorption.' },
+      hi:{ name:'Levothyroxine 50mcg', use:'हाइपोथायरॉइडिज़्म', doseLine:'1 टैबलेट · दिन में एक बार · खाली पेट',
+        adultDose:'1 टैबलेट (50mcg), दिन में एक बार, नाश्ते से 30–60 मिनट पहले',
+        childDose:'वज़न अनुसार (mcg/kg/दिन) — बाल एंडोक्राइनोलॉजिस्ट द्वारा तय की जाती है।',
+        liquid:'शिशुओं के लिए टैबलेट को थोड़े पानी में घोला जा सकता है; सोया या आयरन के साथ न मिलाएँ।',
+        moa:'कृत्रिम थायरॉइड हार्मोन (T4) जो थायरॉइड ग्रंथि की कमी को पूरा करता है।',
+        antidote:'अधिक मात्रा के लिए कोई विशेष प्रतिविष नहीं। तीव्र विषाक्तता में हृदय संबंधी लक्षणों के लिए बीटा-ब्लॉकर का उपयोग किया जाता है।',
+        contraindications:['अनुपचारित एड्रिनल अपर्याप्तता','हाल ही में हुआ हृदयाघात (हार्ट अटैक)','अनियंत्रित हाइपरथायरॉइडिज़्म'],
+        interactionText:'Levothyroxine और कैल्शियम या आयरन सप्लीमेंट के बीच कम से कम 4 घंटे का अंतर रखें — ये इससे जुड़कर अवशोषण रोकते हैं।' } },
+
+    { id:'paracetamol', icon:'💊', status:'good',
+      en:{ name:'Paracetamol 650mg', use:'Fever / pain relief', doseLine:'1 tablet · every 6 hrs · max 4/day',
+        adultDose:'1 tablet (650mg) every 6 hours, maximum 4 doses (4g) in 24 hours',
+        childDose:'10–15 mg/kg every 4–6 hours, maximum 4 doses/day.',
+        liquid:'Liquid syrup 250mg/5ml — e.g. a 12kg child ≈ 3ml (example only, confirm with pharmacist).',
+        moa:'Blocks prostaglandin production in the brain, reducing fever and the perception of pain.',
+        antidote:'N-acetylcysteine (NAC) — the drug of choice for overdose, most effective within 8–10 hours of ingestion.',
+        contraindications:['Severe liver impairment','Chronic heavy alcohol use'],
+        interactionText:'Avoid combining with any other paracetamol-containing product — a common cause of accidental overdose.' },
+      hi:{ name:'Paracetamol 650mg', use:'बुखार / दर्द निवारण', doseLine:'1 टैबलेट · हर 6 घंटे में · अधिकतम 4/दिन',
+        adultDose:'1 टैबलेट (650mg) हर 6 घंटे में, 24 घंटे में अधिकतम 4 खुराक (4g)',
+        childDose:'10–15 mg/kg हर 4–6 घंटे में, अधिकतम 4 खुराक/दिन।',
+        liquid:'तरल सिरप 250mg/5ml — उदाहरण: 12kg के बच्चे को ≈ 3ml (केवल उदाहरण, फार्मासिस्ट से पुष्टि करें)।',
+        moa:'मस्तिष्क में प्रोस्टाग्लैंडिन के उत्पादन को रोकता है, जिससे बुखार और दर्द की अनुभूति कम होती है।',
+        antidote:'N-acetylcysteine (NAC) — अधिक मात्रा के लिए प्राथमिक उपचार दवा, सेवन के 8–10 घंटे के भीतर सबसे प्रभावी।',
+        contraindications:['गंभीर लिवर रोग','लंबे समय से अत्यधिक शराब का सेवन'],
+        interactionText:'किसी अन्य पैरासिटामोल-युक्त दवा के साथ न लें — यह गलती से अधिक मात्रा लेने का सामान्य कारण है।' } },
+
+    { id:'ibuprofen', icon:'💊', status:'risk',
+      en:{ name:'Ibuprofen 400mg', use:'Pain / inflammation relief', doseLine:'1 tablet · up to 3× daily · with food',
+        adultDose:'1 tablet (400mg) every 6–8 hours as needed, maximum 3 doses/day, with food',
+        childDose:'5–10 mg/kg every 6–8 hours (age 3 months+). Confirm with pediatrician.',
+        liquid:'Liquid suspension 100mg/5ml available — dose by weight, confirm with pharmacist.',
+        moa:'Blocks COX enzymes to reduce prostaglandin production, easing pain, swelling and fever.',
+        antidote:'No specific antidote. Overdose managed with supportive care and activated charcoal if early.',
+        contraindications:['Active stomach ulcer or GI bleeding','Severe kidney or heart failure','Known NSAID/aspirin allergy'],
+        attentionNote:'Flagged interaction with Amoxicillin — see Medicines for details.' },
+      hi:{ name:'Ibuprofen 400mg', use:'दर्द / सूजन से राहत', doseLine:'1 टैबलेट · अधिकतम दिन में 3 बार · भोजन के साथ',
+        adultDose:'1 टैबलेट (400mg) हर 6–8 घंटे में आवश्यकतानुसार, अधिकतम 3 खुराक/दिन, भोजन के साथ',
+        childDose:'5–10 mg/kg हर 6–8 घंटे में (3 महीने+ आयु)। बाल रोग विशेषज्ञ से पुष्टि करें।',
+        liquid:'तरल सिरप 100mg/5ml उपलब्ध — वज़न अनुसार खुराक, फार्मासिस्ट से पुष्टि करें।',
+        moa:'COX एंज़ाइम को रोककर प्रोस्टाग्लैंडिन उत्पादन घटाता है, जिससे दर्द, सूजन और बुखार कम होता है।',
+        antidote:'कोई विशेष प्रतिविष नहीं। अधिक मात्रा में सहायक उपचार व शुरुआत में एक्टिवेटेड चारकोल दिया जाता है।',
+        contraindications:['सक्रिय पेट का अल्सर या GI ब्लीडिंग','गंभीर किडनी या हृदय विफलता','NSAID/एस्पिरिन से ज्ञात एलर्जी'],
+        attentionNote:'Amoxicillin के साथ इंटरैक्शन चिह्नित — विवरण के लिए दवाइयाँ देखें।' } },
+
+    { id:'omeprazole', icon:'💊', status:'warn',
+      en:{ name:'Omeprazole 20mg', use:'Acid reflux / stomach protection', doseLine:'1 capsule · once daily · before breakfast',
+        adultDose:'1 capsule (20mg) once daily, 30–60 min before breakfast',
+        childDose:'Weight-based, specialist-guided for children under 12.',
+        liquid:'Capsule can be opened and mixed with soft food for those with swallowing difficulty (non-enteric use only).',
+        moa:'Reduces stomach acid production by blocking the proton pump in the stomach lining.',
+        antidote:'No specific antidote required for standard overdose; supportive care only.',
+        contraindications:['Known hypersensitivity to PPIs','Long-term use without periodic review (bone fracture, B12 risk)'],
+        attentionNote:'Timing check needed with Levothyroxine — see Medicines.' },
+      hi:{ name:'Omeprazole 20mg', use:'एसिड रिफ्लक्स / पेट की सुरक्षा', doseLine:'1 कैप्सूल · दिन में एक बार · नाश्ते से पहले',
+        adultDose:'1 कैप्सूल (20mg) दिन में एक बार, नाश्ते से 30–60 मिनट पहले',
+        childDose:'वज़न अनुसार, 12 वर्ष से कम आयु में विशेषज्ञ की सलाह अनुसार।',
+        liquid:'निगलने में कठिनाई होने पर कैप्सूल खोलकर नरम भोजन में मिलाया जा सकता है (केवल non-enteric उपयोग)।',
+        moa:'पेट की परत में प्रोटॉन पंप को रोककर एसिड उत्पादन घटाता है।',
+        antidote:'सामान्य अधिक मात्रा के लिए कोई विशेष प्रतिविष आवश्यक नहीं; केवल सहायक उपचार।',
+        contraindications:['PPI से ज्ञात अतिसंवेदनशीलता','बिना समीक्षा दीर्घकालिक उपयोग (हड्डी फ्रैक्चर, B12 का खतरा)'],
+        attentionNote:'Levothyroxine के साथ समय-अंतराल जाँचना ज़रूरी — दवाइयाँ देखें।' } }
+  ];
+
+  var CONTACTS = { patientPhone:'+919876543210', caregiverPhone:'+919812345678' };
+
+  var SCHEDULE = [
+    { id:'d1', medId:'metformin', time:'08:00' },
+    { id:'d2', medId:'levothyroxine', time:'08:00' },
+    { id:'d3', medId:'metformin', time:'14:00' },
+    { id:'d4', medId:'amoxicillin', time:'20:00' },
+    { id:'d5', medId:'metformin', time:'21:30' }
+  ];
+
+  var T = {
+    en:{
+      eyebrow:'Interactive Prototype · v2',
+      tagline:'“If you can’t read it, PharmaSaathi speaks.”',
+      desc:'A working mock-up of the medicine-safety app — dosing by age, mechanism &amp; antidote lookups, ADR reporting, missed-dose alerts, an IVR side-effect check-in, and a caregiver view. Tap the tabs inside the phone to explore.',
+      legend:['Verified','Needs attention','Risk flagged','Future / not in MVP'],
+      tabs:['Home','Medicines','Reports','Caregiver','Future'],
+      screenTitles:{ home:['Home','Namaste, Rajesh ji'], medicines:['Medicines','4 active'], 'med-detail':['',''], reports:['Reports','Lab · ADR · Calls'], lab:['Lab report','Kidney function panel'], adr:['ADR report','Adverse reaction log'], ivr:['IVR check-in','Automated side-effect call'], caregiver:['Caregiver view','Rajesh Kumar'], future:['Coming soon','Planned after pilot'], scan:['Scan prescription','Point camera or upload a photo'] },
+      notifTitle:'Missed dose alert', notifDesc:'Metformin 500mg · 2:00 PM dose not marked taken',
+      markTaken:'Mark as taken', notify:'Notify caregiver',
+      scheduleTitle:'Today’s schedule', scheduleBadge:'4 of 6 taken',
+      listenLabel:'Listen', scanBtn:'📷&nbsp; Scan a new prescription',
+      safetyTitle:'Overall safety status', safetyBadge:'1 needs attention',
+      safetyDesc:'Amoxicillin has a flagged interaction. Review under Medicines.',
+      badgeGood:'Verified', badgeWarn:'Review', badgeRisk:'Flagged',
+      dHeadDose:'📏 Dosing by age', dAdult:'Adult', dChild:'Child', dLiquid:'Liquid form',
+      dHeadMoa:'🧬 Mechanism of action', dHeadAntidote:'🆘 Antidote / drug of choice',
+      dHeadContra:'🚫 Important contraindications', dInteraction:'Dose gap / interaction:',
+      dHeadInteractions:'⚠️ Interactions with your other medicines', dNoInteractions:'No interactions flagged with your other current medicines right now.',
+      repLabName:'Lab report &amp; diagnosis', repLabSub:'Kidney function test · 12 Sep 2026',
+      repAdrName:'ADR report', repAdrSub:'1 adverse reaction logged',
+      repIvrName:'IVR side-effect check-in', repIvrSub:'Automated call for low-literacy users',
+      lab:{ uploaded:'Uploaded report', name:'CBC + Kidney Function Test', extracted:'Extracted', meta:'12 Sep 2026 · Apollo Diagnostics',
+        summary:'Diagnosis summary', egfrL:'eGFR', egfrV:'42 mL/min (mildly reduced)', hba1cL:'HbA1c', hba1cV:'7.1%',
+        condL:'Condition', condV:'Type 2 diabetes, well controlled', revL:'Reviewed by', revV:'Dr. S. Iyer (sample)',
+        note:'Renal function is mildly reduced compared to last visit. No immediate action needed, but relevant to medicine dosing below.',
+        linkLabel:'Linked safety insight:', linkText:'Metformin dose may need review given reduced kidney function — flagged for pharmacist confirmation.' },
+      adr:{ status:'Under review', title:'Adverse Drug Reaction Report',
+        patientL:'Patient', patientV:'Rajesh Kumar, 68, M', dateL:'Report date', dateV:'15 Sep 2026',
+        drugL:'Suspected drug', drugV:'Amoxicillin 500mg', onsetL:'Onset', onsetV:'2 days after starting',
+        reactionL:'Reaction described:', reactionV:'Mild skin rash with itching on forearms; no breathing difficulty or swelling.',
+        sevL:'Severity:', sevV:'Mild (non-serious)', causeL:'Causality assessment (WHO-UMC scale):', causeV:'Possible',
+        actionL:'Action taken:', actionV:'Continued under observation; pharmacist notified for confirmation before any change.',
+        viaL:'Reported via:', viaV:'Caregiver, through PharmaSaathi app',
+        viewBtn:'📄&nbsp; View full report', exportNote:'Exports as a formatted PDF in the live product.',
+        alert:'In the full product this generates a signed PDF for the treating doctor and the national ADR database (PvPI). Export is disabled in this prototype.' },
+      ivTitle:'PharmaSaathi automated check-in', ivReady:'Ready to simulate call', ivStart:'▶ Start check-in call',
+      ivProgress:'Call in progress…', ivDone:'Call complete — logged for caregiver', ivReplay:'↻ Replay check-in call',
+      ivDesc:'Built for patients without smartphones or with low literacy — a real automated call in the patient’s language, response logged for the caregiver and pharmacist.',
+      cg:{ linked:'Linked patient · You are caregiver', adherence:'Adherence this week',
+        missedL:'Missed dose:', missedV:'Metformin 500mg, today 2:00 PM — not yet marked taken.',
+        adrL:'ADR flagged:', adrV:'Mild rash reported for Amoxicillin — pharmacist reviewing.',
+        call:'📱&nbsp; Call Rajesh ji', callAlert:'Prototype only — this would place a real call to Rajesh ji.',
+        viewMeds:'💊&nbsp; View full medicine list', viewAdr:'📋&nbsp; View ADR report' },
+      future:{ intro:'Planned after pilot validation — not part of the current MVP.',
+        items:[ ['🪪','Ayushman Card integration','Link the patient’s health ID so guidance accounts for their scheme coverage.'],
+                ['🔗','ABDM interoperability','Sync records via the Ayushman Bharat Digital Mission health ID across clinics and pharmacies.'],
+                ['📊','Population-level safety insights','Aggregated, de-identified ADR trends to support pharmacovigilance and early signal detection.'],
+                ['🔮','Predictive medicine availability','Forecast which nearby pharmacies are likely to have a medicine in stock before the patient travels.'] ] },
+      scan:{
+        dropTitle:'Take a photo or upload your prescription',
+        dropHint:'JPG or PNG · prototype only, nothing is uploaded anywhere',
+        chooseBtn:'📷&nbsp; Choose photo',
+        analyzing:'Reading your prescription…',
+        extractedTitle:'Extracted from prescription',
+        confidence:'Match confidence',
+        fieldName:'Medicine', fieldDose:'Dose', fieldUse:'For',
+        foundMany:' medicines found — untick anything you don\'t want to add.',
+        addBtn:'➕&nbsp; Add selected to my medicines',
+        retakeBtn:'↻ Scan a different prescription',
+        disclaimer:'Prototype only — extraction is simulated, not real OCR.'
+      },
+      footnote:'Sample patient, medicines and reports shown are illustrative for this prototype. Clinical content (dosing, MOA, antidotes, contraindications) is simplified for demonstration and is not medical advice.'
+    },
+    hi:{
+      eyebrow:'इंटरैक्टिव प्रोटोटाइप · v2',
+      tagline:'“अगर आप इसे पढ़ नहीं पा रहे, तो PharmaSaathi बोलकर बताएगा।”',
+      desc:'दवा-सुरक्षा ऐप का एक कार्यशील मॉक-अप — आयु अनुसार खुराक, क्रियाविधि व प्रतिविष जानकारी, ADR रिपोर्टिंग, छूटी खुराक की चेतावनी, IVR साइड-इफ़ेक्ट चेक-इन, और देखभालकर्ता व्यू। नीचे फ़ोन के टैब दबाकर देखें।',
+      legend:['सत्यापित','ध्यान दें','जोखिम चिह्नित','भविष्य / MVP में नहीं'],
+      tabs:['होम','दवाइयाँ','रिपोर्ट','देखभाल','भविष्य'],
+      screenTitles:{ home:['होम','नमस्ते, राजेश जी'], medicines:['दवाइयाँ','4 सक्रिय'], 'med-detail':['',''], reports:['रिपोर्ट','लैब · ADR · कॉल'], lab:['लैब रिपोर्ट','किडनी फंक्शन पैनल'], adr:['ADR रिपोर्ट','प्रतिकूल प्रतिक्रिया लॉग'], ivr:['IVR चेक-इन','स्वचालित साइड-इफ़ेक्ट कॉल'], caregiver:['देखभालकर्ता व्यू','राजेश कुमार'], future:['आने वाला','पायलट के बाद योजनाबद्ध'], scan:['प्रिस्क्रिप्शन स्कैन करें','कैमरा या फ़ोटो अपलोड करें'] },
+      notifTitle:'छूटी हुई खुराक की चेतावनी', notifDesc:'Metformin 500mg · दोपहर 2:00 बजे की खुराक अभी दर्ज नहीं है',
+      markTaken:'ली हुई दर्ज करें', notify:'देखभालकर्ता को सूचित करें',
+      scheduleTitle:'आज की समय-सारणी', scheduleBadge:'6 में से 4 ली गईं',
+      listenLabel:'सुनें', scanBtn:'📷&nbsp; नया प्रिस्क्रिप्शन स्कैन करें',
+      safetyTitle:'समग्र सुरक्षा स्थिति', safetyBadge:'1 पर ध्यान दें',
+      safetyDesc:'Amoxicillin में इंटरैक्शन चिह्नित है। ‘दवाइयाँ’ में देखें।',
+      badgeGood:'सत्यापित', badgeWarn:'समीक्षा करें', badgeRisk:'चिह्नित',
+      dHeadDose:'📏 आयु अनुसार खुराक', dAdult:'वयस्क', dChild:'बच्चा', dLiquid:'तरल रूप (सिरप)',
+      dHeadMoa:'🧬 क्रियाविधि (MOA)', dHeadAntidote:'🆘 प्रतिविष / प्राथमिक उपचार दवा',
+      dHeadContra:'🚫 महत्वपूर्ण निषेध', dInteraction:'खुराक अंतराल / इंटरैक्शन:',
+      dHeadInteractions:'⚠️ आपकी अन्य दवाइयों के साथ इंटरैक्शन', dNoInteractions:'फ़िलहाल आपकी अन्य दवाइयों के साथ कोई इंटरैक्शन चिह्नित नहीं है।',
+      repLabName:'लैब रिपोर्ट और निदान', repLabSub:'किडनी फंक्शन टेस्ट · 12 सितंबर 2026',
+      repAdrName:'ADR रिपोर्ट', repAdrSub:'1 प्रतिकूल प्रतिक्रिया दर्ज',
+      repIvrName:'IVR साइड-इफ़ेक्ट चेक-इन', repIvrSub:'कम साक्षरता वाले उपयोगकर्ताओं हेतु स्वचालित कॉल',
+      lab:{ uploaded:'अपलोड की गई रिपोर्ट', name:'CBC + किडनी फंक्शन टेस्ट', extracted:'निकाला गया', meta:'12 सितंबर 2026 · Apollo Diagnostics',
+        summary:'निदान सारांश', egfrL:'eGFR', egfrV:'42 mL/min (हल्की कमी)', hba1cL:'HbA1c', hba1cV:'7.1%',
+        condL:'स्थिति', condV:'टाइप 2 डायबिटीज़, नियंत्रण में', revL:'समीक्षा की गई', revV:'डॉ. एस. अय्यर (उदाहरण)',
+        note:'पिछली जाँच की तुलना में किडनी की कार्यक्षमता हल्की कम हुई है। तुरंत किसी कार्रवाई की आवश्यकता नहीं, लेकिन नीचे दी गई दवा की खुराक से यह जुड़ा है।',
+        linkLabel:'जुड़ी सुरक्षा जानकारी:', linkText:'किडनी की कम कार्यक्षमता के कारण Metformin की खुराक की समीक्षा ज़रूरी हो सकती है — फार्मासिस्ट की पुष्टि हेतु चिह्नित।' },
+      adr:{ status:'समीक्षाधीन', title:'प्रतिकूल दवा प्रतिक्रिया रिपोर्ट (ADR)',
+        patientL:'मरीज़', patientV:'राजेश कुमार, 68, पुरुष', dateL:'रिपोर्ट तिथि', dateV:'15 सितंबर 2026',
+        drugL:'संदिग्ध दवा', drugV:'Amoxicillin 500mg', onsetL:'शुरुआत', onsetV:'शुरू करने के 2 दिन बाद',
+        reactionL:'बताई गई प्रतिक्रिया:', reactionV:'बाँहों पर हल्की खुजली के साथ त्वचा पर रैश; साँस लेने में कठिनाई या सूजन नहीं।',
+        sevL:'गंभीरता:', sevV:'हल्की (गंभीर नहीं)', causeL:'कारण-संबंध आकलन (WHO-UMC स्केल):', causeV:'संभावित',
+        actionL:'की गई कार्रवाई:', actionV:'निगरानी में जारी रखा गया; किसी भी बदलाव से पहले पुष्टि हेतु फार्मासिस्ट को सूचित किया गया।',
+        viaL:'के माध्यम से रिपोर्ट की गई:', viaV:'देखभालकर्ता, PharmaSaathi ऐप के ज़रिए',
+        viewBtn:'📄&nbsp; पूरी रिपोर्ट देखें', exportNote:'लाइव उत्पाद में यह व्यवस्थित PDF के रूप में एक्सपोर्ट होता है।',
+        alert:'पूर्ण उत्पाद में यह इलाज करने वाले डॉक्टर और राष्ट्रीय ADR डेटाबेस (PvPI) के लिए हस्ताक्षरित PDF तैयार करता है। इस प्रोटोटाइप में एक्सपोर्ट अक्षम है।' },
+      ivTitle:'PharmaSaathi स्वचालित चेक-इन', ivReady:'कॉल सिम्युलेट करने के लिए तैयार', ivStart:'▶ चेक-इन कॉल शुरू करें',
+      ivProgress:'कॉल जारी है…', ivDone:'कॉल पूर्ण — देखभालकर्ता के लिए दर्ज', ivReplay:'↻ फिर से चलाएँ',
+      ivDesc:'उन मरीज़ों के लिए जिनके पास स्मार्टफ़ोन नहीं है या जिनकी साक्षरता कम है — मरीज़ की भाषा में असली स्वचालित कॉल, जवाब देखभालकर्ता और फार्मासिस्ट के लिए दर्ज होता है।',
+      cg:{ linked:'जुड़ा हुआ मरीज़ · आप देखभालकर्ता हैं', adherence:'इस सप्ताह की नियमितता',
+        missedL:'छूटी खुराक:', missedV:'Metformin 500mg, आज दोपहर 2:00 बजे — अभी तक ली हुई दर्ज नहीं।',
+        adrL:'ADR चिह्नित:', adrV:'Amoxicillin के लिए हल्का रैश दर्ज — फार्मासिस्ट समीक्षा कर रहे हैं।',
+        call:'📱&nbsp; राजेश जी को कॉल करें', callAlert:'केवल प्रोटोटाइप — असली ऐप में यह राजेश जी को वास्तविक कॉल करेगा।',
+        viewMeds:'💊&nbsp; पूरी दवा सूची देखें', viewAdr:'📋&nbsp; ADR रिपोर्ट देखें' },
+      future:{ intro:'पायलट सत्यापन के बाद योजनाबद्ध — यह वर्तमान MVP का हिस्सा नहीं है।',
+        items:[ ['🪪','आयुष्मान कार्ड एकीकरण','मरीज़ की हेल्थ ID जोड़ें ताकि मार्गदर्शन उनकी योजना कवरेज को ध्यान में रखे।'],
+                ['🔗','ABDM इंटरऑपरेबिलिटी','आयुष्मान भारत डिजिटल मिशन हेल्थ ID के ज़रिए क्लीनिकों और फार्मेसियों में रिकॉर्ड सिंक करें।'],
+                ['📊','जनसंख्या-स्तरीय सुरक्षा जानकारी','फार्माकोविजिलेंस और शुरुआती संकेत पहचान में मदद हेतु समग्र, पहचान-रहित ADR रुझान।'],
+                ['🔮','दवा उपलब्धता का पूर्वानुमान','मरीज़ के जाने से पहले अनुमान — आस-पास किस फार्मेसी में दवा मिलने की संभावना अधिक है।'] ] },
+      scan:{
+        dropTitle:'अपने प्रिस्क्रिप्शन की फ़ोटो लें या अपलोड करें',
+        dropHint:'JPG या PNG · केवल प्रोटोटाइप, कहीं कुछ अपलोड नहीं होता',
+        chooseBtn:'📷&nbsp; फ़ोटो चुनें',
+        analyzing:'आपका प्रिस्क्रिप्शन पढ़ा जा रहा है…',
+        extractedTitle:'प्रिस्क्रिप्शन से निकाली गई जानकारी',
+        confidence:'मिलान की सटीकता',
+        fieldName:'दवा', fieldDose:'खुराक', fieldUse:'किसलिए',
+        foundMany:' दवाइयाँ मिलीं — जो नहीं जोड़नी उसे अनचेक करें।',
+        addBtn:'➕&nbsp; चुनी गई दवाइयाँ जोड़ें',
+        retakeBtn:'↻ दूसरा प्रिस्क्रिप्शन स्कैन करें',
+        disclaimer:'केवल प्रोटोटाइप — निष्कर्षण अनुकरणित है, असली OCR नहीं।'
+      },
+      footnote:'दिखाए गए मरीज़, दवाइयाँ और रिपोर्ट केवल उदाहरण हेतु हैं। नैदानिक जानकारी (खुराक, MOA, प्रतिविष, निषेध) प्रदर्शन हेतु सरल बनाई गई है और यह चिकित्सीय सलाह नहीं है।'
+    }
+  };
+
+  /* ================= STATE ================= */
+  var LANG = 'en';
+  try { var saved = localStorage.getItem('ps_lang'); if (saved === 'en' || saved === 'hi') LANG = saved; } catch(e){}
+  var currentScreen = 'home';
+  var openMedId = null;
+
+  var screens = ['home','medicines','med-detail','reports','lab','adr','ivr','caregiver','future','scan'];
+  var tabOf = { home:'home', medicines:'medicines', 'med-detail':'medicines', reports:'reports', lab:'reports', adr:'reports', ivr:'reports', caregiver:'caregiver', future:'future', scan:'home' };
+  var backTarget = { 'med-detail':'medicines', lab:'reports', adr:'reports', ivr:'reports', scan:'home' };
+
+  function badgeClass(s){ return s === 'good' ? 'good' : (s === 'risk' ? 'risk' : 'warn'); }
+  function badgeLabel(t,s){ return s === 'good' ? t.badgeGood : (s === 'risk' ? t.badgeRisk : t.badgeWarn); }
+
+  /* ================= RENDER ================= */
+  function renderIntro(){
+    var t = T[LANG];
+    document.getElementById('i_eyebrow').textContent = t.eyebrow;
+    document.getElementById('i_tagline').innerHTML = t.tagline;
+    document.getElementById('i_desc').innerHTML = t.desc;
+    var colors = ['var(--good)','var(--warn)','var(--risk)','var(--text-muted)'];
+    document.getElementById('i_legend').innerHTML = t.legend.map(function(l,i){
+      return '<span><i style="background:'+colors[i]+(i===3?';opacity:.5':'')+'"></i>'+l+'</span>';
+    }).join('');
+    document.querySelectorAll('.tabbar .tb-label').forEach(function(el,i){ el.textContent = t.tabs[i]; });
+  }
+
+  function renderMedList(){
+    var t = T[LANG];
+    document.getElementById('m_count').textContent = LANG === 'en'
+      ? MEDS.length + ' active medicines'
+      : MEDS.length + ' सक्रिय दवाइयाँ';
+    var el = document.getElementById('medList');
+    el.innerHTML = '';
+    MEDS.forEach(function(m){
+      var d = m[LANG];
+      var btn = document.createElement('button');
+      btn.className = 'medcard'; btn.type = 'button';
+      btn.innerHTML = '<span class="pill-ic">'+m.icon+'</span>' +
+        '<span class="mid"><span class="mname">'+d.name+'</span><span class="mdose">'+d.doseLine+'</span></span>' +
+        '<span class="badge '+badgeClass(m.status)+'" style="margin-right:4px">'+badgeLabel(t,m.status)+'</span>' +
+        '<span class="chev">›</span>';
+      btn.addEventListener('click', function(){ openMed(m.id); });
+      el.appendChild(btn);
+    });
+  }
+
+  function renderMedDetail(){
+    if (!openMedId) return;
+    var t = T[LANG];
+    var m = MEDS.filter(function(x){ return x.id === openMedId; })[0];
+    var d = m[LANG];
+    var el = document.getElementById('medDetail');
+    var contraList = d.contraindications.map(function(c){ return '<li>'+c+'</li>'; }).join('');
+    var generalNote = '';
+    if (d.interactionText){
+      var lvl = INTERACTION_LEVEL[m.id] || 'warn';
+      generalNote = '<div class="callout '+lvl+'"><span>⏱️</span><span><strong>'+t.dInteraction+'</strong> '+d.interactionText+'</span></div>';
+    }
+    var crossChecks = getInteractions(m.id);
+    var crossHtml = '<div class="detail-block card"><span class="h">'+t.dHeadInteractions+'</span>' +
+      (crossChecks.length
+        ? crossChecks.map(function(x){
+            var icon = x.severity === 'risk' ? '⛔' : '⚠️';
+            return '<div class="callout '+x.severity+'"><span>'+icon+'</span><span>'+x[LANG]+'</span></div>';
+          }).join('')
+        : '<div class="callout good"><span>✅</span><span>'+t.dNoInteractions+'</span></div>') +
+      '</div>';
+    el.innerHTML =
+      '<div class="card"><div class="row"><span class="card-title" style="font-size:1.05rem">'+d.name+'</span><span class="badge '+badgeClass(m.status)+'">'+badgeLabel(t,m.status)+'</span></div>'+
+      '<p class="muted" style="margin-top:3px">'+d.use+'</p></div>' +
+      '<div class="detail-block card"><span class="h">'+t.dHeadDose+'</span>' +
+      '<table class="dosetable"><tr><td>'+t.dAdult+'</td><td>'+d.adultDose+'</td></tr>' +
+      '<tr><td>'+t.dChild+'</td><td>'+d.childDose+'</td></tr>' +
+      '<tr><td>'+t.dLiquid+'</td><td>'+d.liquid+'</td></tr></table></div>' +
+      '<div class="detail-block card"><span class="h">'+t.dHeadMoa+'</span><p>'+d.moa+'</p></div>' +
+      '<div class="detail-block card"><span class="h">'+t.dHeadAntidote+'</span><p>'+d.antidote+'</p></div>' +
+      '<div class="detail-block card"><span class="h">'+t.dHeadContra+'</span><ul>'+contraList+'</ul></div>' +
+      crossHtml + generalNote;
+  }
+  // interaction severity for medicines that still carry a general (non-drug-specific) note
+  var INTERACTION_LEVEL = { metformin:'warn', levothyroxine:'warn', paracetamol:'warn' };
+
+  /* cross-medicine interaction checks — shown only when BOTH drugs are in the patient's current list */
+  var INTERACTIONS = [
+    { pair:['amoxicillin','ibuprofen'], severity:'risk',
+      en:'Possible interaction flagged between Amoxicillin and Ibuprofen in this patient\'s current list — confirm timing with pharmacist before combining.',
+      hi:'इस मरीज़ की सूची में Amoxicillin और Ibuprofen के बीच संभावित इंटरैक्शन चिह्नित है — साथ लेने से पहले फार्मासिस्ट से समय की पुष्टि करें।' },
+    { pair:['ibuprofen','levothyroxine'], severity:'warn',
+      en:'Regular Ibuprofen use can reduce how well Levothyroxine is absorbed — keep Levothyroxine on an empty stomach, well separated from Ibuprofen doses.',
+      hi:'नियमित Ibuprofen लेने से Levothyroxine का अवशोषण घट सकता है — Levothyroxine खाली पेट व Ibuprofen की खुराक से अलग समय पर लें।' },
+    { pair:['omeprazole','levothyroxine'], severity:'warn',
+      en:'Omeprazole lowers stomach acid, which can reduce Levothyroxine absorption — separate the two by at least 4 hours, ideally Levothyroxine first thing in the morning.',
+      hi:'Omeprazole पेट के एसिड को कम करता है, जिससे Levothyroxine का अवशोषण घट सकता है — दोनों के बीच कम से कम 4 घंटे का अंतर रखें, Levothyroxine सुबह सबसे पहले लें।' }
+  ];
+  function getInteractions(id){
+    var activeIds = MEDS.map(function(m){ return m.id; });
+    return INTERACTIONS.filter(function(x){
+      return x.pair.indexOf(id) !== -1 && activeIds.indexOf(x.pair[0]) !== -1 && activeIds.indexOf(x.pair[1]) !== -1;
+    });
+  }
+
+  /* ================= REMINDERS & ALARMS ================= */
+  function todayKey(){
+    var d = new Date();
+    return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+  }
+  function isTaken(doseId){
+    try { return localStorage.getItem('ps_taken_'+todayKey()+'_'+doseId) === '1'; } catch(e){ return false; }
+  }
+  function markTaken(doseId){
+    try { localStorage.setItem('ps_taken_'+todayKey()+'_'+doseId, '1'); } catch(e){}
+  }
+  function unmarkTaken(doseId){
+    try { localStorage.removeItem('ps_taken_'+todayKey()+'_'+doseId); } catch(e){}
+  }
+  function minutesNow(){ var n = new Date(); return n.getHours()*60 + n.getMinutes(); }
+  function minutesOf(hhmm){ var p = hhmm.split(':'); return parseInt(p[0],10)*60 + parseInt(p[1],10); }
+  function doseState(dose){
+    if (isTaken(dose.id)) return 'taken';
+    return minutesNow() > minutesOf(dose.time) ? 'missed' : 'pending';
+  }
+  function firstMissedDose(){
+    return SCHEDULE.filter(function(d){ return doseState(d) === 'missed'; })[0] || null;
+  }
+
+  function renderSchedule(){
+    var el = document.getElementById('scheduleList');
+    if (!el) return;
+    el.innerHTML = SCHEDULE.map(function(dose){
+      var med = MEDS.filter(function(m){ return m.id === dose.medId; })[0];
+      var name = med ? med[LANG].name : dose.medId;
+      var st = doseState(dose);
+      var cls = st === 'pending' ? 'pending' : (st === 'missed' ? 'missed' : '');
+      return '<div class="schedule-row '+cls+'" data-dose-id="'+dose.id+'">' +
+        '<span class="time num">'+dose.time+'</span><span class="dot"></span><span class="name">'+name+'</span></div>';
+    }).join('');
+    var takenCount = SCHEDULE.filter(function(d){ return doseState(d) === 'taken'; }).length;
+    document.getElementById('h_scheduleBadge').textContent = LANG === 'en'
+      ? takenCount+' of '+SCHEDULE.length+' taken'
+      : SCHEDULE.length+' में से '+takenCount+' ली गईं';
+
+    var missed = firstMissedDose();
+    var notif = document.getElementById('missedDoseNotif');
+    if (missed){
+      var mmed = MEDS.filter(function(m){ return m.id === missed.medId; })[0];
+      var mname = mmed ? mmed[LANG].name : missed.medId;
+      notif.hidden = false;
+      document.getElementById('h_notifDesc').textContent = LANG === 'en'
+        ? mname+' · '+missed.time+' dose not marked taken'
+        : mname+' · '+missed.time+' की खुराक अभी दर्ज नहीं है';
+      document.getElementById('markTakenBtn').onclick = function(){ markTaken(missed.id); renderHome(); };
+      var smsBody = LANG === 'en'
+        ? 'Reminder from PharmaSaathi: Rajesh ji has not marked '+mname+' ('+missed.time+') as taken today.'
+        : 'PharmaSaathi से सूचना: राजेश जी ने आज '+mname+' ('+missed.time+') की खुराक अभी दर्ज नहीं की है।';
+      document.getElementById('h_notifNotify').href = 'sms:'+CONTACTS.caregiverPhone+'?body='+encodeURIComponent(smsBody);
+    } else {
+      notif.hidden = true;
+    }
+  }
+
+  function updateReminderPermCard(){
+    var card = document.getElementById('reminderPermCard');
+    if (!card) return;
+    var supported = 'Notification' in window;
+    card.hidden = !supported || Notification.permission === 'granted' || Notification.permission === 'denied';
+  }
+
+  function beep(times){
+    times = times || 3;
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      var ctx = new Ctx();
+      var i = 0;
+      (function playOne(){
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 880;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.0001, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime+0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.4);
+        o.start(); o.stop(ctx.currentTime+0.42);
+        i++;
+        if (i < times) setTimeout(playOne, 480);
+      })();
+    } catch(e){}
+  }
+
+  var snoozeTimers = {};
+  function triggerAlarm(dose){
+    var med = MEDS.filter(function(m){ return m.id === dose.medId; })[0];
+    if (!med) return;
+    var name = med[LANG].name;
+    beep(3);
+    if ('Notification' in window && Notification.permission === 'granted'){
+      try {
+        new Notification(LANG === 'en' ? 'PharmaSaathi reminder' : 'PharmaSaathi रिमाइंडर', {
+          body: name + ' — ' + dose.time,
+          icon: 'icon.svg'
+        });
+      } catch(e){}
+    }
+    var overlay = document.getElementById('alarmOverlay');
+    var card = document.getElementById('alarmCard');
+    card.innerHTML =
+      '<span class="bell">⏰</span>' +
+      '<h3>'+(LANG === 'en' ? 'Time for your medicine' : 'दवा लेने का समय हो गया')+'</h3>' +
+      '<span class="time">'+dose.time+'</span>' +
+      '<div class="card-title">'+name+'</div>' +
+      '<div class="actions">' +
+        '<button class="btn primary" type="button" id="alarmTakeBtn">'+(LANG === 'en' ? '✓ Mark as taken' : '✓ ली हुई दर्ज करें')+'</button>' +
+        '<button class="btn ghost" type="button" id="alarmSnoozeBtn">'+(LANG === 'en' ? '⏳ Snooze 10 min' : '⏳ 10 मिनट बाद याद दिलाएँ')+'</button>' +
+        '<button class="btn outline" type="button" id="alarmDismissBtn">'+(LANG === 'en' ? 'Dismiss' : 'बंद करें')+'</button>' +
+      '</div>';
+    overlay.hidden = false;
+    document.getElementById('alarmTakeBtn').addEventListener('click', function(){
+      markTaken(dose.id);
+      overlay.hidden = true;
+      renderHome();
+    });
+    document.getElementById('alarmSnoozeBtn').addEventListener('click', function(){
+      overlay.hidden = true;
+      if (snoozeTimers[dose.id]) clearTimeout(snoozeTimers[dose.id]);
+      snoozeTimers[dose.id] = setTimeout(function(){ triggerAlarm(dose); }, 10*60*1000);
+    });
+    document.getElementById('alarmDismissBtn').addEventListener('click', function(){ overlay.hidden = true; });
+  }
+
+  var firedAlarms = {};
+  function checkAlarms(){
+    var now = new Date();
+    var nowStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    SCHEDULE.forEach(function(dose){
+      var fireKey = todayKey()+'_'+dose.id;
+      if (dose.time === nowStr && !isTaken(dose.id) && !firedAlarms[fireKey]){
+        firedAlarms[fireKey] = true;
+        triggerAlarm(dose);
+      }
+    });
+  }
+  setInterval(checkAlarms, 20000);
+
+  function openMed(id){ openMedId = id; renderMedDetail(); go('med-detail'); }
+  window.openMed = openMed;
+
+  function renderReportsHub(){
+    var t = T[LANG];
+    document.getElementById('r_labName').innerHTML = t.repLabName;
+    document.getElementById('r_labSub').textContent = t.repLabSub;
+    document.getElementById('r_adrName').textContent = t.repAdrName;
+    document.getElementById('r_adrSub').textContent = t.repAdrSub;
+    document.getElementById('r_ivrName').textContent = t.repIvrName;
+    document.getElementById('r_ivrSub').textContent = t.repIvrSub;
+  }
+
+  function renderLab(){
+    var L = T[LANG].lab;
+    document.getElementById('labBody').innerHTML =
+      '<div class="card"><span class="section-label">'+L.uploaded+'</span>' +
+      '<div class="row" style="margin-top:8px"><span class="card-title">'+L.name+'</span><span class="badge good">'+L.extracted+'</span></div>' +
+      '<p class="muted" style="margin-top:4px">'+L.meta+'</p></div>' +
+      '<div class="report-doc"><h3>'+L.summary+'</h3><div class="meta">' +
+      '<div><span>'+L.egfrL+'</span>'+L.egfrV+'</div><div><span>'+L.hba1cL+'</span>'+L.hba1cV+'</div>' +
+      '<div><span>'+L.condL+'</span>'+L.condV+'</div><div><span>'+L.revL+'</span>'+L.revV+'</div>' +
+      '</div><hr><p>'+L.note+'</p></div>' +
+      '<div class="callout warn"><span>⚠️</span><span><strong>'+L.linkLabel+'</strong> '+L.linkText+'</span></div>';
+  }
+
+  function renderAdr(){
+    var A = T[LANG].adr;
+    document.getElementById('adrBody').innerHTML =
+      '<div class="report-doc"><span class="badge risk" style="margin-bottom:8px">ADR · '+A.status+'</span><h3>'+A.title+'</h3>' +
+      '<div class="meta"><div><span>'+A.patientL+'</span>'+A.patientV+'</div><div><span>'+A.dateL+'</span>'+A.dateV+'</div>' +
+      '<div><span>'+A.drugL+'</span>'+A.drugV+'</div><div><span>'+A.onsetL+'</span>'+A.onsetV+'</div></div><hr>' +
+      '<p><strong>'+A.reactionL+'</strong> '+A.reactionV+'</p>' +
+      '<p style="margin-top:8px"><strong>'+A.sevL+'</strong> '+A.sevV+'</p>' +
+      '<p style="margin-top:8px"><strong>'+A.causeL+'</strong> '+A.causeV+'</p>' +
+      '<p style="margin-top:8px"><strong>'+A.actionL+'</strong> '+A.actionV+'</p>' +
+      '<p style="margin-top:8px"><strong>'+A.viaL+'</strong> '+A.viaV+'</p></div>' +
+      '<button class="btn primary" type="button" id="adrViewBtn">'+A.viewBtn+'</button>' +
+      '<p class="muted" style="text-align:center">'+A.exportNote+'</p>';
+    document.getElementById('adrViewBtn').addEventListener('click', function(){ alert(T[LANG].adr.alert); });
+  }
+
+  function renderIvr(){
+    var t = T[LANG];
+    document.getElementById('iv_title').textContent = t.ivTitle;
+    document.getElementById('callStatus').textContent = t.ivReady;
+    document.getElementById('callBtn').textContent = t.ivStart;
+    document.getElementById('iv_desc').textContent = t.ivDesc;
+  }
+
+  function renderCaregiver(){
+    var C = T[LANG].cg;
+    var missed = firstMissedDose();
+    var missedText;
+    if (missed){
+      var mmed = MEDS.filter(function(m){ return m.id === missed.medId; })[0];
+      var mname = mmed ? mmed[LANG].name : missed.medId;
+      missedText = LANG === 'en'
+        ? mname+', today '+missed.time+' — not yet marked taken.'
+        : mname+', आज '+missed.time+' — अभी तक ली हुई दर्ज नहीं।';
+    } else {
+      missedText = LANG === 'en' ? 'No missed doses right now — all on track.' : 'फ़िलहाल कोई खुराक नहीं छूटी — सब समय पर है।';
+    }
+    document.getElementById('cgBody').innerHTML =
+      '<div class="card"><div class="cg-patient"><span class="av">RK</span>' +
+      '<div style="flex:1"><div class="card-title">Rajesh Kumar, 68</div><div class="muted">'+C.linked+'</div></div></div>' +
+      '<div style="margin-top:12px"><div class="row" style="margin-bottom:5px"><span class="muted" style="font-size:.75rem">'+C.adherence+'</span>' +
+      '<span class="num" style="font-size:.78rem;font-weight:700">92%</span></div>' +
+      '<div class="adherence-bar"><i style="width:92%"></i></div></div></div>' +
+      '<div class="callout '+(missed ? 'risk' : 'good')+'"><span>'+(missed ? '⏰' : '✅')+'</span><span><strong>'+C.missedL+'</strong> '+missedText+'</span></div>' +
+      '<div class="callout warn"><span>📋</span><span><strong>'+C.adrL+'</strong> '+C.adrV+'</span></div>' +
+      '<a class="btn primary" href="tel:'+CONTACTS.patientPhone+'" id="cgCallBtn">'+C.call+'</a>' +
+      '<button class="btn ghost" type="button" id="cgMedsBtn">'+C.viewMeds+'</button>' +
+      '<button class="btn ghost" type="button" id="cgAdrBtn">'+C.viewAdr+'</button>';
+    document.getElementById('cgMedsBtn').addEventListener('click', function(){ go('medicines'); });
+    document.getElementById('cgAdrBtn').addEventListener('click', function(){ go('adr'); });
+  }
+
+  function renderFuture(){
+    var F = T[LANG].future;
+    var html = '<p class="muted">'+F.intro+'</p>';
+    F.items.forEach(function(it){
+      html += '<div class="future-card"><span class="ic">'+it[0]+'</span><div><h3>'+it[1]+'</h3><p>'+it[2]+'</p></div></div>';
+    });
+    document.getElementById('futureBody').innerHTML = html;
+  }
+
+  /* ================= SCAN PRESCRIPTION ================= */
+  var SCAN_RESULTS = [
+    { id:'azithromycin', icon:'💊', status:'good',
+      en:{ name:'Azithromycin 250mg', use:'Bacterial infection (5-day course)', doseLine:'1 tablet · once daily · 5-day course',
+        adultDose:'1 tablet (250mg) once daily for 5 days, or as prescribed',
+        childDose:'10 mg/kg once daily for 3 days, or per the pediatrician\'s course.',
+        liquid:'Liquid suspension 200mg/5ml available — dose by weight, confirm with pharmacist.',
+        moa:'Stops bacteria from making the proteins they need to grow, halting the infection.',
+        antidote:'No specific antidote. Overdose managed with supportive care.',
+        contraindications:['Known macrolide allergy','Caution with existing heart rhythm problems (QT prolongation)'] },
+      hi:{ name:'Azithromycin 250mg', use:'बैक्टीरियल संक्रमण (5-दिन का कोर्स)', doseLine:'1 टैबलेट · दिन में एक बार · 5-दिन का कोर्स',
+        adultDose:'1 टैबलेट (250mg) दिन में एक बार, 5 दिनों तक, या डॉक्टर की सलाह अनुसार',
+        childDose:'10 mg/kg दिन में एक बार, 3 दिनों तक, या बाल रोग विशेषज्ञ के कोर्स अनुसार।',
+        liquid:'तरल सिरप 200mg/5ml उपलब्ध — वज़न अनुसार खुराक, फार्मासिस्ट से पुष्टि करें।',
+        moa:'बैक्टीरिया को बढ़ने के लिए आवश्यक प्रोटीन बनाने से रोकता है, जिससे संक्रमण रुक जाता है।',
+        antidote:'कोई विशेष प्रतिविष नहीं। अधिक मात्रा में सहायक उपचार दिया जाता है।',
+        contraindications:['मैक्रोलाइड से ज्ञात एलर्जी','मौजूदा हृदय-लय समस्याओं में सावधानी (QT प्रोलोंगेशन)'] } },
+    { id:'cetirizine', icon:'💊', status:'good',
+      en:{ name:'Cetirizine 10mg', use:'Allergy relief', doseLine:'1 tablet · once daily · anytime',
+        adultDose:'1 tablet (10mg) once daily',
+        childDose:'2.5–5mg once daily (age 6–12). Confirm with pediatrician.',
+        liquid:'Syrup 5mg/5ml available for children.',
+        moa:'Blocks histamine receptors, reducing allergic symptoms like itching, sneezing and rash.',
+        antidote:'No specific antidote. Overdose managed with supportive care (drowsiness).',
+        contraindications:['Severe kidney impairment (dose adjustment needed)','Known hypersensitivity to cetirizine/hydroxyzine'] },
+      hi:{ name:'Cetirizine 10mg', use:'एलर्जी से राहत', doseLine:'1 टैबलेट · दिन में एक बार · कभी भी',
+        adultDose:'1 टैबलेट (10mg) दिन में एक बार',
+        childDose:'2.5–5mg दिन में एक बार (6–12 वर्ष)। बाल रोग विशेषज्ञ से पुष्टि करें।',
+        liquid:'बच्चों के लिए सिरप 5mg/5ml उपलब्ध।',
+        moa:'हिस्टामिन रिसेप्टर्स को रोककर खुजली, छींक और रैश जैसे एलर्जी लक्षण कम करता है।',
+        antidote:'कोई विशेष प्रतिविष नहीं। अधिक मात्रा में सहायक उपचार (नींद आना)।',
+        contraindications:['गंभीर किडनी रोग (खुराक समायोजन आवश्यक)','Cetirizine/hydroxyzine से ज्ञात अतिसंवेदनशीलता'] } }
+  ];
+
+  var scanState = 'idle'; // idle | analyzing | done
+  var scanImageUrl = null;
+  var scanSelected = {};
+
+  function startScan(){
+    scanState = 'idle';
+    scanImageUrl = null;
+    scanSelected = {};
+    SCAN_RESULTS.forEach(function(r){ scanSelected[r.id] = true; });
+    var input = document.getElementById('scanFileInput');
+    if (input) input.value = '';
+    renderScan();
+    go('scan');
+  }
+  window.startScan = startScan;
+
+  function toggleScanSelect(id, val){ scanSelected[id] = val; }
+  window.toggleScanSelect = toggleScanSelect;
+
+  function handleScanFile(file){
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      scanImageUrl = e.target.result;
+      scanState = 'analyzing';
+      renderScan();
+      setTimeout(function(){ scanState = 'done'; renderScan(); }, 1500);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function addScannedMeds(){
+    var added = [];
+    SCAN_RESULTS.forEach(function(r){
+      if (scanSelected[r.id] && !MEDS.some(function(m){ return m.id === r.id; })){
+        MEDS.push(r);
+        added.push(r.id);
+      }
+    });
+    if (added.length){ renderMedList(); renderHome(); }
+    if (added.length === 1) openMed(added[0]);
+    else go('medicines');
+  }
+  window.addScannedMeds = addScannedMeds;
+
+  function renderScan(){
+    var s = T[LANG].scan;
+    var el = document.getElementById('scanBody');
+    if (!el) return;
+    if (scanState === 'idle'){
+      el.innerHTML =
+        '<div class="scan-drop" onclick="document.getElementById(\'scanFileInput\').click()">' +
+          '<span class="ic">📷</span><strong>'+s.dropTitle+'</strong><span class="hint">'+s.dropHint+'</span>' +
+        '</div>' +
+        '<button class="btn primary" type="button" onclick="document.getElementById(\'scanFileInput\').click()">'+s.chooseBtn+'</button>';
+    } else if (scanState === 'analyzing'){
+      el.innerHTML =
+        '<div class="scan-preview">' +
+          (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') +
+          '<div class="spinner"></div>' +
+          '<span class="muted">'+s.analyzing+'</span>' +
+        '</div>';
+    } else if (scanState === 'done'){
+      var itemsHtml = SCAN_RESULTS.map(function(r){
+        var d = r[LANG];
+        var checked = scanSelected[r.id] ? 'checked' : '';
+        return '<label class="scan-check">' +
+          '<input type="checkbox" '+checked+' onchange="toggleScanSelect(\''+r.id+'\', this.checked)">' +
+          '<span class="mid"><span class="mname">'+d.name+'</span><span class="mdose">'+d.doseLine+' · '+d.use+'</span></span>' +
+        '</label>';
+      }).join('');
+      el.innerHTML =
+        '<div class="scan-preview">' + (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') + '</div>' +
+        '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+s.confidence+' 92%</span></div><hr>' +
+        '<p class="muted" style="margin-bottom:6px">'+SCAN_RESULTS.length+s.foundMany+'</p>' +
+        '<div style="display:flex;flex-direction:column;gap:8px">'+itemsHtml+'</div></div>' +
+        '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
+        '<button class="btn ghost" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
+        '<p class="muted" style="text-align:center">'+s.disclaimer+'</p>';
+    }
+  }
+
+  function renderHome(){
+    var t = T[LANG];
+    document.getElementById('h_notifTitle').textContent = t.notifTitle;
+    document.getElementById('markTakenBtn').textContent = t.markTaken;
+    document.getElementById('h_notifNotify').textContent = t.notify;
+    document.getElementById('h_scheduleTitle').innerHTML = t.scheduleTitle;
+    document.getElementById('h_listenLabel').textContent = t.listenLabel;
+    document.getElementById('h_scanBtn').innerHTML = t.scanBtn;
+    document.getElementById('h_safetyTitle').textContent = t.safetyTitle;
+    document.getElementById('testAlarmBtn').textContent = LANG === 'en' ? '🔔 Test a reminder alarm now' : '🔔 अभी अलार्म टेस्ट करें';
+    document.getElementById('rp_title').textContent = LANG === 'en' ? '🔔 Turn on dose reminders' : '🔔 खुराक रिमाइंडर चालू करें';
+    document.getElementById('rp_desc').textContent = LANG === 'en'
+      ? 'Get an alarm and notification when it\'s time for a dose, even while using other apps.'
+      : 'खुराक का समय होने पर अलार्म और सूचना पाएँ, भले ही आप कोई और ऐप इस्तेमाल कर रहे हों।';
+    document.getElementById('rp_enableBtn').textContent = LANG === 'en' ? 'Enable reminders' : 'रिमाइंडर चालू करें';
+    var attention = MEDS.filter(function(m){ return m.status !== 'good'; });
+    var badgeEl = document.getElementById('h_safetyBadge');
+    var descEl = document.getElementById('h_safetyDesc');
+    if (attention.length){
+      badgeEl.className = 'badge warn';
+      badgeEl.textContent = LANG === 'en'
+        ? attention.length + (attention.length === 1 ? ' needs attention' : ' need attention')
+        : attention.length + ' पर ध्यान दें';
+      descEl.textContent = attention.map(function(m){ return m[LANG].attentionNote; }).join(' ');
+    } else {
+      badgeEl.className = 'badge good';
+      badgeEl.textContent = t.badgeGood;
+      descEl.textContent = LANG === 'en' ? 'All current medicines look safe together.' : 'सभी मौजूदा दवाइयाँ साथ में सुरक्षित हैं।';
+    }
+    renderSchedule();
+    updateReminderPermCard();
+  }
+
+  function updateHeader(){
+    var t = T[LANG];
+    var pair = t.screenTitles[currentScreen];
+    document.getElementById('headerTitle').textContent = pair[0];
+    var sub = pair[1];
+    if (currentScreen === 'medicines'){
+      sub = LANG === 'en' ? MEDS.length + ' active' : MEDS.length + ' सक्रिय';
+    }
+    document.getElementById('headerSub').textContent = sub;
+    var header = document.getElementById('appheader');
+    var back = backTarget[currentScreen];
+    if (back){ header.classList.add('has-back'); document.getElementById('backBtn').dataset.target = back; }
+    else { header.classList.remove('has-back'); }
+    var tab = tabOf[currentScreen];
+    document.querySelectorAll('#tabbar button').forEach(function(b){
+      b.setAttribute('aria-current', b.dataset.tab === tab ? 'true' : 'false');
+    });
+  }
+
+  function renderEverything(){
+    renderIntro();
+    document.getElementById('footnote').textContent = T[LANG].footnote;
+    renderHome();
+    renderMedList();
+    if (openMedId) renderMedDetail();
+    renderReportsHub();
+    renderLab();
+    renderAdr();
+    renderIvr();
+    renderCaregiver();
+    renderFuture();
+    renderScan();
+    updateHeader();
+    document.querySelectorAll('[data-lang]').forEach(function(b){
+      b.setAttribute('aria-pressed', b.dataset.lang === LANG ? 'true' : 'false');
+    });
+    document.documentElement.lang = LANG;
+  }
+
+  function setLang(l){
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopSpeakAnim();
+    LANG = l;
+    try { localStorage.setItem('ps_lang', l); } catch(e){}
+    renderEverything();
+  }
+  window.setLang = setLang;
+  document.querySelectorAll('[data-lang]').forEach(function(b){
+    b.addEventListener('click', function(){ setLang(b.dataset.lang); });
+  });
+
+  /* ================= NAV ================= */
+  function go(name){
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopSpeakAnim();
+    screens.forEach(function(s){ document.getElementById('screen-'+s).hidden = (s !== name); });
+    currentScreen = name;
+    updateHeader();
+    document.getElementById('content').scrollTop = 0;
+  }
+  window.go = go;
+
+  document.getElementById('backBtn').addEventListener('click', function(){ go(this.dataset.target || 'home'); });
+  document.querySelectorAll('#tabbar button').forEach(function(b){
+    b.addEventListener('click', function(){ go(b.dataset.tab); });
+  });
+
+  var scanFileInput = document.getElementById('scanFileInput');
+  if (scanFileInput){
+    scanFileInput.addEventListener('change', function(e){
+      handleScanFile(e.target.files && e.target.files[0]);
+    });
+  }
+
+  /* schedule row tap-to-toggle (handy for demoing without waiting for real dose times) */
+  document.getElementById('scheduleList').addEventListener('click', function(e){
+    var row = e.target.closest('.schedule-row');
+    if (!row) return;
+    var id = row.dataset.doseId;
+    if (!id) return;
+    if (isTaken(id)) unmarkTaken(id); else markTaken(id);
+    renderHome();
+  });
+
+  var rpBtn = document.getElementById('rp_enableBtn');
+  if (rpBtn){
+    rpBtn.addEventListener('click', function(){
+      if ('Notification' in window){
+        Notification.requestPermission().then(function(){ updateReminderPermCard(); });
+      }
+    });
+  }
+
+  var testAlarmBtn = document.getElementById('testAlarmBtn');
+  if (testAlarmBtn){
+    testAlarmBtn.addEventListener('click', function(){
+      var upcoming = SCHEDULE.filter(function(d){ return doseState(d) !== 'taken'; })[0] || SCHEDULE[0];
+      triggerAlarm(upcoming);
+    });
+  }
+
+  /* waveform + text-to-speech */
+  function buildWave(el, n){
+    for (var i=0;i<n;i++){ var b = document.createElement('i'); b.style.height = (5+Math.round(Math.random()*17))+'px'; el.appendChild(b); }
+  }
+  buildWave(document.getElementById('homeWave'), 18);
+
+  var speakInterval = null;
+  function stopSpeakAnim(){
+    if (speakInterval){ clearInterval(speakInterval); speakInterval = null; }
+    document.querySelectorAll('#homeWave i').forEach(function(b){ b.style.height = '5px'; });
+  }
+
+  /* pick the warmest-sounding available voice instead of the OS default robotic one */
+  var cachedVoices = [];
+  function loadVoices(){ if ('speechSynthesis' in window) cachedVoices = window.speechSynthesis.getVoices(); }
+  if ('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(lang){
+    var voices = cachedVoices.length ? cachedVoices : (('speechSynthesis' in window) ? window.speechSynthesis.getVoices() : []);
+    var wantHi = lang === 'hi';
+    var matches = voices.filter(function(v){ return wantHi ? /^hi/i.test(v.lang) : /^en/i.test(v.lang); });
+    var natural = matches.filter(function(v){ return /Google|Natural|Neural|Wavenet|Online/i.test(v.name); });
+    return natural[0] || matches[0] || voices[0] || null;
+  }
+  function speakFriendly(text, lang){
+    if (!('speechSynthesis' in window)) return null;
+    var utter = new SpeechSynthesisUtterance(text);
+    utter.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
+    var v = pickVoice(lang);
+    if (v) utter.voice = v;
+    utter.rate = 0.94;   // a touch slower than default — reads as calmer, less clipped
+    utter.pitch = 1.06;  // slightly warmer than the flat default pitch
+    utter.volume = 1;
+    return utter;
+  }
+
+  function buildSpeechText(){
+    var t = T[LANG];
+    var greeting = LANG === 'en' ? 'Namaste Rajesh ji.' : 'नमस्ते राजेश जी।';
+    var attention = MEDS.filter(function(m){ return m.status !== 'good'; });
+    var safetyLine = attention.length
+      ? attention.map(function(m){ return m[LANG].attentionNote; }).join(' ')
+      : (LANG === 'en' ? 'All your current medicines look safe together.' : 'आपकी सभी मौजूदा दवाइयाँ साथ में सुरक्षित हैं।');
+    return greeting + ' ' + t.scheduleTitle + '. ' + t.scheduleBadge + '. ' + t.safetyTitle + '. ' + safetyLine;
+  }
+  document.getElementById('listenBtn').addEventListener('click', function(){
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!('speechSynthesis' in window)){
+      if (!reduced) document.querySelectorAll('#homeWave i').forEach(function(b){ b.style.height = (5+Math.round(Math.random()*17))+'px'; });
+      alert(LANG === 'en' ? 'Voice playback is not supported in this browser.' : 'इस ब्राउज़र में आवाज़ चलाना समर्थित नहीं है।');
+      return;
+    }
+    window.speechSynthesis.cancel();
+    stopSpeakAnim();
+    var utter = speakFriendly(buildSpeechText(), LANG);
+    if (!reduced){
+      speakInterval = setInterval(function(){
+        document.querySelectorAll('#homeWave i').forEach(function(b){ b.style.height = (5+Math.round(Math.random()*17))+'px'; });
+      }, 160);
+    }
+    utter.onend = utter.onerror = stopSpeakAnim;
+    window.speechSynthesis.speak(utter);
+  });
+
+  /* IVR simulation — the call itself is always spoken in Hindi, regardless of UI language */
+  var callLines = [
+    { who:'ai', text:'नमस्ते Rajesh ji. This is PharmaSaathi calling about your Amoxicillin course.' },
+    { who:'ai', text:'Press 1, or say “Haan”, if you have any side effects like rash or stomach upset.' },
+    { who:'ai', text:'Press 2, or say “Nahi”, if you are feeling fine.' },
+    { who:'user', text:'“Nahi” — no side effects reported' },
+    { who:'ai', text:'Thank you. This has been shared with your caregiver and pharmacist. Take care, Rajesh ji.' }
+  ];
+  document.getElementById('callBtn').addEventListener('click', function(){
+    var btn = this;
+    var box = document.getElementById('transcript');
+    box.innerHTML = '';
+    document.getElementById('callStatus').textContent = T[LANG].ivProgress;
+    btn.disabled = true;
+    beep(2);
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    callLines.forEach(function(line, i){
+      var delay = reduced ? 300 : 900 + i*1700;
+      setTimeout(function(){
+        var b = document.createElement('div');
+        b.className = 'bubble ' + line.who;
+        b.textContent = line.text;
+        box.appendChild(b);
+        if (line.who === 'ai'){
+          var u = speakFriendly(line.text.replace(/[""]/g,'"'), 'hi');
+          if (u) window.speechSynthesis.speak(u);
+        }
+        if (i === callLines.length-1){
+          document.getElementById('callStatus').textContent = T[LANG].ivDone;
+          btn.disabled = false;
+          btn.textContent = T[LANG].ivReplay;
+        }
+      }, delay);
+    });
+  });
+
+  renderEverything();
+  go('home');
+})();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
+</script>
