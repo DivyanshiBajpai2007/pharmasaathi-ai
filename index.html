@@ -432,11 +432,20 @@
         <div id="rxList" style="display:flex;flex-direction:column;gap:10px"></div>
         <p class="section-label" id="m_count" style="margin-top:6px">4 active medicines</p>
         <div id="medList" style="display:flex;flex-direction:column;gap:10px"></div>
+        <details id="stoppedMedDetails" style="margin-top:6px" hidden>
+          <summary id="stoppedMedSummary" style="cursor:pointer;font-weight:700;font-size:.82rem;color:var(--text-muted)">Stopped medicines</summary>
+          <div id="stoppedMedList" style="display:flex;flex-direction:column;gap:10px;margin-top:8px"></div>
+        </details>
       </section>
 
       <!-- PRESCRIPTION DETAIL -->
       <section class="screen" id="screen-rx-detail" hidden>
         <div id="rxDetailBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- INCLUDE EXISTING MEDICINES IN SAFETY CHECK? -->
+      <section class="screen" id="screen-merge-check" hidden>
+        <div id="mergeCheckBody" style="display:flex;flex-direction:column;gap:14px"></div>
       </section>
 
       <!-- SAFETY CHECK RESULT -->
@@ -791,8 +800,14 @@
         whyLabel:'Why am I seeing this warning?', whyText:'PharmaSaathi checks your confirmed medicines against a known list of drug pairs, allergy conflicts and duplicate ingredients. A warning means the combination needs a professional look — it does not mean you\'ve done anything wrong.',
         noInteractions:'No interactions detected among your current medicines.',
         viewScheduleBtn:'📅 View my schedule', contactPharmacistBtn:'🩺 Contact pharmacist' },
+      grpMorning:'🌅 Morning', grpAfternoon:'🍽 Afternoon', grpNight:'🌙 Night', fromLabel:'From:',
+      medStopBtn:'Mark as stopped', medReactivateBtn:'Mark as active', medStoppedBadge:'🔴 Stopped', medActiveBadge:'🟢 Active',
+      merge:{ title:'Include your current medicines?', newLabel:'New from this scan:',
+        intro:'You\'re currently taking these medicines from other prescriptions. PharmaSaathi always checks new medicines against everything you take — untick anything that\'s no longer accurate.',
+        noneOther:'You have no other active medicines to cross-check against.', fromPrefix:'From:',
+        continueBtn:'🛡️ Continue to safety check' },
       screenTitles:{ home:['Home','Namaste, Rajesh ji'], medicines:['Medicines','4 active'], 'med-detail':['',''], reports:['Health','Reports · History · Appointments'], lab:['Lab report','Kidney function panel'], adr:['ADR report','Adverse reaction log'], ivr:['IVR check-in','Automated side-effect call'], caregiver:['Care','Caregiver & family support'], future:['Profile','Rewards, help & settings'], scan:['Scan prescription','Point camera or upload a photo'],
-        'rx-detail':['Prescription',''], 'safety-check':['Safety check','Medicine safety review'],
+        'rx-detail':['Prescription',''], 'safety-check':['Safety check','Medicine safety review'], 'merge-check':['Confirm medicines',''],
         diagnostics:['Diagnostic reports','All reports'], 'diag-detail':['',''], doctor:['Book appointment','Choose a doctor'], 'doctor-book':['Choose a slot',''], history:['Medical history','Full timeline'], rewards:['Rewards','Coins & streaks'], settings:['Settings',''], help:['Help & support','FAQs and contact'], privacy:['Privacy policy','How your data is handled'] },
       notifTitle:'Missed dose alert', notifDesc:'Metformin 500mg · 2:00 PM dose not marked taken',
       markTaken:'Mark as taken', notify:'Notify caregiver',
@@ -883,8 +898,14 @@
         whyLabel:'यह चेतावनी क्यों दिख रही है?', whyText:'PharmaSaathi आपकी पुष्टि की गई दवाइयों की तुलना ज्ञात दवा-जोड़ों, एलर्जी टकराव और डुप्लिकेट सामग्री की सूची से करता है। चेतावनी का मतलब है कि इस संयोजन पर विशेषज्ञ की नज़र ज़रूरी है — इसका मतलब यह नहीं कि आपने कुछ गलत किया है।',
         noInteractions:'आपकी मौजूदा दवाइयों के बीच कोई इंटरैक्शन नहीं मिला।',
         viewScheduleBtn:'📅 मेरी समय-सारणी देखें', contactPharmacistBtn:'🩺 फार्मासिस्ट से संपर्क करें' },
+      grpMorning:'🌅 सुबह', grpAfternoon:'🍽 दोपहर', grpNight:'🌙 रात', fromLabel:'स्रोत:',
+      medStopBtn:'बंद के रूप में चिह्नित करें', medReactivateBtn:'सक्रिय के रूप में चिह्नित करें', medStoppedBadge:'🔴 बंद', medActiveBadge:'🟢 सक्रिय',
+      merge:{ title:'क्या आपकी मौजूदा दवाइयाँ शामिल करें?', newLabel:'इस स्कैन से नई:',
+        intro:'आप फ़िलहाल अन्य प्रिस्क्रिप्शन की ये दवाइयाँ ले रहे हैं। PharmaSaathi हमेशा नई दवाइयों की जाँच आपकी सभी मौजूदा दवाइयों के साथ करता है — जो अब सही नहीं है उसे अनचेक करें।',
+        noneOther:'तुलना के लिए आपकी कोई अन्य सक्रिय दवा नहीं है।', fromPrefix:'स्रोत:',
+        continueBtn:'🛡️ सुरक्षा जाँच जारी रखें' },
       screenTitles:{ home:['होम','नमस्ते, राजेश जी'], medicines:['दवाइयाँ','4 सक्रिय'], 'med-detail':['',''], reports:['हेल्थ','रिपोर्ट · हिस्ट्री · अपॉइंटमेंट्स'], lab:['लैब रिपोर्ट','किडनी फंक्शन पैनल'], adr:['ADR रिपोर्ट','प्रतिकूल प्रतिक्रिया लॉग'], ivr:['IVR चेक-इन','स्वचालित साइड-इफ़ेक्ट कॉल'], caregiver:['केयर','देखभाल व पारिवारिक सहयोग'], future:['प्रोफ़ाइल','रिवॉर्ड्स, सहायता व सेटिंग्स'], scan:['प्रिस्क्रिप्शन स्कैन करें','कैमरा या फ़ोटो अपलोड करें'],
-        'rx-detail':['प्रिस्क्रिप्शन',''], 'safety-check':['सुरक्षा जाँच','दवा सुरक्षा समीक्षा'],
+        'rx-detail':['प्रिस्क्रिप्शन',''], 'safety-check':['सुरक्षा जाँच','दवा सुरक्षा समीक्षा'], 'merge-check':['दवाइयों की पुष्टि करें',''],
         diagnostics:['डायग्नोस्टिक रिपोर्ट','सभी रिपोर्ट'], 'diag-detail':['',''], doctor:['अपॉइंटमेंट बुक करें','डॉक्टर चुनें'], 'doctor-book':['स्लॉट चुनें',''], history:['मेडिकल हिस्ट्री','पूरी समयरेखा'], rewards:['रिवॉर्ड्स','कॉइन्स व स्ट्रीक'], settings:['सेटिंग्स',''], help:['सहायता','FAQ और संपर्क'], privacy:['प्राइवेसी पॉलिसी','आपका डेटा कैसे संभाला जाता है'] },
       notifTitle:'छूटी हुई खुराक की चेतावनी', notifDesc:'Metformin 500mg · दोपहर 2:00 बजे की खुराक अभी दर्ज नहीं है',
       markTaken:'ली हुई दर्ज करें', notify:'देखभालकर्ता को सूचित करें',
@@ -971,13 +992,13 @@
   var openMedId = null;
 
   var screens = ['home','medicines','med-detail','reports','lab','adr','ivr','caregiver','future','scan',
-    'diagnostics','diag-detail','doctor','doctor-book','history','rewards','help','privacy','rx-detail','safety-check'];
+    'diagnostics','diag-detail','doctor','doctor-book','history','rewards','help','privacy','rx-detail','safety-check','merge-check'];
   var tabOf = { home:'home', medicines:'medicines', 'med-detail':'medicines', reports:'reports', lab:'reports', adr:'reports', ivr:'caregiver', caregiver:'caregiver', future:'future', scan:'home',
     diagnostics:'reports', 'diag-detail':'reports', doctor:'reports', 'doctor-book':'reports', history:'reports', rewards:'future',
-    'rx-detail':'medicines', 'safety-check':'medicines' };
+    'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines' };
   var backTarget = { 'med-detail':'medicines', lab:'reports', adr:'reports', ivr:'caregiver', scan:'home',
     diagnostics:'reports', 'diag-detail':'diagnostics', doctor:'reports', 'doctor-book':'doctor', history:'reports', rewards:'future',
-    help:'future', privacy:'future', 'rx-detail':'medicines', 'safety-check':'medicines' };
+    help:'future', privacy:'future', 'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines' };
 
   function badgeClass(s){ return s === 'good' ? 'good' : (s === 'risk' ? 'risk' : 'warn'); }
   function badgeLabel(t,s){ return s === 'good' ? t.badgeGood : (s === 'risk' ? t.badgeRisk : t.badgeWarn); }
@@ -997,12 +1018,14 @@
 
   function renderMedList(){
     var t = T[LANG];
+    var active = MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; });
+    var stopped = MEDS.filter(function(m){ return medRxStatus(m) === 'stopped'; });
     document.getElementById('m_count').textContent = LANG === 'en'
-      ? MEDS.length + ' active medicines'
-      : MEDS.length + ' सक्रिय दवाइयाँ';
+      ? active.length + ' active medicines'
+      : active.length + ' सक्रिय दवाइयाँ';
     var el = document.getElementById('medList');
     el.innerHTML = '';
-    MEDS.forEach(function(m){
+    active.forEach(function(m){
       var d = m[LANG];
       var btn = document.createElement('button');
       btn.className = 'medcard'; btn.type = 'button';
@@ -1013,6 +1036,20 @@
       btn.addEventListener('click', function(){ openMed(m.id); });
       el.appendChild(btn);
     });
+    var det = document.getElementById('stoppedMedDetails');
+    var sum = document.getElementById('stoppedMedSummary');
+    var stEl = document.getElementById('stoppedMedList');
+    if (det && stopped.length){
+      det.hidden = false;
+      sum.textContent = (LANG === 'en' ? 'Stopped medicines' : 'बंद की गई दवाइयाँ') + ' (' + stopped.length + ')';
+      stEl.innerHTML = stopped.map(function(m){
+        var d = m[LANG];
+        return '<button class="medcard" type="button" style="opacity:.6" onclick="openMed(\''+m.id+'\')">' +
+          '<span class="pill-ic">⚪</span><span class="mid"><span class="mname">'+d.name+'</span><span class="mdose">'+d.doseLine+'</span></span><span class="chev">›</span></button>';
+      }).join('');
+    } else if (det){
+      det.hidden = true;
+    }
   }
 
   function renderMedDetail(){
@@ -1036,9 +1073,16 @@
           }).join('')
         : '<div class="callout good"><span>✅</span><span>'+t.dNoInteractions+'</span></div>') +
       '</div>';
+    var isStopped = medRxStatus(m) === 'stopped';
+    var rx = prescriptionOf(m.id);
+    var sourceLine = '<p class="muted" style="margin-top:3px">'+t.fromLabel+' '+doctorLabelFor(m.id)+(rx ? ' · '+rx.date : '')+'</p>';
+    var statusHtml = '<div class="row" style="margin-top:8px">' +
+      '<span class="badge '+(isStopped ? 'risk' : 'good')+'">'+(isStopped ? t.medStoppedBadge : t.medActiveBadge)+'</span>' +
+      '<button class="btn '+(isStopped ? 'primary' : 'outline')+' sm" type="button" onclick="setMedStatus(\''+m.id+'\', \''+(isStopped ? 'active' : 'stopped')+'\')">'+(isStopped ? t.medReactivateBtn : t.medStopBtn)+'</button>' +
+      '</div>';
     el.innerHTML =
       '<div class="card"><div class="row"><span class="card-title" style="font-size:1.05rem">'+d.name+'</span><span class="badge '+badgeClass(m.status)+'">'+badgeLabel(t,m.status)+'</span></div>'+
-      '<p class="muted" style="margin-top:3px">'+d.use+'</p></div>' +
+      '<p class="muted" style="margin-top:3px">'+d.use+'</p>' + sourceLine + statusHtml + '</div>' +
       '<div class="detail-block card"><span class="h">'+t.dHeadDose+'</span>' +
       '<table class="dosetable"><tr><td>'+t.dAdult+'</td><td>'+d.adultDose+'</td></tr>' +
       '<tr><td>'+t.dChild+'</td><td>'+d.childDose+'</td></tr>' +
@@ -1064,11 +1108,48 @@
       hi:'Omeprazole पेट के एसिड को कम करता है, जिससे Levothyroxine का अवशोषण घट सकता है — दोनों के बीच कम से कम 4 घंटे का अंतर रखें, Levothyroxine सुबह सबसे पहले लें।' }
   ];
   function getInteractions(id){
-    var activeIds = MEDS.map(function(m){ return m.id; });
+    if (medRxStatus(MEDS.filter(function(m){ return m.id === id; })[0] || {}) === 'stopped') return [];
+    var activeIds = MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; }).map(function(m){ return m.id; });
     return INTERACTIONS.filter(function(x){
       return x.pair.indexOf(id) !== -1 && activeIds.indexOf(x.pair[0]) !== -1 && activeIds.indexOf(x.pair[1]) !== -1;
     });
   }
+
+  /* ================= MEDICATION RECONCILIATION =================
+     Prescriptions stay separate (who prescribed what, when), but every
+     active medicine is combined into one list for daily use and safety
+     checking — this is what lets PharmaSaathi catch a conflict between
+     two different doctors' prescriptions. */
+  function prescriptionOf(medId){
+    return PRESCRIPTIONS.filter(function(rx){ return rx.medIds.indexOf(medId) !== -1; })[0] || null;
+  }
+  function doctorLabelFor(medId){
+    var rx = prescriptionOf(medId);
+    if (!rx) return LANG === 'en' ? 'Self-reported' : 'स्व-रिपोर्टित';
+    return rxDoctorName(rx);
+  }
+  function medRxStatus(m){ return m.rxStatus || 'active'; }
+  function needsAttention(m){ return m.status !== 'good' && medRxStatus(m) !== 'stopped'; }
+  function todayDateLabel(){
+    var d = new Date();
+    return d.getDate() + ' ' + d.toLocaleString('en-US',{month:'short'}) + ' ' + d.getFullYear();
+  }
+  function setMedStatus(id, status){
+    var m = MEDS.filter(function(x){ return x.id === id; })[0];
+    if (!m) return;
+    m.rxStatus = status;
+    if (status === 'stopped'){
+      SCHEDULE = SCHEDULE.filter(function(d){ return d.medId !== id; });
+      HISTORY.unshift({ date: todayDateLabel(),
+        en:'Medicine stopped: '+m.en.name+' — doctor instruction.',
+        hi:'दवा बंद: '+m.hi.name+' — डॉक्टर के निर्देश पर।' });
+    }
+    renderMedList();
+    renderMedDetail();
+    renderHome();
+    renderHistory();
+  }
+  window.setMedStatus = setMedStatus;
 
   /* ================= REMINDERS & ALARMS ================= */
   function todayKey(){
@@ -1096,17 +1177,35 @@
     return SCHEDULE.filter(function(d){ return doseState(d) === 'missed'; })[0] || null;
   }
 
+  function timeGroup(hhmm){
+    var mins = minutesOf(hhmm);
+    if (mins < 12*60) return 'morning';
+    if (mins < 17*60) return 'afternoon';
+    return 'night';
+  }
+
   function renderSchedule(){
     var el = document.getElementById('scheduleList');
     if (!el) return;
-    el.innerHTML = SCHEDULE.map(function(dose){
-      var med = MEDS.filter(function(m){ return m.id === dose.medId; })[0];
-      var name = med ? med[LANG].name : dose.medId;
-      var st = doseState(dose);
-      var cls = st === 'pending' ? 'pending' : (st === 'missed' ? 'missed' : '');
-      return '<div class="schedule-row '+cls+'" data-dose-id="'+dose.id+'">' +
-        '<span class="time num">'+dose.time+'</span><span class="dot"></span><span class="name">'+name+'</span></div>';
-    }).join('');
+    var t = T[LANG];
+    var groups = { morning:[], afternoon:[], night:[] };
+    SCHEDULE.forEach(function(dose){ groups[timeGroup(dose.time)].push(dose); });
+    var labels = { morning:t.grpMorning, afternoon:t.grpAfternoon, night:t.grpNight };
+    var html = '';
+    ['morning','afternoon','night'].forEach(function(g){
+      if (!groups[g].length) return;
+      html += '<p class="section-label" style="margin-top:10px">'+labels[g]+'</p>';
+      groups[g].sort(function(a,b){ return minutesOf(a.time) - minutesOf(b.time); }).forEach(function(dose){
+        var med = MEDS.filter(function(m){ return m.id === dose.medId; })[0];
+        var name = med ? med[LANG].name : dose.medId;
+        var st = doseState(dose);
+        var cls = st === 'pending' ? 'pending' : (st === 'missed' ? 'missed' : '');
+        html += '<div class="schedule-row '+cls+'" data-dose-id="'+dose.id+'" style="align-items:flex-start">' +
+          '<span class="time num" style="padding-top:2px">'+dose.time+'</span><span class="dot" style="margin-top:6px"></span>' +
+          '<span class="name">'+name+'<br><span class="muted" style="font-size:.68rem;font-weight:500">'+t.fromLabel+' '+doctorLabelFor(dose.medId)+'</span></span></div>';
+      });
+    });
+    el.innerHTML = html;
     var takenCount = SCHEDULE.filter(function(d){ return doseState(d) === 'taken'; }).length;
     document.getElementById('h_scheduleBadge').textContent = LANG === 'en'
       ? takenCount+' of '+SCHEDULE.length+' taken'
@@ -1657,20 +1756,63 @@
       }
     });
     if (added.length){
-      var today = new Date();
-      var dateLabel = today.getDate() + ' ' + today.toLocaleString('en-US',{month:'short'}) + ' ' + today.getFullYear();
       PRESCRIPTIONS.unshift({ id:'rx-scan-'+Date.now(), doctorId:null,
         selfLabel:{ en:'Scanned prescription', hi:'स्कैन किया गया प्रिस्क्रिप्शन' },
-        date: dateLabel, medIds: added });
+        date: todayDateLabel(), medIds: added });
       renderMedList();
       renderRxList();
       renderHome();
-      runSafetyCheck(added);
+      openMergeCheck(added);
     } else {
       go('medicines');
     }
   }
   window.addScannedMeds = addScannedMeds;
+
+  /* "you're already taking N other medicines — include them in this safety check?" —
+     the interaction engine always checks everything regardless (that's the safe default);
+     this screen exists purely so the patient can SEE what's being cross-referenced. */
+  var pendingSafetyIds = [];
+  var mergeSelected = {};
+  function openMergeCheck(newIds){
+    pendingSafetyIds = newIds;
+    mergeSelected = {};
+    MEDS.filter(function(m){ return newIds.indexOf(m.id) === -1 && medRxStatus(m) !== 'stopped'; })
+      .forEach(function(m){ mergeSelected[m.id] = true; });
+    renderMergeCheck();
+    go('merge-check');
+  }
+  function toggleMergeSelect(id, val){ mergeSelected[id] = val; }
+  window.toggleMergeSelect = toggleMergeSelect;
+  function confirmMergeAndCheck(){
+    var others = Object.keys(mergeSelected).filter(function(id){ return mergeSelected[id]; });
+    runSafetyCheck(pendingSafetyIds.concat(others));
+  }
+  window.confirmMergeAndCheck = confirmMergeAndCheck;
+
+  function renderMergeCheck(){
+    var t = T[LANG].merge;
+    var el = document.getElementById('mergeCheckBody');
+    if (!el) return;
+    var newMeds = pendingSafetyIds.map(function(id){ return MEDS.filter(function(m){ return m.id === id; })[0]; }).filter(Boolean);
+    var newNames = newMeds.map(function(m){ return m[LANG].name; }).join(', ');
+    var otherIds = Object.keys(mergeSelected);
+    var othersHtml = otherIds.map(function(id){
+      var m = MEDS.filter(function(x){ return x.id === id; })[0];
+      if (!m) return '';
+      var checked = mergeSelected[id] ? 'checked' : '';
+      return '<label class="scan-check">' +
+        '<input type="checkbox" '+checked+' onchange="toggleMergeSelect(\''+id+'\', this.checked)">' +
+        '<span class="mid"><span class="mname">'+m[LANG].name+'</span><span class="mdose">'+t.fromPrefix+' '+doctorLabelFor(id)+'</span></span>' +
+      '</label>';
+    }).join('');
+    el.innerHTML =
+      '<div class="card"><span class="card-title">'+t.title+'</span><p class="muted" style="margin-top:4px">'+t.newLabel+' '+newNames+'</p></div>' +
+      (otherIds.length
+        ? '<p class="muted">'+t.intro+'</p><div style="display:flex;flex-direction:column;gap:8px">'+othersHtml+'</div>'
+        : '<p class="muted">'+t.noneOther+'</p>') +
+      '<button class="btn primary" type="button" onclick="confirmMergeAndCheck()">'+t.continueBtn+'</button>';
+  }
 
   function renderScan(){
     var s = T[LANG].scan;
@@ -1724,7 +1866,7 @@
       ? 'Get an alarm and notification when it\'s time for a dose, even while using other apps.'
       : 'खुराक का समय होने पर अलार्म और सूचना पाएँ, भले ही आप कोई और ऐप इस्तेमाल कर रहे हों।';
     document.getElementById('rp_enableBtn').textContent = LANG === 'en' ? 'Enable reminders' : 'रिमाइंडर चालू करें';
-    var attention = MEDS.filter(function(m){ return m.status !== 'good'; });
+    var attention = MEDS.filter(needsAttention);
     var badgeEl = document.getElementById('h_safetyBadge');
     var descEl = document.getElementById('h_safetyDesc');
     if (attention.length){
@@ -1740,7 +1882,7 @@
     }
     renderSchedule();
     updateReminderPermCard();
-    var attentionActive = MEDS.some(function(m){ return m.status !== 'good'; });
+    var attentionActive = MEDS.some(needsAttention);
     var contactBtn = document.getElementById('h_safetyContactBtn');
     if (attentionActive){
       contactBtn.hidden = false;
@@ -1795,6 +1937,7 @@
     renderRxList();
     if (openRxId) renderRxDetail();
     if (safetyCheckMedIds.length) renderSafetyCheck();
+    if (pendingSafetyIds.length) renderMergeCheck();
     document.getElementById('pc_scanLabel').textContent = T[LANG].pcScanLabel;
     document.getElementById('pc_myRx').textContent = T[LANG].pcMyRx;
     document.getElementById('qa_health').textContent = T[LANG].qaHealth;
@@ -1830,7 +1973,8 @@
     doctor: renderDoctor,
     diagnostics: renderDiagnosticsList,
     history: renderHistory,
-    future: renderFuture
+    future: renderFuture,
+    'merge-check': renderMergeCheck
   };
   function go(name){
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -1923,7 +2067,7 @@
   function buildSpeechText(){
     var t = T[LANG];
     var greeting = LANG === 'en' ? 'Namaste Rajesh ji.' : 'नमस्ते राजेश जी।';
-    var attention = MEDS.filter(function(m){ return m.status !== 'good'; });
+    var attention = MEDS.filter(needsAttention);
     var safetyLine = attention.length
       ? attention.map(function(m){ return m[LANG].attentionNote; }).join(' ')
       : (LANG === 'en' ? 'All your current medicines look safe together.' : 'आपकी सभी मौजूदा दवाइयाँ साथ में सुरक्षित हैं।');
