@@ -1130,6 +1130,17 @@
   }
   function medRxStatus(m){ return m.rxStatus || 'active'; }
   function needsAttention(m){ return m.status !== 'good' && medRxStatus(m) !== 'stopped'; }
+  /* build the "why this needs attention" line fresh each time from the live interaction
+     check, instead of a fixed per-medicine string — so it can't go stale (e.g. after the
+     other interacting medicine gets marked stopped) */
+  function attentionMessageFor(m){
+    var live = getInteractions(m.id);
+    if (live.length) return live.map(function(x){ return x[LANG]; }).join(' ');
+    if (m[LANG].interactionText) return m[LANG].interactionText;
+    return LANG === 'en'
+      ? 'No active interaction right now, but ' + m[LANG].name + ' is flagged for review — see Medicines for details.'
+      : 'फ़िलहाल कोई सक्रिय इंटरैक्शन नहीं, लेकिन ' + m[LANG].name + ' समीक्षा हेतु चिह्नित है — दवाइयाँ देखें।';
+  }
   function todayDateLabel(){
     var d = new Date();
     return d.getDate() + ' ' + d.toLocaleString('en-US',{month:'short'}) + ' ' + d.getFullYear();
@@ -1874,7 +1885,7 @@
       badgeEl.textContent = LANG === 'en'
         ? attention.length + (attention.length === 1 ? ' needs attention' : ' need attention')
         : attention.length + ' पर ध्यान दें';
-      descEl.textContent = attention.map(function(m){ return m[LANG].attentionNote; }).join(' ');
+      descEl.textContent = attention.map(attentionMessageFor).join(' ');
     } else {
       badgeEl.className = 'badge good';
       badgeEl.textContent = t.badgeGood;
@@ -2069,7 +2080,7 @@
     var greeting = LANG === 'en' ? 'Namaste Rajesh ji.' : 'नमस्ते राजेश जी।';
     var attention = MEDS.filter(needsAttention);
     var safetyLine = attention.length
-      ? attention.map(function(m){ return m[LANG].attentionNote; }).join(' ')
+      ? attention.map(attentionMessageFor).join(' ')
       : (LANG === 'en' ? 'All your current medicines look safe together.' : 'आपकी सभी मौजूदा दवाइयाँ साथ में सुरक्षित हैं।');
     return greeting + ' ' + t.scheduleTitle + '. ' + t.scheduleBadge + '. ' + t.safetyTitle + '. ' + safetyLine;
   }
