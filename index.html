@@ -826,10 +826,10 @@
   ];
 
   var FAQ = [
-    { en:{ q:'How accurate is the prescription scan?', a:'This is a working prototype — scanning is simulated for demonstration. A production version would use real OCR trained on Indian prescription formats.' },
-      hi:{ q:'प्रिस्क्रिप्शन स्कैन कितनी सटीक है?', a:'यह एक कार्यशील प्रोटोटाइप है — स्कैनिंग प्रदर्शन हेतु अनुकरणित है। पूर्ण उत्पाद में भारतीय प्रिस्क्रिप्शन प्रारूपों पर प्रशिक्षित वास्तविक OCR का उपयोग होगा।' } },
-    { en:{ q:'Is my data safe?', a:'In this prototype, everything stays on your own device (browser storage) and is never uploaded anywhere. See our Privacy Policy for details.' },
-      hi:{ q:'क्या मेरा डेटा सुरक्षित है?', a:'इस प्रोटोटाइप में सब कुछ आपके डिवाइस (ब्राउज़र स्टोरेज) में ही रहता है और कहीं अपलोड नहीं होता। विवरण हेतु हमारी प्राइवेसी पॉलिसी देखें।' } },
+    { en:{ q:'How accurate is the prescription scan?', a:'The scan reads printed text well and neat handwriting reasonably, but it can misread blurry or messy photos — so you always see what it read and can correct the names before adding. Medicines that are not in our safety database are added as "not safety-checked".' },
+      hi:{ q:'प्रिस्क्रिप्शन स्कैन कितनी सटीक है?', a:'स्कैन छपे हुए अक्षरों को अच्छी तरह और साफ़ लिखावट को ठीक-ठाक पढ़ लेता है, पर धुंधली या उलझी हुई फ़ोटो में गलती हो सकती है — इसलिए जोड़ने से पहले आप पढ़े गए नाम देखकर सुधार सकते हैं। जो दवाइयाँ हमारे सुरक्षा डेटाबेस में नहीं हैं, वे "सुरक्षा जाँच नहीं हुई" के रूप में जुड़ती हैं।' } },
+    { en:{ q:'Is my data safe?', a:'Prescription photos are read on your own device and are never uploaded. If you create an account, your medicines, schedule and reminders are stored securely in your account so they follow you across devices; without an account nothing is saved. See our Privacy Policy for details.' },
+      hi:{ q:'क्या मेरा डेटा सुरक्षित है?', a:'प्रिस्क्रिप्शन की फ़ोटो आपके अपने डिवाइस पर पढ़ी जाती है और कभी अपलोड नहीं होती। खाता बनाने पर आपकी दवाइयाँ, समय-सारणी और रिमाइंडर आपके खाते में सुरक्षित रहते हैं ताकि हर डिवाइस पर मिलें; खाते के बिना कुछ भी सहेजा नहीं जाता। विवरण हेतु प्राइवेसी पॉलिसी देखें।' } },
     { en:{ q:'What happens if I miss a dose?', a:'You get an on-screen alert, an alarm with sound if reminders are enabled, and you can notify your caregiver by SMS with one tap.' },
       hi:{ q:'खुराक छूटने पर क्या होता है?', a:'आपको स्क्रीन पर चेतावनी मिलती है, रिमाइंडर चालू होने पर ध्वनि सहित अलार्म बजता है, और आप एक टैप में SMS द्वारा देखभालकर्ता को सूचित कर सकते हैं।' } },
     { en:{ q:'Can my caregiver see my information?', a:'Yes — the Caregiver tab is designed for a family member to check your schedule, missed doses and ADR reports, and call you directly.' },
@@ -840,9 +840,9 @@
 
   var T = {
     en:{
-      eyebrow:'Interactive Prototype · v2',
+      eyebrow:'Sample data · nothing is saved',
       tagline:'“If you can’t read it, PharmaSaathi speaks.”',
-      desc:'A working mock-up of the medicine-safety app — dosing by age, mechanism &amp; antidote lookups, ADR reporting, missed-dose alerts, an IVR side-effect check-in, and a caregiver view. Tap the tabs inside the phone to explore.',
+      desc:'You are exploring PharmaSaathi with a made-up patient. Nothing you do here is saved — create an account to keep your own medicines and reminders.',
       legend:['Verified','Needs attention','Risk flagged','Future / not in MVP'],
       tabs:['Home','Medicines','Health','Care','Profile'],
       pcScanLabel:'Scan / upload prescription', pcMyRx:'My prescriptions',
@@ -890,14 +890,14 @@
         actionL:'Action taken:', actionV:'Continued under observation; pharmacist notified for confirmation before any change.',
         viaL:'Reported via:', viaV:'Caregiver, through PharmaSaathi app',
         viewBtn:'📄&nbsp; View full report', exportNote:'Exports as a formatted PDF in the live product.',
-        alert:'In the full product this generates a signed PDF for the treating doctor and the national ADR database (PvPI). Export is disabled in this prototype.' },
+        alert:'In the full product this generates a signed PDF for the treating doctor and the national ADR database (PvPI). Export is not available yet.' },
       ivTitle:'PharmaSaathi automated check-in', ivReady:'Ready to simulate call', ivStart:'▶ Start check-in call',
       ivProgress:'Call in progress…', ivDone:'Call complete — logged for caregiver', ivReplay:'↻ Replay check-in call',
       ivDesc:'Built for patients without smartphones or with low literacy — a real automated call in the patient’s language, response logged for the caregiver and pharmacist.',
       cg:{ linked:'Linked patient · You are caregiver', adherence:'Adherence this week',
         missedL:'Missed dose:', missedV:'Metformin 500mg, today 2:00 PM — not yet marked taken.',
         adrL:'ADR flagged:', adrV:'Mild rash reported for Amoxicillin — pharmacist reviewing.',
-        call:'📱&nbsp; Call Rajesh ji', callAlert:'Prototype only — this would place a real call to Rajesh ji.',
+        call:'📱&nbsp; Call Rajesh ji', callAlert:'Calling from the app isn’t available yet — please call Rajesh ji directly.',
         viewMeds:'💊&nbsp; View full medicine list', viewAdr:'📋&nbsp; View ADR report',
         ivrName:'IVR side-effect check-in', ivrSub:'Automated call for low-literacy users' },
       future:{ intro:'Planned after pilot validation — not part of the current MVP.',
@@ -933,18 +933,19 @@
       stPrivName:'Privacy policy', stPrivSub:'How your data is handled',
       help:{ contactTitle:'Contact us', email:'support@pharmasaathi.example', emailLabel:'Email support', callLabel:'Call helpline' },
       priv:{ sections:[
-        ['What this prototype stores','Your dose schedule, taken/not-taken status, coins and streak, and language preference are stored only in your own browser (localStorage). Nothing is uploaded to any server.'],
-        ['What we don\'t collect','No name, phone number, health records or prescription photos leave your device in this prototype. Photos you "scan" are processed only in your browser and never uploaded.'],
-        ['Third-party services','This page loads fonts from Google Fonts and may use your browser\'s built-in voice engine for speech — no PharmaSaathi account or server is involved.'],
-        ['Not medical advice','All clinical content (dosing, interactions, antidotes) is simplified for demonstration and must not be used for real medical decisions.'],
-        ['Contact','Questions about this prototype: support@pharmasaathi.example']
-      ], updated:'Last updated: September 2026 · This is a prototype policy for demonstration purposes.' },
-      footnote:'Sample patient, medicines and reports shown are illustrative for this prototype. Clinical content (dosing, MOA, antidotes, contraindications) is simplified for demonstration and is not medical advice.'
+        ['What we store','If you create an account: your email, the medicines and prescriptions you add, your dose schedule and taken/missed history, appointments, side-effect reports, coins and streak, and an optional caregiver contact. This is kept in a secured database and is visible only to you. If you just browse the sample data, nothing is saved.'],
+        ['Prescription photos','Photos you scan are read on your own device and are never uploaded. Only the medicine names you confirm are saved.'],
+        ['Third-party services','The app uses Supabase for sign-in and storage, loads fonts from Google Fonts and its text-reading engine from a public CDN, and may use your browser’s built-in voice engine for speech. Your data is not sold or used for advertising.'],
+        ['Deleting your data','You can delete all your stored data from the Profile tab at any time. "Clear app data on this device" also removes everything saved in this browser.'],
+        ['Not medical advice','The safety checks cover only a limited set of medicines and are informational. They do not replace your doctor or pharmacist — always confirm with them before changing any medicine.'],
+        ['Contact','Questions about privacy: support@pharmasaathi.example']
+      ], updated:'Last updated: September 2026 · Draft policy — to be reviewed by legal counsel before public launch.' },
+      footnote:'Sample patient, medicines and reports shown are illustrative sample data. Clinical content (dosing, MOA, antidotes, contraindications) is simplified and is not medical advice.'
     },
     hi:{
-      eyebrow:'इंटरैक्टिव प्रोटोटाइप · v2',
+      eyebrow:'नमूना डेटा · कुछ सहेजा नहीं जाता',
       tagline:'“अगर आप इसे पढ़ नहीं पा रहे, तो PharmaSaathi बोलकर बताएगा।”',
-      desc:'दवा-सुरक्षा ऐप का एक कार्यशील मॉक-अप — आयु अनुसार खुराक, क्रियाविधि व प्रतिविष जानकारी, ADR रिपोर्टिंग, छूटी खुराक की चेतावनी, IVR साइड-इफ़ेक्ट चेक-इन, और देखभालकर्ता व्यू। नीचे फ़ोन के टैब दबाकर देखें।',
+      desc:'आप एक काल्पनिक मरीज़ के साथ PharmaSaathi देख रहे हैं। यहाँ कुछ भी सहेजा नहीं जाता — अपनी दवाइयाँ और रिमाइंडर रखने के लिए खाता बनाएँ।',
       legend:['सत्यापित','ध्यान दें','जोखिम चिह्नित','भविष्य / MVP में नहीं'],
       tabs:['होम','दवाइयाँ','हेल्थ','केयर','प्रोफ़ाइल'],
       pcScanLabel:'प्रिस्क्रिप्शन स्कैन/अपलोड करें', pcMyRx:'मेरे प्रिस्क्रिप्शन',
@@ -992,14 +993,14 @@
         actionL:'की गई कार्रवाई:', actionV:'निगरानी में जारी रखा गया; किसी भी बदलाव से पहले पुष्टि हेतु फार्मासिस्ट को सूचित किया गया।',
         viaL:'के माध्यम से रिपोर्ट की गई:', viaV:'देखभालकर्ता, PharmaSaathi ऐप के ज़रिए',
         viewBtn:'📄&nbsp; पूरी रिपोर्ट देखें', exportNote:'लाइव उत्पाद में यह व्यवस्थित PDF के रूप में एक्सपोर्ट होता है।',
-        alert:'पूर्ण उत्पाद में यह इलाज करने वाले डॉक्टर और राष्ट्रीय ADR डेटाबेस (PvPI) के लिए हस्ताक्षरित PDF तैयार करता है। इस प्रोटोटाइप में एक्सपोर्ट अक्षम है।' },
+        alert:'पूर्ण उत्पाद में यह इलाज करने वाले डॉक्टर और राष्ट्रीय ADR डेटाबेस (PvPI) के लिए हस्ताक्षरित PDF तैयार करता है। अभी एक्सपोर्ट उपलब्ध नहीं है।' },
       ivTitle:'PharmaSaathi स्वचालित चेक-इन', ivReady:'कॉल सिम्युलेट करने के लिए तैयार', ivStart:'▶ चेक-इन कॉल शुरू करें',
       ivProgress:'कॉल जारी है…', ivDone:'कॉल पूर्ण — देखभालकर्ता के लिए दर्ज', ivReplay:'↻ फिर से चलाएँ',
       ivDesc:'उन मरीज़ों के लिए जिनके पास स्मार्टफ़ोन नहीं है या जिनकी साक्षरता कम है — मरीज़ की भाषा में असली स्वचालित कॉल, जवाब देखभालकर्ता और फार्मासिस्ट के लिए दर्ज होता है।',
       cg:{ linked:'जुड़ा हुआ मरीज़ · आप देखभालकर्ता हैं', adherence:'इस सप्ताह की नियमितता',
         missedL:'छूटी खुराक:', missedV:'Metformin 500mg, आज दोपहर 2:00 बजे — अभी तक ली हुई दर्ज नहीं।',
         adrL:'ADR चिह्नित:', adrV:'Amoxicillin के लिए हल्का रैश दर्ज — फार्मासिस्ट समीक्षा कर रहे हैं।',
-        call:'📱&nbsp; राजेश जी को कॉल करें', callAlert:'केवल प्रोटोटाइप — असली ऐप में यह राजेश जी को वास्तविक कॉल करेगा।',
+        call:'📱&nbsp; राजेश जी को कॉल करें', callAlert:'ऐप से कॉल अभी उपलब्ध नहीं है — कृपया राजेश जी को सीधे कॉल करें।',
         viewMeds:'💊&nbsp; पूरी दवा सूची देखें', viewAdr:'📋&nbsp; ADR रिपोर्ट देखें',
         ivrName:'IVR साइड-इफ़ेक्ट चेक-इन', ivrSub:'कम साक्षरता वाले उपयोगकर्ताओं हेतु स्वचालित कॉल' },
       future:{ intro:'पायलट सत्यापन के बाद योजनाबद्ध — यह वर्तमान MVP का हिस्सा नहीं है।',
@@ -1035,12 +1036,13 @@
       stPrivName:'प्राइवेसी पॉलिसी', stPrivSub:'आपका डेटा कैसे संभाला जाता है',
       help:{ contactTitle:'हमसे संपर्क करें', email:'support@pharmasaathi.example', emailLabel:'ईमेल सहायता', callLabel:'हेल्पलाइन कॉल करें' },
       priv:{ sections:[
-        ['यह प्रोटोटाइप क्या संग्रहीत करता है','आपकी खुराक समय-सारणी, ली/नहीं ली स्थिति, कॉइन्स व स्ट्रीक, और भाषा वरीयता केवल आपके ब्राउज़र (localStorage) में संग्रहीत होती है। कुछ भी किसी सर्वर पर अपलोड नहीं होता।'],
-        ['हम क्या एकत्र नहीं करते','इस प्रोटोटाइप में कोई नाम, फ़ोन नंबर, स्वास्थ्य रिकॉर्ड या प्रिस्क्रिप्शन फ़ोटो आपके डिवाइस से बाहर नहीं जाती। आपके "स्कैन" किए गए फ़ोटो केवल ब्राउज़र में प्रोसेस होते हैं, कभी अपलोड नहीं होते।'],
-        ['थर्ड-पार्टी सेवाएँ','यह पेज Google Fonts से फ़ॉन्ट लोड करता है और आवाज़ हेतु आपके ब्राउज़र के अंतर्निहित वॉइस इंजन का उपयोग कर सकता है — इसमें कोई PharmaSaathi खाता या सर्वर शामिल नहीं है।'],
-        ['यह चिकित्सीय सलाह नहीं है','सभी नैदानिक जानकारी (खुराक, इंटरैक्शन, प्रतिविष) प्रदर्शन हेतु सरल बनाई गई है और वास्तविक चिकित्सीय निर्णयों हेतु उपयोग न करें।'],
-        ['संपर्क','इस प्रोटोटाइप संबंधी प्रश्न: support@pharmasaathi.example']
-      ], updated:'अंतिम अपडेट: सितंबर 2026 · यह प्रदर्शन हेतु एक प्रोटोटाइप पॉलिसी है।' },
+        ['हम क्या संग्रहीत करते हैं','खाता बनाने पर: आपका ईमेल, आपकी जोड़ी गई दवाइयाँ और प्रिस्क्रिप्शन, खुराक समय-सारणी व ली/छूटी खुराक का इतिहास, अपॉइंटमेंट, साइड-इफ़ेक्ट रिपोर्ट, कॉइन्स व स्ट्रीक, और वैकल्पिक देखभालकर्ता संपर्क। यह सुरक्षित डेटाबेस में रहता है और केवल आपको दिखता है। यदि आप सिर्फ़ नमूना डेटा देखते हैं, तो कुछ भी सहेजा नहीं जाता।'],
+        ['प्रिस्क्रिप्शन फ़ोटो','आपके स्कैन किए फ़ोटो आपके अपने डिवाइस पर पढ़े जाते हैं और कभी अपलोड नहीं होते। केवल वे दवाइयों के नाम सहेजे जाते हैं जिन्हें आप पुष्टि करते हैं।'],
+        ['थर्ड-पार्टी सेवाएँ','ऐप साइन-इन और स्टोरेज हेतु Supabase का उपयोग करता है, Google Fonts से फ़ॉन्ट और सार्वजनिक CDN से टेक्स्ट-रीडिंग इंजन लोड करता है, और आवाज़ हेतु आपके ब्राउज़र का वॉइस इंजन उपयोग कर सकता है। आपका डेटा बेचा या विज्ञापन हेतु उपयोग नहीं किया जाता।'],
+        ['अपना डेटा हटाना','आप प्रोफ़ाइल टैब से कभी भी अपना सारा संग्रहीत डेटा हटा सकते हैं। "इस डिवाइस का ऐप डेटा साफ़ करें" इस ब्राउज़र में सहेजा सब कुछ भी हटा देता है।'],
+        ['यह चिकित्सीय सलाह नहीं है','सुरक्षा जाँच केवल सीमित दवाइयों को कवर करती है और केवल जानकारी हेतु है। यह आपके डॉक्टर या फार्मासिस्ट का विकल्प नहीं है — कोई भी दवा बदलने से पहले उनसे पुष्टि करें।'],
+        ['संपर्क','गोपनीयता संबंधी प्रश्न: support@pharmasaathi.example']
+      ], updated:'अंतिम अपडेट: सितंबर 2026 · मसौदा पॉलिसी — सार्वजनिक लॉन्च से पहले कानूनी समीक्षा आवश्यक।' },
       footnote:'दिखाए गए मरीज़, दवाइयाँ और रिपोर्ट केवल उदाहरण हेतु हैं। नैदानिक जानकारी (खुराक, MOA, प्रतिविष, निषेध) प्रदर्शन हेतु सरल बनाई गई है और यह चिकित्सीय सलाह नहीं है।'
     }
   };
@@ -1141,7 +1143,8 @@
       '</div>';
     var isStopped = medRxStatus(m) === 'stopped';
     var rx = prescriptionOf(m.id);
-    var sourceLine = '<p class="muted" style="margin-top:3px">'+t.fromLabel+' '+doctorLabelFor(m.id)+(rx ? ' · '+rx.date : '')+'</p>';
+    var sourceLine = '<p class="muted" style="margin-top:3px">'+t.fromLabel+' '+doctorLabelFor(m.id)+(rx ? ' · '+rx.date : '')+'</p>' +
+      (m.doseNote ? '<p class="muted" style="margin-top:3px">'+X().onPaper+' '+esc(m.doseNote)+'</p>' : '');
     var statusHtml = '<div class="row" style="margin-top:8px">' +
       '<span class="badge '+(isStopped ? 'risk' : 'good')+'">'+(isStopped ? t.medStoppedBadge : t.medActiveBadge)+'</span>' +
       '<button class="btn '+(isStopped ? 'primary' : 'outline')+' sm" type="button" onclick="setMedStatus(\''+m.id+'\', \''+(isStopped ? 'active' : 'stopped')+'\')">'+(isStopped ? t.medReactivateBtn : t.medStopBtn)+'</button>' +
@@ -1980,7 +1983,7 @@
     cetirizine: ['cetirizine','cetzine','alerid','zyrtec']
   };
   function fullCatalog(){
-    if (isAccount()) return CATALOG;      // account mode: the shared catalog table
+    if (isAccount()) return CATALOG;
     var seen = {}, list = [];
     MEDS.concat(SCAN_RESULTS).forEach(function(m){
       if (!m.custom && !seen[m.id]){ seen[m.id] = true; list.push(m); }
@@ -1988,42 +1991,236 @@
     return list;
   }
   function catalogMed(id){ return fullCatalog().filter(function(m){ return m.id === id; })[0]; }
-  /* whole-word style match so short aliases like "mox" or "dolo" don't fire inside
-     unrelated words (digits may follow: "Dolo650") */
-  function aliasInText(text, alias){
-    var esc = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp('(^|[^a-z])' + esc + (alias.length <= 4 ? '($|[^a-z])' : ''), 'i').test(text);
-  }
-  /* real OCR text is noisy — score each candidate so obvious matches (generic
-     name or an exact brand alias) rank above weaker hits */
-  function matchMedicinesFromText(rawText){
-    var text = (rawText || '').toLowerCase();
-    var matches = [];
-    fullCatalog().forEach(function(m){
-      var aliases = MED_ALIASES[m.id] || [m.id];
-      var best = null;
-      aliases.forEach(function(a){
-        if (aliasInText(text, a) && (!best || a.length > best.length)) best = a;
-      });
-      if (best){
-        matches.push({ med:m, matchedOn:best, confidence: best === m.id || best === m.en.name.split(' ')[0].toLowerCase() ? 'high' : 'medium' });
+
+  /* ================= PRESCRIPTION TEXT UNDERSTANDING =================
+     OCR output is noisy (Metf0rmin, Glycomet650, "Tab. Dolo 650 1-0-1 x 5 days"),
+     so instead of exact matching we (1) tolerate a few misread letters, (2) recognise
+     hundreds of common drug names, and (3) pull dose / timing out of Indian
+     prescription shorthand (OD, BD, TDS, 1-0-1 …). Whatever is found is only ever a
+     SUGGESTION the patient can edit before anything is saved. */
+  function editDistance(a, b, max){
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    var prev = [], cur, i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++){
+      cur = [i];
+      var rowMin = i;
+      for (j = 1; j <= b.length; j++){
+        cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a.charAt(i-1) === b.charAt(j-1) ? 0 : 1));
+        if (cur[j] < rowMin) rowMin = cur[j];
       }
+      if (rowMin > max) return max + 1;
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+  /* short names must match exactly (a 1-letter slip in "tab" vs "rab" is a different word) */
+  function allowedErrors(termLen){ return termLen >= 10 ? 2 : (termLen >= 7 ? 1 : 0); }
+  function tokensOf(text){
+    var out = [];
+    (String(text).toLowerCase().match(/[a-z0-9]{3,}/g) || []).forEach(function(t){
+      var core = t.replace(/^[0-9]+/, '').replace(/[0-9]+$/, '');            // Dolo650 -> dolo
+      if (core.length < 3) return;
+      out.push(core.replace(/0/g, 'o').replace(/1/g, 'l').replace(/5/g, 's')); // OCR look-alikes
+    });
+    return out;
+  }
+  function bestTermHit(tokens, terms){
+    var best = null;
+    tokens.forEach(function(tok){
+      terms.forEach(function(term){
+        var max = allowedErrors(term.length);
+        if (Math.abs(tok.length - term.length) > max) return;
+        var d = editDistance(tok, term, max);
+        if (d <= max && (!best || d < best.dist || (d === best.dist && term.length > best.term.length))) best = { term:term, dist:d };
+      });
+    });
+    return best;
+  }
+  function catalogTerms(m){
+    var terms = (MED_ALIASES[m.id] || [m.id]).concat([String(m.en.name).split(' ')[0].toLowerCase()]);
+    return terms.filter(function(t, i){ return t.length >= 3 && terms.indexOf(t) === i; });
+  }
+  function catalogHit(tokens){
+    var best = null;
+    fullCatalog().forEach(function(m){
+      var h = bestTermHit(tokens, catalogTerms(m));
+      if (h && (!best || h.dist < best.dist || (h.dist === best.dist && h.term.length > best.term.length))) best = { med:m, term:h.term, dist:h.dist };
+    });
+    return best;
+  }
+  /* used by manual add, and to re-check a name the patient just corrected */
+  function matchMedicinesFromText(rawText){
+    var tokens = tokensOf(rawText), matches = [];
+    fullCatalog().forEach(function(m){
+      var h = bestTermHit(tokens, catalogTerms(m));
+      if (h) matches.push({ med:m, matchedOn:h.term, confidence: h.dist === 0 ? 'high' : 'medium' });
     });
     return matches;
   }
 
+  /* Names only — used purely to RECOGNISE that a line is a medicine. No clinical
+     content is attached to these; anything not in the safety catalog stays "not checked". */
+  var DRUG_NAMES = ('paracetamol acetaminophen ibuprofen diclofenac aceclofenac nimesulide naproxen tramadol etoricoxib ketorolac mefenamic aspirin piroxicam indomethacin celecoxib ' +
+    'amoxicillin amoxycillin clavulanate ampicillin cloxacillin azithromycin clarithromycin erythromycin cefixime cefpodoxime cefuroxime ceftriaxone cefotaxime cephalexin cefadroxil cefdinir ' +
+    'ciprofloxacin levofloxacin ofloxacin norfloxacin moxifloxacin doxycycline tetracycline minocycline metronidazole ornidazole tinidazole secnidazole clindamycin nitrofurantoin cotrimoxazole trimethoprim linezolid gentamicin amikacin ' +
+    'rifampicin isoniazid pyrazinamide ethambutol fluconazole itraconazole terbinafine clotrimazole ketoconazole acyclovir valacyclovir oseltamivir ivermectin albendazole mebendazole praziquantel hydroxychloroquine chloroquine artemether primaquine ' +
+    'pantoprazole omeprazole esomeprazole rabeprazole lansoprazole ranitidine famotidine domperidone ondansetron metoclopramide loperamide racecadotril lactulose sucralfate dicyclomine drotaverine hyoscine mebeverine ursodeoxycholic simethicone bisacodyl ' +
+    'cetirizine levocetirizine fexofenadine loratadine chlorpheniramine montelukast salbutamol levosalbutamol ipratropium tiotropium budesonide formoterol salmeterol fluticasone theophylline doxofylline ambroxol bromhexine guaifenesin dextromethorphan phenylephrine pseudoephedrine terbutaline acebrophylline ' +
+    'amlodipine atenolol metoprolol bisoprolol carvedilol nebivolol propranolol losartan telmisartan olmesartan valsartan candesartan irbesartan ramipril enalapril lisinopril perindopril hydrochlorothiazide chlorthalidone indapamide furosemide torsemide spironolactone eplerenone ' +
+    'atorvastatin rosuvastatin simvastatin pravastatin fenofibrate ezetimibe clopidogrel prasugrel ticagrelor warfarin acenocoumarol rivaroxaban apixaban dabigatran digoxin isosorbide nitroglycerin ranolazine trimetazidine nifedipine diltiazem verapamil clonidine methyldopa hydralazine cilnidipine ' +
+    'metformin glimepiride gliclazide glipizide glibenclamide sitagliptin vildagliptin teneligliptin linagliptin saxagliptin pioglitazone dapagliflozin empagliflozin canagliflozin voglibose acarbose insulin glargine levothyroxine thyroxine carbimazole methimazole ' +
+    'gabapentin pregabalin amitriptyline nortriptyline escitalopram citalopram sertraline fluoxetine paroxetine venlafaxine duloxetine mirtazapine clonazepam alprazolam lorazepam diazepam zolpidem levetiracetam phenytoin carbamazepine oxcarbazepine valproate lamotrigine topiramate ' +
+    'olanzapine risperidone quetiapine aripiprazole haloperidol lithium donepezil memantine levodopa carbidopa pramipexole ropinirole sumatriptan flunarizine betahistine cinnarizine ' +
+    'prednisolone methylprednisolone dexamethasone hydrocortisone deflazacort betamethasone allopurinol febuxostat colchicine alendronate risedronate raloxifene tamsulosin silodosin finasteride dutasteride sildenafil tadalafil tranexamic methotrexate leflunomide sulfasalazine azathioprine tacrolimus cyclosporine ' +
+    'pyridoxine methylcobalamin cyanocobalamin cholecalciferol calcitriol calcium ferrous ferric magnesium multivitamin vitamin thiamine ascorbic biotin ' +
+    'dolo crocin calpol combiflam brufen voveran zerodol ultracet augmentin azithral taxim monocef cifran ciplox oflox flagyl pantop nexpro omez aciloc zinetac domstal ondem emeset cetzine okacet montair levocet allegra sinarest benadryl asthalin deriphyllin ascoril grilinctus ' +
+    'glycomet glucophage amaryl glimestar januvia galvus jalra volix eltroxin thyronorm telma telmikind amlong stamlo amlodac atorva storvas rosuvas clopilet ecosprin deplatt lasix aldactone shelcal calcirol neurobion becosules limcee folvite evion supradyn zincovit gelusil digene cyclopam meftal dexorange cremaffin duphalac').split(' ');
+
+  var FORM_RE = /^\s*(?:\(?[0-9A-Za-z]{1,2}\s*[\).:\-]?\s*)?(?:tab(?:let)?s?|cap(?:sule)?s?|syp|syr|syrup|susp(?:ension)?|inj(?:ection)?|drops?|oint(?:ment)?|cream|gel|lotion|sachet|powder|neb|spray|inhaler)\b[\.\s:\-]*/i;
+  var HEADER_RE = /\b(?:dr\.?|doctor|clinic|hospital|centre|center|registration|reg\.? ?no|phone|mobile|mob|date|name|age|sex|address|signature|patient|opd|mbbs|diagnosis|advice|follow ?up|review|next visit|weight|pulse)\b/i;
+
+  /* Indian prescription shorthand -> reminder clock times (null when nothing recognisable) */
+  function parseFrequency(s){
+    var t = ' ' + String(s).toLowerCase() + ' ';
+    t = t.replace(/[0-9oil]\s*[-–—]\s*[0-9oil]\s*[-–—]\s*[0-9oil](?:\s*[-–—]\s*[0-9oil])?/g, function(m){ return m.replace(/o/g, '0').replace(/[il]/g, '1'); });
+    if (/[\s.(](?:sos|prn|p\.?r\.?n|as needed|if needed|when required|when needed)[\s.)]/.test(t)) return [];
+    var m = t.match(/(\d)\s*[-–—]\s*(\d)\s*[-–—]\s*(\d)(?:\s*[-–—]\s*(\d))?/);
+    if (m){
+      var slots = [m[1], m[2], m[3]].concat(m[4] !== undefined ? [m[4]] : []);
+      var map = slots.length === 4 ? ['08:00','13:00','18:00','22:00'] : ['08:00','14:00','21:00'];
+      var times = [];
+      slots.forEach(function(d, i){ if (parseInt(d, 10) > 0) times.push(map[i]); });
+      if (times.length) return times;
+    }
+    if (/[\s.]?(?:qid|q\.?i\.?d|qds|four times|4 times|4x)[\s.]/.test(t)) return ['08:00','13:00','18:00','22:00'];
+    if (/[\s.](?:tds|tid|t\.?d\.?s|t\.?i\.?d|thrice|three times|3 times|3x|8 hourly)[\s.]/.test(t)) return ['08:00','14:00','21:00'];
+    if (/[\s.](?:bd|bid|b\.?d|b\.?i\.?d|twice|two times|2 times|2x|12 hourly)[\s.]/.test(t)) return ['08:00','20:00'];
+    if (/[\s.](?:hs|h\.?s|at night|bedtime)[\s.]/.test(t)) return ['22:00'];
+    if (/[\s.](?:od|qd|o\.?d|once|1 time|1x|daily|morning)[\s.]/.test(t)) return ['08:00'];
+    return null;
+  }
+  /* strength like "500 mg"; tolerates OCR look-alikes inside the number (5O0mg, Smg) and a
+     misread unit (5 mI = 5 ml) */
+  function parseDose(s){
+    var str = String(s);
+    var re = /(?:^|[^0-9OoSsIl.])([0-9OoSsIl]{1,5}(?:\.\d+)?)\s?(mg|mcg|µg|ug|g|m[l1iI]|iu|%)(?![a-z])/g, g;
+    while ((g = re.exec(str))){
+      var raw = g[1], num = raw.replace(/[Ss]/g, '5').replace(/[Oo]/g, '0').replace(/[Il]/g, '1');
+      if (!/[0-9]/.test(raw) && raw.length !== 1) continue;        // "Smg" is fine, a random word is not
+      if (!(parseFloat(num) > 0)) continue;
+      var u = g[2].toLowerCase();
+      if (/^m[1i]$/.test(u)) u = 'ml';
+      return num + ' ' + u;
+    }
+    return '';
+  }
+  function parseDuration(s){
+    var m = String(s).toLowerCase().match(/(?:\bx|×|\bfor)\s*(\d{1,3})\s*(days?|d\b|weeks?|wks?|months?)/);
+    if (!m) return '';
+    var u = m[2].charAt(0) === 'd' ? 'days' : (m[2].charAt(0) === 'w' ? 'weeks' : 'months');
+    return m[1] + ' ' + u;
+  }
+  function titleCase(s){
+    if (s !== s.toUpperCase() && s !== s.toLowerCase()) return s;
+    return s.toLowerCase().replace(/\b([a-z])/g, function(c){ return c.toUpperCase(); });
+  }
+  function extractName(line){
+    var s = String(line).replace(/^\s*\(?\d{1,2}\s*[\).:\-]\s*/, '').replace(FORM_RE, '');
+    var cut = s.search(/[\s(][0-9OoSsIl]{1,5}(?:\.\d+)?\s?(?:mg|mcg|µg|ug|g|m[l1iI]|iu|%)(?![a-z])|\b\d\s*[-–—]\s*\d\s*[-–—]\s*\d|[\s.](?:od|bd|bid|tds|tid|qid|hs|sos|prn|once|twice|thrice)(?:[\s.)]|$)|\s[x×]\s*\d/i);
+    if (cut > 0) s = s.slice(0, cut);
+    s = s.replace(/^[A-Za-z]{2,4}\.\s+(?=\S)/, '');
+    var first = s.split(' ')[0], restText = s.slice(first.length).trim();
+    if (restText.length >= 3 && first.length <= 4 && ['tab','cap','syp','syr','inj','tabs','caps'].some(function(f){ return editDistance(first.toLowerCase(), f, 1) <= 1; })) s = restText;                     // "Tap. " / "Tob. " = misread "Tab."
+    s = s.replace(/^\(?\d{1,2}\s*[\).:\-]\s*/, '');
+    s = s.replace(/^[A-Za-z0-9]\s+(?=[A-Za-z]{3,})/, '');                 // stray character from a misread list number
+    s = s.replace(/[^A-Za-z0-9\s\-\.]/g, ' ').replace(/\s+/g, ' ').replace(/^[\s.\-]+|[\s.\-]+$/g, '');
+    s = s.replace(/(\d+(?:\.\d+)?\s?(?:mg|mcg|ml|g|iu))$/i, '').trim();
+    return titleCase(s.slice(0, 40));
+  }
+  function strengthOf(text){
+    var m = String(text).match(/(\d+(?:\.\d+)?)\s?(mg|mcg|µg|ug|g|ml|iu)/i);
+    return m ? (parseFloat(m[1]) + m[2].toLowerCase().replace('µg','mcg').replace('ug','mcg')) : '';
+  }
+  var CONF_RANK = { catalog:5, 'catalog-fuzzy':4, dict:3, form:2, weak:1 };
+
+  function extractCandidates(rawText){
+    var items = [], seen = {};
+    String(rawText || '').split(/\r?\n/).forEach(function(line){
+      line = line.replace(/\s+/g, ' ').trim();
+      if (line.length < 4 || line.length > 140) return;
+      var tokens = tokensOf(line);
+      var cat = catalogHit(tokens), dict = bestTermHit(tokens, DRUG_NAMES);
+      var hasForm = FORM_RE.test(line);
+      var strength = parseDose(line), freq = parseFrequency(line);
+      var numbered = /^\s*\(?\d{1,2}\s*[\).:\-]\s*\S/.test(line);
+      var known = !!(cat || dict || hasForm);
+      if (!(known || (numbered && (strength || freq)) || (strength && freq))) return;
+      if (HEADER_RE.test(line) && !known) return;
+      var name = extractName(line);
+      if (!known && !/[A-Za-z]{4,}/.test(name)) return;
+      if (name.length < 3){
+        if (cat) name = String(cat.med.en.name).split(' ')[0];
+        else if (dict) name = titleCase(dict.term);
+        else return;
+      }
+      if (cat && cat.dist > 0) name = titleCase(cat.term);
+      else if (!cat && dict && dict.dist > 0) name = titleCase(dict.term);
+      var conf = cat ? (cat.dist === 0 ? 'catalog' : 'catalog-fuzzy') : (dict ? 'dict' : (hasForm ? 'form' : 'weak'));
+      var it = { raw:line, name:name, medId:cat ? cat.med.id : null, dose:strength, duration:parseDuration(line),
+                 times:freq, conf:conf, include:conf !== 'weak' };
+      var key = it.medId || (dict ? dict.term : name.toLowerCase());
+      if (seen[key]) return;
+      seen[key] = true;
+      items.push(it);
+    });
+    return items;
+  }
+  /* two OCR passes see slightly different text — keep the better read of each medicine */
+  function lineSimilarity(a, b){
+    var A = a.raw.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 32), B = b.raw.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 32);
+    var m = Math.max(A.length, B.length);
+    return m ? 1 - editDistance(A, B, m) / m : 0;
+  }
+  function mergeCandidates(lists){
+    var out = [], byKey = {};
+    lists.forEach(function(list){
+      list.forEach(function(it){
+        var key = it.medId || it.name.toLowerCase();
+        var ex = byKey[key];
+        if (!ex){ byKey[key] = it; out.push(it); return; }
+        if (CONF_RANK[it.conf] > CONF_RANK[ex.conf]) { ex.conf = it.conf; ex.medId = it.medId || ex.medId; }
+        ['dose','duration'].forEach(function(k){ if (!ex[k]) ex[k] = it[k]; });
+        if (!ex.times) ex.times = it.times;
+      });
+    });
+    var kept = [];
+    out.slice().sort(function(a, b){ return CONF_RANK[b.conf] - CONF_RANK[a.conf]; }).forEach(function(it){
+      var dup = kept.some(function(k){ return lineSimilarity(it, k) >= (it.conf === 'weak' ? 0.5 : 0.75); });
+      if (!dup) kept.push(it);
+    });
+    return out.filter(function(it){ return kept.indexOf(it) !== -1; });
+  }
+  /* database entries are for one specific strength — flag it if the paper says otherwise */
+  function strengthMismatch(it){
+    if (!it.medId || !it.dose) return '';
+    var cm = catalogMed(it.medId);
+    if (!cm) return '';
+    var printed = strengthOf(it.dose), have = strengthOf(cm.en.name);
+    return (printed && have && printed !== have) ? have : '';
+  }
+
+  /* ================= SCAN FLOW ================= */
   var scanState = 'idle'; // idle | analyzing | done | no-match | ocr-failed
   var scanImageUrl = null;
-  var scanSelected = {};
-  var scanMatches = [];
+  var scanItems = [];
   var scanRawText = '';
-  var scanProgressPct = 0;
+  var scanProgressPct = 0, scanStep = 0, scanStepTotal = 0;
 
   function startScan(){
     scanState = 'idle';
     scanImageUrl = null;
-    scanSelected = {};
-    scanMatches = [];
+    scanItems = [];
     scanRawText = '';
     scanProgressPct = 0;
     var input = document.getElementById('scanFileInput');
@@ -2033,8 +2230,19 @@
   }
   window.startScan = startScan;
 
-  function toggleScanSelect(id, val){ scanSelected[id] = val; }
-  window.toggleScanSelect = toggleScanSelect;
+  function scanToggle(i, val){ if (scanItems[i]) scanItems[i].include = !!val; }
+  /* fixing a misread name re-checks it against the safety catalog straight away */
+  function scanEdit(i, val){
+    var it = scanItems[i];
+    if (!it) return;
+    it.name = clean(val);
+    var hit = matchMedicinesFromText(it.name)[0];
+    it.medId = hit ? hit.med.id : null;
+    it.conf = hit ? (hit.confidence === 'high' ? 'catalog' : 'catalog-fuzzy') : (bestTermHit(tokensOf(it.name), DRUG_NAMES) ? 'dict' : 'form');
+    if (it.name) it.include = true;
+    renderScan();
+  }
+  window.scanToggle = scanToggle; window.scanEdit = scanEdit;
 
   function handleScanFile(file){
     if (!file) return;
@@ -2042,73 +2250,160 @@
     reader.onload = function(e){
       scanImageUrl = e.target.result;
       scanState = 'analyzing';
-      scanProgressPct = 0;
+      scanProgressPct = 0; scanStep = 0; scanStepTotal = 0;
       renderScan();
-      downscaleImage(file).then(runOcr);
+      runOcr(file);
     };
     reader.readAsDataURL(file);
   }
 
-  /* phone cameras produce huge photos; shrinking to ~1800px keeps OCR fast and stops
-     low-memory phones from choking, without hurting readability of printed text */
-  function downscaleImage(file){
-    return new Promise(function(resolve){
-      var img = new Image(), url = URL.createObjectURL(file);
-      img.onload = function(){
-        var w = img.naturalWidth, h = img.naturalHeight, s = Math.min(1, 1800 / Math.max(w, h));
-        if (s >= 1){ URL.revokeObjectURL(url); resolve(file); return; }
-        var c = document.createElement('canvas');
-        c.width = Math.round(w * s); c.height = Math.round(h * s);
-        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-        c.toBlob(function(b){ URL.revokeObjectURL(url); resolve(b || file); }, 'image/jpeg', 0.92);
-      };
-      img.onerror = function(){ URL.revokeObjectURL(url); resolve(file); };
-      img.src = url;
+  /* ---- image clean-up: phone photos have shadows, glare and low contrast ---- */
+  function loadImageFile(file){
+    return new Promise(function(resolve, reject){
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function(){ URL.revokeObjectURL(url); resolve(im); };
+      im.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('Could not open this image')); };
+      im.src = url;
     });
   }
+  async function makeOcrVariants(file){
+    var im = await loadImageFile(file);
+    var w = im.naturalWidth, h = im.naturalHeight, longSide = Math.max(w, h);
+    var target = longSide < 1600 ? 2000 : Math.min(longSide, 2000);      // enlarge small photos, cap huge ones
+    var s = target / longSide, cw = Math.round(w * s), ch = Math.round(h * s);
+    var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    var g = c.getContext('2d', { willReadFrequently:true });
+    g.fillStyle = '#fff'; g.fillRect(0, 0, cw, ch);
+    g.drawImage(im, 0, 0, cw, ch);
+    var px = g.getImageData(0, 0, cw, ch).data, n = cw * ch, gray = new Float32Array(n), i, x, y;
+    for (i = 0; i < n; i++) gray[i] = 0.299 * px[i*4] + 0.587 * px[i*4+1] + 0.114 * px[i*4+2];
 
-  /* this is real OCR (Tesseract.js, runs in-browser, no account/API key
-     needed) — not a canned result. Accuracy depends entirely on the photo:
-     it reads clear printed/typed text well, handwriting poorly, same as any
-     OCR engine. The raw text is always shown so nothing is hidden from the
-     patient if the reading is wrong. */
-  function runOcr(file){
-    if (typeof Tesseract === 'undefined'){
-      scanState = 'ocr-failed';
-      renderScan();
-      return;
+    /* 1) flat-field: estimate the lighting (shadow / gradient / glare) with a big local
+          average and divide it out, so the page becomes evenly lit and the ink stays dark */
+    var W1 = cw + 1, integral = new Float64Array(W1 * (ch + 1));
+    for (y = 1; y <= ch; y++){
+      var rowSum = 0;
+      for (x = 1; x <= cw; x++){
+        rowSum += gray[(y-1) * cw + (x-1)];
+        integral[y * W1 + x] = integral[(y-1) * W1 + x] + rowSum;
+      }
     }
-    Tesseract.recognize(file, 'eng', {
-      logger: function(m){
-        if (m.status === 'recognizing text' && typeof m.progress === 'number'){
-          scanProgressPct = Math.round(m.progress * 100);
-          renderScan();
+    var R = Math.max(25, Math.round(cw / 25)), flat = new Float32Array(n);
+    for (y = 0; y < ch; y++){
+      var y0 = Math.max(0, y - R), y1 = Math.min(ch - 1, y + R);
+      for (x = 0; x < cw; x++){
+        var x0 = Math.max(0, x - R), x1 = Math.min(cw - 1, x + R);
+        var area = (x1 - x0 + 1) * (y1 - y0 + 1);
+        var mean = (integral[(y1+1)*W1 + (x1+1)] - integral[y0*W1 + (x1+1)] - integral[(y1+1)*W1 + x0] + integral[y0*W1 + x0]) / area;
+        var val = gray[y * cw + x] / Math.max(mean, 8) * 235;
+        flat[y * cw + x] = val > 255 ? 255 : val;
+      }
+    }
+    /* 2) light 3x3 blur removes sensor noise without smearing 20px+ characters */
+    var tmp = new Float32Array(n), soft = new Uint8ClampedArray(n);
+    for (y = 0; y < ch; y++) for (x = 0; x < cw; x++){
+      var xl = x > 0 ? x - 1 : x, xr = x < cw - 1 ? x + 1 : x;
+      tmp[y*cw + x] = (flat[y*cw + xl] + flat[y*cw + x] + flat[y*cw + xr]) / 3;
+    }
+    for (y = 0; y < ch; y++) for (x = 0; x < cw; x++){
+      var yu = y > 0 ? y - 1 : y, yd = y < ch - 1 ? y + 1 : y;
+      soft[y*cw + x] = (tmp[yu*cw + x] + tmp[y*cw + x] + tmp[yd*cw + x]) / 3;
+    }
+    /* 3) stretch so the darkest ink is black and the page is white */
+    var hist = new Uint32Array(256), acc = 0, lo = 0;
+    for (i = 0; i < n; i++) hist[soft[i]]++;
+    for (i = 0; i < 256; i++){ acc += hist[i]; if (acc >= n * 0.01){ lo = i; break; } }
+    lo = Math.min(lo, 150);
+    var range = 235 - lo, gray8 = new Uint8ClampedArray(n), bin = new Uint8ClampedArray(n);
+    for (i = 0; i < n; i++){
+      var v = (soft[i] - lo) * 255 / Math.max(range, 1);
+      gray8[i] = v < 0 ? 0 : (v > 255 ? 255 : v);
+      bin[i] = soft[i] < 150 ? 0 : 255;                    // hard black/white version for stubborn photos
+    }
+    function toCanvas(buf){
+      var oc = document.createElement('canvas'); oc.width = cw; oc.height = ch;
+      var og = oc.getContext('2d'), od = og.createImageData(cw, ch);
+      for (var k = 0; k < n; k++){ var q = buf[k]; od.data[k*4] = q; od.data[k*4+1] = q; od.data[k*4+2] = q; od.data[k*4+3] = 255; }
+      og.putImageData(od, 0, 0);
+      return oc;
+    }
+    return [ { canvas:toCanvas(gray8), psm:'6' }, { canvas:toCanvas(bin), psm:'6' } ];
+  }
+
+  var ocrWorker = null, ocrProgressCb = null;
+  async function getOcrWorker(){
+    if (!ocrWorker){
+      ocrWorker = await Tesseract.createWorker('eng', 1, {
+        logger:function(m){ if (m.status === 'recognizing text' && typeof m.progress === 'number' && ocrProgressCb) ocrProgressCb(m.progress); }
+      });
+    }
+    return ocrWorker;
+  }
+
+  /* Real OCR (Tesseract.js), entirely in the browser: the photo never leaves the device.
+     It reads clean printed text well; doctors' handwriting is genuinely hard for any OCR,
+     which is why every result is shown as an editable suggestion, with the raw text visible. */
+  async function runOcr(file){
+    if (typeof Tesseract === 'undefined'){ scanState = 'ocr-failed'; renderScan(); return; }
+    try {
+      var variants = await makeOcrVariants(file), texts = [];
+      var worker = await getOcrWorker();
+      scanStepTotal = variants.length;
+      for (var i = 0; i < variants.length; i++){
+        scanStep = i + 1; scanProgressPct = 0; renderScan();
+        ocrProgressCb = function(p){ scanProgressPct = Math.round(p * 100); renderScan(); };
+        await worker.setParameters({ tessedit_pageseg_mode:variants[i].psm, preserve_interword_spaces:'1' });
+        var r = await worker.recognize(variants[i].canvas);
+        texts.push((r && r.data && r.data.text) || '');
+        if (i === 0){                        // first pass already found a clear result -> skip the slower second pass
+          var quick = extractCandidates(texts[0]);
+          var strong = quick.filter(function(x){ return CONF_RANK[x.conf] >= 3; }).length;
+          var shaky = quick.filter(function(x){ return CONF_RANK[x.conf] < 3; }).length;
+          if (strong >= 3 && shaky === 0) break;
         }
       }
-    }).then(function(result){
-      scanRawText = (result && result.data && result.data.text) || '';
-      scanMatches = matchMedicinesFromText(scanRawText);
-      scanSelected = {};
-      scanMatches.forEach(function(x){ scanSelected[x.med.id] = true; });
-      scanState = scanMatches.length ? 'done' : 'no-match';
-      renderScan();
-    }).catch(function(){
+      var found = mergeCandidates(texts.map(extractCandidates));
+      var strongCount = function(list){ return list.filter(function(x){ return CONF_RANK[x.conf] >= 3; }).length; };
+      var degrees = [90, 270, 180];
+      for (var d = 0; d < degrees.length && strongCount(found) < 2; d++){
+        scanStep = variants.length + d + 1; scanStepTotal = variants.length + degrees.length; scanProgressPct = 0; renderScan();
+        var rc = document.createElement('canvas'), src = variants[0].canvas, quarter = degrees[d] !== 180;
+        rc.width = quarter ? src.height : src.width; rc.height = quarter ? src.width : src.height;
+        var rg = rc.getContext('2d');
+        rg.translate(rc.width / 2, rc.height / 2); rg.rotate(degrees[d] * Math.PI / 180); rg.drawImage(src, -src.width / 2, -src.height / 2);
+        var rr = await worker.recognize(rc);
+        var rt = (rr && rr.data && rr.data.text) || '';
+        texts.push(rt);
+        var attempt = mergeCandidates([extractCandidates(rt)]);
+        if (strongCount(attempt) > strongCount(found)) found = attempt;
+      }
+      ocrProgressCb = null;
+      scanRawText = texts.join('\n');
+      scanItems = found;
+      scanState = scanItems.length ? 'done' : 'no-match';
+    } catch(e){
+      console.error(e);
+      ocrWorker = null;
       scanState = 'ocr-failed';
-      renderScan();
-    });
+    }
+    renderScan();
   }
 
   var scanBusy = false;
   async function addScannedMeds(){
     if (scanBusy) return;
-    var items = [];
-    scanMatches.forEach(function(x){
-      var r = x.med;
-      if (scanSelected[r.id] && !MEDS.some(function(m){ return m.id === r.id; })){
-        items.push({ medId:r.id, times:scheduleTimesFor(r.en.doseLine) });
-      }
+    var items = [], skipped = 0;
+    scanItems.forEach(function(it){
+      if (!it.include) return;
+      var name = clean(it.name), medId = it.medId;
+      if (medId && MEDS.some(function(m){ return m.id === medId; })){ skipped++; return; }
+      if (!medId && (!name || MEDS.some(function(m){ return m.custom && m.en.name.toLowerCase() === name.toLowerCase(); }))){ skipped++; return; }
+      var cm = medId ? catalogMed(medId) : null;
+      var times = it.times ? it.times : (cm ? scheduleTimesFor(cm.en.doseLine) : ['08:00']);
+      var note = [it.dose, it.duration ? 'for ' + it.duration : ''].filter(Boolean).join(' · ');
+      items.push({ medId:medId, customName:name, customDose:note, times:times });
     });
-    if (!items.length){ go('medicines'); return; }
+    if (!items.length){ toast(skipped ? X().manual.already : X().scanX.nothing); return; }
     scanBusy = true;
     try {
       var ids = await persistPrescription({ doctorName:'', source:'scanned', items:items });
@@ -2165,65 +2460,60 @@
   }
 
   function renderScan(){
-    var s = T[LANG].scan;
+    var s = T[LANG].scan, sx = X().scanX;
     var el = document.getElementById('scanBody');
     if (!el) return;
+    var preview = scanImageUrl ? '<div class="scan-preview"><img src="'+scanImageUrl+'" alt=""></div>' : '';
+    var rawBlock = scanRawText.trim()
+      ? '<details><summary>'+s.rawTextLabel+'</summary><p style="margin-top:6px;white-space:pre-wrap;font-size:.78rem">'+esc(scanRawText)+'</p></details>'
+      : '';
     if (scanState === 'idle'){
       el.innerHTML =
         '<div class="scan-drop" onclick="document.getElementById(\'scanFileInput\').click()">' +
           '<span class="ic">📷</span><strong>'+s.dropTitle+'</strong><span class="hint">'+s.dropHint+'</span>' +
         '</div>' +
-        '<button class="btn primary" type="button" onclick="document.getElementById(\'scanFileInput\').click()">'+s.chooseBtn+'</button>';
+        '<button class="btn primary" type="button" onclick="document.getElementById(\'scanFileInput\').click()">'+s.chooseBtn+'</button>' +
+        '<div class="card flat" style="background:var(--surface-2)"><span class="card-title">'+sx.tipsTitle+'</span><ul class="muted" style="margin:6px 0 0;padding-left:18px;line-height:1.6">' +
+          sx.tips.map(function(t){ return '<li>'+t+'</li>'; }).join('') + '</ul></div>' +
+        '<button class="link-btn" type="button" onclick="openAddMed()">✍️ '+X().manual.addInstead+'</button>';
     } else if (scanState === 'analyzing'){
-      el.innerHTML =
-        '<div class="scan-preview">' +
-          (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') +
-          '<div class="spinner"></div>' +
-          '<span class="muted">'+s.analyzing+(scanProgressPct ? ' '+scanProgressPct+'%' : '')+'</span>' +
-        '</div>';
+      el.innerHTML = preview +
+        '<div class="scan-preview"><div class="spinner"></div>' +
+        '<span class="muted">'+(scanStepTotal ? sx.pass.replace('{i}', scanStep).replace('{n}', scanStepTotal) : s.analyzing)+(scanProgressPct ? ' '+scanProgressPct+'%' : '')+'</span></div>';
     } else if (scanState === 'ocr-failed'){
-      el.innerHTML =
-        '<div class="scan-preview">' + (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') + '</div>' +
+      el.innerHTML = preview +
         '<div class="callout risk"><span>⚠️</span><span>'+s.ocrFailed+'</span></div>' +
-        '<button class="btn primary" type="button" onclick="startScan()">'+s.retakeBtn+'</button>';
+        '<button class="btn primary" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
+        '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+X().manual.addInstead+'</button>';
     } else if (scanState === 'no-match'){
-      el.innerHTML =
-        '<div class="scan-preview">' + (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') + '</div>' +
-        '<div class="callout warn"><span>🔍</span><span>'+s.noMatch+'</span></div>' +
-        (scanRawText.trim()
-          ? '<details><summary>'+s.rawTextLabel+'</summary><p style="margin-top:6px;white-space:pre-wrap;font-size:.78rem">'+scanRawText.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</p></details>'
-          : '') +
+      el.innerHTML = preview +
+        '<div class="callout warn"><span>🔍</span><span>'+s.noMatch+'</span></div>' + rawBlock +
         '<button class="btn primary" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+X().manual.addInstead+'</button>';
     } else if (scanState === 'done'){
-      var itemsHtml = scanMatches.map(function(x){
-        var r = x.med, d = r[LANG];
-        var already = MEDS.some(function(m){ return m.id === r.id; });
-        if (already){
-          return '<div class="scan-check" style="opacity:.7;cursor:default">' +
-            '<span class="badge good" style="flex:0 0 auto">✓</span>' +
-            '<span class="mid"><span class="mname">'+d.name+'</span><span class="mdose">'+s.alreadyTaking+'</span></span>' +
-          '</div>';
-        }
-        var checked = scanSelected[r.id] ? 'checked' : '';
-        var confBadge = x.confidence === 'high'
-          ? '<span class="badge good" style="flex:0 0 auto">'+s.confHigh+'</span>'
-          : '<span class="badge warn" style="flex:0 0 auto">'+s.confMedium+'</span>';
-        return '<label class="scan-check">' +
-          '<input type="checkbox" '+checked+' onchange="toggleScanSelect(\''+r.id+'\', this.checked)">' +
-          '<span class="mid"><span class="mname">'+d.name+'</span><span class="mdose">'+d.doseLine+' · '+d.use+'</span></span>' +
-          confBadge +
-        '</label>';
+      var rows = scanItems.map(function(it, i){
+        var already = it.medId ? MEDS.some(function(m){ return m.id === it.medId; }) : false;
+        var cm = it.medId ? catalogMed(it.medId) : null;
+        var badge = { catalog:['good', sx.bCatalog], 'catalog-fuzzy':['warn', sx.bFuzzy], dict:['warn', sx.bDict], form:['warn', sx.bForm], weak:['risk', sx.bWeak] }[it.conf];
+        var mm = strengthMismatch(it);
+        var timesTxt = it.times ? (it.times.length ? it.times.join(' · ') : sx.asNeeded) : sx.timesGuess.replace('{t}', (cm ? scheduleTimesFor(cm.en.doseLine) : ['08:00']).join(' · '));
+        var meta = [it.dose, it.duration ? sx.forDur.replace('{d}', it.duration) : ''].filter(Boolean).join(' · ');
+        return '<div class="card" style="padding:12px;'+(already ? 'opacity:.6' : '')+'"><div class="row" style="align-items:flex-start;gap:10px">' +
+          '<input type="checkbox" style="width:20px;height:20px;margin-top:10px;accent-color:var(--accent)" '+(it.include && !already ? 'checked' : '')+(already ? ' disabled' : '')+' onchange="scanToggle('+i+',this.checked)" aria-label="'+esc(it.name)+'">' +
+          '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">' +
+            '<div class="field"><input type="text" maxlength="60" value="'+esc(it.name)+'" onchange="scanEdit('+i+',this.value)" aria-label="'+esc(sx.nameLabel)+'"></div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="badge '+badge[0]+'">'+(already ? s.alreadyTaking : badge[1].replace('{name}', cm ? esc(cm.en.name) : ''))+'</span></div>' +
+            (meta ? '<span class="muted">'+esc(meta)+'</span>' : '') +
+            '<span class="muted">⏰ '+esc(timesTxt)+'</span>' +
+            (mm ? '<div class="callout warn" style="padding:8px 10px"><span>⚠️</span><span>'+sx.mismatch.replace('{a}', esc(it.dose)).replace(/\{b\}/g, esc(mm))+'</span></div>' : '') +
+            '<span class="muted" style="font-size:.7rem">'+sx.readAs+' “'+esc(it.raw)+'”</span>' +
+          '</div></div></div>';
       }).join('');
-      el.innerHTML =
-        '<div class="scan-preview">' + (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') + '</div>' +
-        '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanMatches.length+s.matchesFound+'</span></div><hr>' +
-        '<p class="muted" style="margin-bottom:6px">'+s.verifyWarning+'</p>' +
-        '<div style="display:flex;flex-direction:column;gap:8px">'+itemsHtml+'</div></div>' +
-        (scanRawText.trim()
-          ? '<details><summary>'+s.rawTextLabel+'</summary><p style="margin-top:6px;white-space:pre-wrap;font-size:.78rem">'+scanRawText.replace(/</g,'&lt;')+'</p></details>'
-          : '') +
+      el.innerHTML = preview +
+        '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanItems.length+'</span></div><hr>' +
+        '<p class="muted">'+sx.editHint+'</p></div>' + rows + rawBlock +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
+        '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+sx.addMissing+'</button>' +
         '<button class="btn ghost" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
         '<p class="muted" style="text-align:center">'+s.disclaimer+'</p>';
     }
@@ -2624,6 +2914,7 @@
       checkedCount:'{n} medicine(s) found in the safety database and checked',
       uncheckedHome:"{n} medicine(s) aren't in the safety database and were not checked.",
       startsTomorrow:'starts tomorrow',
+      onPaper:'Your prescription says:',
       empty:{
         meds:'No medicines yet. Scan a prescription or add a medicine to get started.',
         schedule:'Nothing scheduled yet. Scan a prescription or add a medicine to set up reminders.',
@@ -2636,6 +2927,18 @@
       hub:{ labSub:'Coming soon', adrName:'Side effects', adrSub:'{n} reported', docName:'Appointments', docSub:'Keep track of your doctor visits', histSub:'Prescriptions, changes & side effects' },
       subAccount:{ caregiver:'Your caregiver contact', adr:'Report a side effect' },
       times:{ title:'Reminder times', add:'Add', none:'No reminder times set.' },
+      scanX:{
+        tipsTitle:'For the best reading',
+        tips:['Use good light and hold the phone directly above the paper.','Fill the frame with the prescription and keep it flat and in focus.','Printed or typed text reads best — handwriting is often misread, so check every name.'],
+        pass:'Reading your prescription… step {i} of {n}',
+        editHint:'PharmaSaathi read these from your photo. Fix any name that is wrong, untick anything that is not a medicine, then add.',
+        nameLabel:'Medicine name', readAs:'Read as:',
+        bCatalog:'✓ In safety database', bFuzzy:'≈ Looks like {name} — check', bDict:'Name recognised — not safety-checked',
+        bForm:'Please check this name', bWeak:'Unsure — is this a medicine?',
+        timesGuess:'no timing found on the paper — will use {t} (change it later)', forDur:'for {d}',
+        mismatch:'Your paper says {a}, but the database entry is {b} — its dosing information is for {b}.',
+        addMissing:'Add a medicine that was missed', nothing:'Tick at least one medicine to add.', asNeeded:'as needed — no fixed reminders'
+      },
       manual:{
         addLabel:'Add a medicine manually', addInstead:'Add a medicine manually instead', title:'Add a medicine',
         name:'Medicine name', namePh:'e.g. Dolo 650, Metformin', dose:'Strength / instructions (optional)', dosePh:'e.g. 1 tablet after food',
@@ -2667,7 +2970,9 @@
         demoTitle:"You're viewing sample data", demoBody:'Nothing here is saved. Create a free account to keep your own medicines, schedule and reminders on all your devices.',
         demoCta:'Create account / Sign in', del:'Delete my health data',
         delConfirm:'Delete ALL your prescriptions, medicines, schedule history, side-effect reports and appointments? This cannot be undone.',
-        deleted:'Your health data was deleted.'
+        deleted:'Your health data was deleted.',
+        resetDevice:'Clear app data on this device',
+        resetConfirm:'Sign out and clear everything this app stored on this device? Data saved in your account is not deleted.'
       },
       auth:{
         tag:'Understand · Remember · Stay safe',
@@ -2681,7 +2986,7 @@
         needName:'Enter your name.', needEmail:'Enter your email first.', rate:'Too many attempts, or too many emails sent. Please wait a few minutes and try again.',
         generic:'Something went wrong: ', noBackend:"Can't reach the sign-in service. Check your internet connection, or try the sample data.",
         loading:'Loading your health data…', loadFail:"We couldn't load your data.", dbMissing:'The database has not been set up yet (tables are missing).',
-        retry:'Try again', signout:'Sign out',
+        retry:'Try again', signout:'Sign out', dbFix:'Run backend/schema.sql in the Supabase SQL editor, then reload this page.',
         disclaimer:'PharmaSaathi helps you organise and understand your medicines. It is not medical advice — always follow your doctor and pharmacist.'
       },
       privAccount:{ sections:[
@@ -2704,6 +3009,7 @@
       checkedCount:'{n} दवा(एँ) सुरक्षा डेटाबेस में मिलीं और जाँची गईं',
       uncheckedHome:'{n} दवा(एँ) सुरक्षा डेटाबेस में नहीं हैं और उनकी जाँच नहीं हुई।',
       startsTomorrow:'कल से शुरू',
+      onPaper:'आपके प्रिस्क्रिप्शन में लिखा है:',
       empty:{
         meds:'अभी कोई दवा नहीं। शुरू करने के लिए प्रिस्क्रिप्शन स्कैन करें या दवा जोड़ें।',
         schedule:'अभी कुछ निर्धारित नहीं। रिमाइंडर के लिए प्रिस्क्रिप्शन स्कैन करें या दवा जोड़ें।',
@@ -2716,6 +3022,18 @@
       hub:{ labSub:'जल्द आ रहा है', adrName:'साइड इफ़ेक्ट', adrSub:'{n} दर्ज', docName:'अपॉइंटमेंट्स', docSub:'अपने डॉक्टर के दौरे दर्ज रखें', histSub:'प्रिस्क्रिप्शन, बदलाव व साइड इफ़ेक्ट' },
       subAccount:{ caregiver:'आपका देखभालकर्ता संपर्क', adr:'साइड इफ़ेक्ट दर्ज करें' },
       times:{ title:'रिमाइंडर समय', add:'जोड़ें', none:'कोई रिमाइंडर समय नहीं है।' },
+      scanX:{
+        tipsTitle:'बेहतर पढ़ाई के लिए',
+        tips:['अच्छी रोशनी में फ़ोन को कागज़ के ठीक ऊपर पकड़ें।','प्रिस्क्रिप्शन को फ़्रेम में भरें, कागज़ सपाट और फ़ोकस में रखें।','छपा या टाइप किया टेक्स्ट सबसे अच्छा पढ़ा जाता है — हाथ की लिखावट अक्सर गलत पढ़ी जाती है, इसलिए हर नाम जाँचें।'],
+        pass:'आपका प्रिस्क्रिप्शन पढ़ा जा रहा है… चरण {i}/{n}',
+        editHint:'PharmaSaathi ने ये आपकी फ़ोटो से पढ़ा है। जो नाम गलत हो उसे ठीक करें, जो दवा नहीं है उसे अनचेक करें, फिर जोड़ें।',
+        nameLabel:'दवा का नाम', readAs:'ऐसा पढ़ा:',
+        bCatalog:'✓ सुरक्षा डेटाबेस में', bFuzzy:'≈ {name} जैसा लगता है — जाँचें', bDict:'नाम पहचाना — सुरक्षा जाँच नहीं हुई',
+        bForm:'कृपया यह नाम जाँचें', bWeak:'पक्का नहीं — क्या यह दवा है?',
+        timesGuess:'कागज़ पर समय नहीं मिला — {t} रखा जाएगा (बाद में बदलें)', forDur:'{d} के लिए',
+        mismatch:'आपके कागज़ पर {a} है, पर डेटाबेस एंट्री {b} की है — उसकी खुराक जानकारी {b} के लिए है।',
+        addMissing:'छूटी हुई दवा जोड़ें', nothing:'जोड़ने के लिए कम से कम एक दवा चुनें।', asNeeded:'ज़रूरत पड़ने पर — कोई तय रिमाइंडर नहीं'
+      },
       manual:{
         addLabel:'दवा हाथ से जोड़ें', addInstead:'इसके बजाय दवा हाथ से जोड़ें', title:'दवा जोड़ें',
         name:'दवा का नाम', namePh:'जैसे Dolo 650, Metformin', dose:'मात्रा / निर्देश (वैकल्पिक)', dosePh:'जैसे भोजन के बाद 1 टैबलेट',
@@ -2747,7 +3065,9 @@
         demoTitle:'आप नमूना डेटा देख रहे हैं', demoBody:'यहाँ कुछ भी सहेजा नहीं जाता। अपनी दवाइयाँ, समय-सारणी और रिमाइंडर सभी डिवाइस पर रखने के लिए मुफ़्त खाता बनाएँ।',
         demoCta:'खाता बनाएँ / साइन इन करें', del:'मेरा स्वास्थ्य डेटा हटाएँ',
         delConfirm:'आपके सभी प्रिस्क्रिप्शन, दवाइयाँ, समय-सारणी इतिहास, साइड-इफ़ेक्ट रिपोर्ट और अपॉइंटमेंट हटा दें? यह वापस नहीं हो सकता।',
-        deleted:'आपका स्वास्थ्य डेटा हटा दिया गया।'
+        deleted:'आपका स्वास्थ्य डेटा हटा दिया गया।',
+        resetDevice:'इस डिवाइस का ऐप डेटा साफ़ करें',
+        resetConfirm:'साइन आउट करके इस डिवाइस पर ऐप द्वारा सहेजा गया सब कुछ साफ़ करें? आपके खाते में सहेजा डेटा नहीं हटेगा।'
       },
       auth:{
         tag:'समझें · याद रखें · सुरक्षित रहें',
@@ -2761,7 +3081,7 @@
         needName:'अपना नाम लिखें।', needEmail:'पहले अपना ईमेल लिखें।', rate:'बहुत ज़्यादा प्रयास या ईमेल भेजे जा चुके हैं। कुछ मिनट रुककर दोबारा कोशिश करें।',
         generic:'कुछ गड़बड़ हुई: ', noBackend:'साइन-इन सेवा तक पहुँच नहीं हो पा रही। इंटरनेट जाँचें, या नमूना डेटा आज़माएँ।',
         loading:'आपका स्वास्थ्य डेटा लोड हो रहा है…', loadFail:'हम आपका डेटा लोड नहीं कर सके।', dbMissing:'डेटाबेस अभी सेट नहीं हुआ है (टेबल नहीं मिलीं)।',
-        retry:'फिर कोशिश करें', signout:'साइन आउट',
+        retry:'फिर कोशिश करें', signout:'साइन आउट', dbFix:'Supabase SQL एडिटर में backend/schema.sql चलाएँ, फिर यह पेज रीलोड करें।',
         disclaimer:'PharmaSaathi आपको अपनी दवाइयाँ व्यवस्थित करने और समझने में मदद करता है। यह चिकित्सीय सलाह नहीं है — हमेशा अपने डॉक्टर और फार्मासिस्ट की सलाह मानें।'
       },
       privAccount:{ sections:[
@@ -2851,6 +3171,7 @@
         base = customMed(it);
       }
       base.itemId = it.id;
+      if (it.medicine_id && it.custom_dose) base.doseNote = clean(it.custom_dose);
       base.rxStatus = (it.status === 'active' || it.status === 'paused') ? 'active' : 'stopped';
       base.stoppedAt = it.stopped_at || null;
       itemToMed[it.id] = base.id;
@@ -2922,7 +3243,7 @@
         if (isAccount()){
           var ir = await SB.from('prescription_items').insert({
             prescription_id:rxId, patient_id:uid, medicine_id:it.medId || null,
-            custom_name: it.medId ? null : it.customName, custom_dose: it.medId ? null : (it.customDose || null)
+            custom_name: it.medId ? null : it.customName, custom_dose: it.customDose || null
           }).select().single();
           if (ir.error) throw ir.error;
           itemId = ir.data.id;
@@ -2937,7 +3258,7 @@
           schedRows = (it.times || []).map(function(t){ return { id:localId(), time_of_day:t, created_at:new Date().toISOString() }; });
         }
         var med = it.medId ? Object.assign({}, catalogMed(it.medId)) : customMed({ id:itemId, custom_name:it.customName, custom_dose:it.customDose });
-        med.itemId = itemId; med.rxStatus = 'active'; med.stoppedAt = null;
+        med.itemId = itemId; med.rxStatus = 'active'; med.stoppedAt = null; if (it.medId) med.doseNote = clean(it.customDose);
         created.push(med);
         schedRows.forEach(function(s){
           newSched.push({ id:s.id, itemId:itemId, medId:med.id, time:String(s.time_of_day).slice(0,5), active:true, createdAt:s.created_at });
@@ -3204,10 +3525,12 @@
         '<p class="muted">'+a.signedIn+' '+esc(USER && USER.email)+'</p>' +
         '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">' +
         '<button class="btn outline" type="button" onclick="signOut()">'+a.signOut+'</button>' +
-        '<button class="btn danger" type="button" onclick="deleteMyData()">'+a.del+'</button></div></div>';
+        '<button class="btn danger" type="button" onclick="deleteMyData()">'+a.del+'</button>' +
+        '<button class="link-btn" type="button" onclick="resetDevice()">'+a.resetDevice+'</button></div></div>';
     } else {
       el.innerHTML = '<div class="callout warn"><span>ℹ️</span><span><strong>'+a.demoTitle+'</strong><br>'+a.demoBody+'</span></div>' +
-        '<button class="btn primary" type="button" onclick="leaveDemo()">'+a.demoCta+'</button>';
+        '<button class="btn primary" type="button" onclick="leaveDemo()">'+a.demoCta+'</button>' +
+        '<button class="link-btn" type="button" onclick="resetDevice()">'+a.resetDevice+'</button>';
     }
   }
   async function deleteMyData(){
@@ -3225,7 +3548,7 @@
     } catch(e){ dbFail(e); }
   }
   function signOut(){
-    var done = function(){ try { localStorage.removeItem('ps_demo'); } catch(e){} location.reload(); };
+    var done = function(){ clearLocalAppData(); location.reload(); };
     if (SB) SB.auth.signOut().then(done, done); else done();
   }
   function leaveDemo(){ try { localStorage.removeItem('ps_demo'); } catch(e){} location.reload(); }
@@ -3266,7 +3589,7 @@
         '<div style="display:flex;flex-direction:column;align-items:center;gap:2px">' +
         '<button class="link-btn" type="button" onclick="authToggle()">'+(isUp ? a.toSignin : a.toSignup)+'</button>' +
         (isUp ? '' : '<button class="link-btn" type="button" onclick="authForgot()">'+a.forgot+'</button>') + '</div>' +
-        '<button class="btn ghost" type="button" onclick="enterDemo()">'+a.demo+'</button>') +
+        '<button class="btn ghost" type="button" onclick="startDemo()">'+a.demo+'</button>') +
       '<p class="muted" style="text-align:center;font-size:.74rem">'+a.disclaimer+'</p>';
   }
   function authToggle(){
@@ -3380,6 +3703,51 @@
   }
   window.enterDemo = enterDemo;
 
+  /* ---------- local storage hygiene ---------- */
+  var STORAGE_VERSION = '4';
+  function clearLocalAppData(){
+    try {
+      Object.keys(localStorage).forEach(function(k){ if (k.indexOf('ps_') === 0 && k !== 'ps_lang') localStorage.removeItem(k); });
+    } catch(e){}
+  }
+  function clearDemoData(){
+    try {
+      Object.keys(localStorage).forEach(function(k){
+        if (/^ps_(taken_|awarded_|appointments$|coins$|streak$|last_full_day$)/.test(k)) localStorage.removeItem(k);
+      });
+    } catch(e){}
+  }
+  /* one-time wipe of anything left behind by earlier versions of the app */
+  function migrateStorage(){
+    try {
+      if (localStorage.getItem('ps_version') !== STORAGE_VERSION){
+        clearLocalAppData();
+        localStorage.setItem('ps_version', STORAGE_VERSION);
+      }
+    } catch(e){}
+  }
+  function startDemo(){ clearDemoData(); enterDemo(); }
+  async function resetDevice(){
+    if (!window.confirm(X().acct.resetConfirm)) return;
+    try { if (SB && isAccount()) await SB.auth.signOut(); } catch(e){}
+    clearLocalAppData();
+    try { var regs = await navigator.serviceWorker.getRegistrations(); regs.forEach(function(r){ r.unregister(); }); } catch(e){}
+    try { var keys = await caches.keys(); keys.forEach(function(k){ caches.delete(k); }); } catch(e){}
+    location.reload();
+  }
+  window.startDemo = startDemo; window.resetDevice = resetDevice;
+
+  /* show a clear banner when the database tables haven't been created yet */
+  function checkBackendSetup(){
+    if (!SB) return;
+    SB.from('medicine_catalog').select('id').limit(1).then(function(r){
+      if (r.error && r.error.code === 'PGRST205'){
+        setAuthMsg('err', X().auth.dbMissing + ' ' + X().auth.dbFix);
+        if (isAuthOpen() && authMode !== 'recovery') renderAuth();
+      }
+    });
+  }
+
   function initSupabase(){
     try {
       if (window.supabase && window.supabase.createClient){
@@ -3388,7 +3756,9 @@
     } catch(e){ SB = null; }
   }
   function boot(){
+    migrateStorage();
     initSupabase();
+    checkBackendSetup();
     var demoFlag = false;
     try { demoFlag = localStorage.getItem('ps_demo') === '1'; } catch(e){}
     if (!SB){
