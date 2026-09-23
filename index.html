@@ -297,6 +297,33 @@
   .alarm-card .time{ font-family:var(--font-mono); font-size:1.6rem; font-weight:700; color:var(--accent-ink); background:var(--accent-soft); padding:4px 16px; border-radius:10px; }
   .alarm-card .actions{ display:flex; flex-direction:column; gap:8px; width:100%; margin-top:6px; }
 
+  .appheader .iconbtn{ flex:0 0 auto; width:34px; height:34px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--text); font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+  .reward-hero{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:22px 16px; border-radius:20px; background:linear-gradient(160deg,var(--accent-soft),var(--surface-2)); border:1px solid var(--border); text-align:center; }
+  .reward-hero .coins{ font-family:var(--font-mono); font-size:2.1rem; font-weight:700; color:var(--accent-ink); }
+  .reward-hero .streak{ font-size:.85rem; color:var(--text-muted); font-weight:700; }
+  .badge-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .badge-tile{ display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 6px; border-radius:14px; border:1px solid var(--border); background:var(--surface); text-align:center; }
+  .badge-tile.locked{ opacity:.35; }
+  .badge-tile .ic{ font-size:1.4rem; }
+  .badge-tile .lbl{ font-size:.64rem; font-weight:700; }
+
+  .timeline{ display:flex; flex-direction:column; }
+  .tl-item{ display:flex; gap:12px; padding-bottom:16px; position:relative; }
+  .tl-item::before{ content:""; position:absolute; left:5px; top:16px; bottom:0; width:1.4px; background:var(--border); }
+  .tl-item:last-child::before{ display:none; }
+  .tl-dot{ width:11px; height:11px; border-radius:50%; background:var(--accent); flex:0 0 auto; margin-top:3px; }
+  .tl-date{ font-family:var(--font-mono); font-size:.68rem; color:var(--text-muted); font-weight:700; }
+  .tl-text{ font-size:.86rem; margin-top:2px; }
+
+  .slot-btn{ border:1.4px solid var(--border); background:var(--surface); border-radius:12px; padding:10px 8px; font-weight:700; font-size:.82rem; cursor:pointer; text-align:center; }
+  .slot-btn[aria-pressed="true"]{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent-ink); }
+  .slot-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+
+  .faq details{ border:1px solid var(--border); border-radius:14px; padding:12px 14px; background:var(--surface); }
+  .faq summary{ font-weight:700; font-size:.88rem; cursor:pointer; }
+  .faq p{ margin-top:8px; font-size:.84rem; color:var(--text-muted); line-height:1.5; }
+
   .footnote{ max-width:600px; margin:34px auto 0; text-align:center; font-size:.8rem; color:var(--text-muted); line-height:1.6; }
 </style>
 
@@ -334,6 +361,7 @@
         <button type="button" data-lang="en" aria-pressed="true">EN</button>
         <button type="button" data-lang="hi" aria-pressed="false">हि</button>
       </div>
+      <button class="iconbtn" id="settingsBtn" type="button" aria-label="Settings" onclick="go('settings')">⚙️</button>
     </div>
 
     <div class="content" id="content">
@@ -373,6 +401,12 @@
           <span class="muted" style="font-size:.72rem" id="h_listenLabel">Listen</span>
         </div>
 
+        <button class="medcard" type="button" onclick="go('rewards')" id="rewardsCard">
+          <span class="pill-ic">🏆</span>
+          <span class="mid"><span class="mname" id="rw_home_label">Rewards</span><span class="mdose" id="rw_home_sub">0 coins · 0-day streak</span></span>
+          <span class="chev">›</span>
+        </button>
+
         <button class="btn primary" type="button" onclick="startScan()" id="h_scanBtn">📷&nbsp; Scan a new prescription</button>
 
         <div class="card flat" style="background:var(--surface-2)">
@@ -403,9 +437,9 @@
 
       <!-- REPORTS HUB -->
       <section class="screen" id="screen-reports" hidden>
-        <button class="medcard" type="button" onclick="go('lab')">
+        <button class="medcard" type="button" onclick="go('diagnostics')">
           <span class="pill-ic">🧪</span>
-          <span class="mid"><span class="mname" id="r_labName">Lab report &amp; diagnosis</span><span class="mdose" id="r_labSub">Kidney function test · 12 Sep 2026</span></span>
+          <span class="mid"><span class="mname" id="r_labName">Diagnostic reports</span><span class="mdose" id="r_labSub">3 reports on file</span></span>
           <span class="chev">›</span>
         </button>
         <button class="medcard" type="button" onclick="go('adr')">
@@ -416,6 +450,16 @@
         <button class="medcard" type="button" onclick="go('ivr')">
           <span class="pill-ic">📞</span>
           <span class="mid"><span class="mname" id="r_ivrName">IVR side-effect check-in</span><span class="mdose" id="r_ivrSub">Automated call for low-literacy users</span></span>
+          <span class="chev">›</span>
+        </button>
+        <button class="medcard" type="button" onclick="go('doctor')">
+          <span class="pill-ic">👨‍⚕️</span>
+          <span class="mid"><span class="mname" id="r_docName">Book a doctor appointment</span><span class="mdose" id="r_docSub">Endocrinologist, GP &amp; pharmacist slots</span></span>
+          <span class="chev">›</span>
+        </button>
+        <button class="medcard" type="button" onclick="go('history')">
+          <span class="pill-ic">🗂️</span>
+          <span class="mid"><span class="mname" id="r_histName">Medical history</span><span class="mdose" id="r_histSub">Diagnoses, prescriptions &amp; tests timeline</span></span>
           <span class="chev">›</span>
         </button>
       </section>
@@ -450,6 +494,60 @@
       <!-- FUTURE -->
       <section class="screen" id="screen-future" hidden>
         <div id="futureBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- DIAGNOSTIC REPORTS LIST -->
+      <section class="screen" id="screen-diagnostics" hidden>
+        <div id="diagList" style="display:flex;flex-direction:column;gap:10px"></div>
+      </section>
+
+      <!-- DIAGNOSTIC REPORT DETAIL -->
+      <section class="screen" id="screen-diag-detail" hidden>
+        <div id="diagDetail" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- DOCTOR LIST / MY APPOINTMENTS -->
+      <section class="screen" id="screen-doctor" hidden>
+        <div id="doctorBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- DOCTOR SLOT BOOKING -->
+      <section class="screen" id="screen-doctor-book" hidden>
+        <div id="doctorBookBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- MEDICAL HISTORY -->
+      <section class="screen" id="screen-history" hidden>
+        <div id="historyBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- REWARDS -->
+      <section class="screen" id="screen-rewards" hidden>
+        <div id="rewardsBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- SETTINGS HUB -->
+      <section class="screen" id="screen-settings" hidden>
+        <button class="medcard" type="button" onclick="go('help')">
+          <span class="pill-ic">❓</span>
+          <span class="mid"><span class="mname" id="st_helpName">Help &amp; support</span><span class="mdose" id="st_helpSub">FAQs and contact</span></span>
+          <span class="chev">›</span>
+        </button>
+        <button class="medcard" type="button" onclick="go('privacy')">
+          <span class="pill-ic">🔒</span>
+          <span class="mid"><span class="mname" id="st_privName">Privacy policy</span><span class="mdose" id="st_privSub">How your data is handled</span></span>
+          <span class="chev">›</span>
+        </button>
+      </section>
+
+      <!-- HELP & SUPPORT -->
+      <section class="screen" id="screen-help" hidden>
+        <div id="helpBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- PRIVACY POLICY -->
+      <section class="screen" id="screen-privacy" hidden>
+        <div id="privacyBody" style="display:flex;flex-direction:column;gap:14px"></div>
       </section>
 
     </div>
@@ -584,7 +682,7 @@
         attentionNote:'Levothyroxine के साथ समय-अंतराल जाँचना ज़रूरी — दवाइयाँ देखें।' } }
   ];
 
-  var CONTACTS = { patientPhone:'+919876543210', caregiverPhone:'+919812345678' };
+  var CONTACTS = { patientPhone:'+919876543210', caregiverPhone:'+919812345678', supportPhone:'+911800123456' };
 
   var SCHEDULE = [
     { id:'d1', medId:'metformin', time:'08:00' },
@@ -594,6 +692,65 @@
     { id:'d5', medId:'metformin', time:'21:30' }
   ];
 
+  var DIAGNOSTICS = [
+    { id:'hba1c', icon:'🩸',
+      en:{ name:'HbA1c / Blood Sugar Panel', sub:'18 Aug 2026 · Apollo Diagnostics',
+        summary:'Diagnosis summary',
+        rows:[['HbA1c','7.1%'],['Fasting Glucose','128 mg/dL'],['Post-meal Glucose','168 mg/dL'],['Condition','Type 2 diabetes, well controlled']],
+        note:'Blood sugar control has improved slightly since the last panel. Continue current Metformin dose.',
+        linkText:'No dosing changes suggested at this time — recheck in 3 months.' },
+      hi:{ name:'HbA1c / ब्लड शुगर पैनल', sub:'18 अगस्त 2026 · Apollo Diagnostics',
+        summary:'निदान सारांश',
+        rows:[['HbA1c','7.1%'],['फास्टिंग ग्लूकोज़','128 mg/dL'],['भोजन के बाद ग्लूकोज़','168 mg/dL'],['स्थिति','टाइप 2 डायबिटीज़, नियंत्रण में']],
+        note:'पिछले पैनल की तुलना में ब्लड शुगर नियंत्रण थोड़ा बेहतर हुआ है। मौजूदा Metformin खुराक जारी रखें।',
+        linkText:'फ़िलहाल खुराक में बदलाव की सलाह नहीं — 3 महीने बाद दोबारा जाँच करें।' } },
+    { id:'cbc', icon:'🧬',
+      en:{ name:'Complete Blood Count (CBC)', sub:'12 Sep 2026 · Apollo Diagnostics',
+        summary:'Diagnosis summary',
+        rows:[['Hemoglobin','13.2 g/dL'],['WBC Count','7,200 /µL'],['Platelets','2,50,000 /µL'],['Condition','All values within normal range']],
+        note:'No abnormalities detected. No medicine-related action needed.',
+        linkText:'Routine result — no safety flags raised for current medicines.' },
+      hi:{ name:'कम्प्लीट ब्लड काउंट (CBC)', sub:'12 सितंबर 2026 · Apollo Diagnostics',
+        summary:'निदान सारांश',
+        rows:[['हीमोग्लोबिन','13.2 g/dL'],['WBC काउंट','7,200 /µL'],['प्लेटलेट्स','2,50,000 /µL'],['स्थिति','सभी मान सामान्य सीमा में']],
+        note:'कोई असामान्यता नहीं मिली। दवा से जुड़ी कोई कार्रवाई आवश्यक नहीं।',
+        linkText:'नियमित परिणाम — मौजूदा दवाओं के लिए कोई सुरक्षा चेतावनी नहीं।' } }
+  ];
+
+  var DOCTORS = [
+    { id:'iyer', icon:'👨‍⚕️',
+      en:{ name:'Dr. S. Iyer', spec:'Endocrinologist', place:'Apollo Clinic, Sector 12', slots:['10:00 AM','11:30 AM','4:00 PM'] },
+      hi:{ name:'डॉ. एस. अय्यर', spec:'एंडोक्राइनोलॉजिस्ट', place:'Apollo क्लीनिक, सेक्टर 12', slots:['सुबह 10:00','सुबह 11:30','शाम 4:00'] } },
+    { id:'mehta', icon:'🩺',
+      en:{ name:'Dr. R. Mehta', spec:'General Physician', place:'City Health Centre', slots:['9:00 AM','1:00 PM','5:30 PM'] },
+      hi:{ name:'डॉ. आर. मेहता', spec:'जनरल फिज़िशियन', place:'सिटी हेल्थ सेंटर', slots:['सुबह 9:00','दोपहर 1:00','शाम 5:30'] } },
+    { id:'sharma', icon:'💊',
+      en:{ name:'Dr. A. Sharma', spec:'Pharmacist consult', place:'PharmaSaathi Partner Pharmacy', slots:['12:00 PM','3:00 PM'] },
+      hi:{ name:'डॉ. ए. शर्मा', spec:'फार्मासिस्ट परामर्श', place:'PharmaSaathi पार्टनर फार्मेसी', slots:['दोपहर 12:00','दोपहर 3:00'] } }
+  ];
+
+  var HISTORY = [
+    { date:'15 Sep 2026', en:'ADR reported: mild rash linked to Amoxicillin.', hi:'ADR दर्ज: Amoxicillin से जुड़ा हल्का रैश।' },
+    { date:'12 Sep 2026', en:'Diagnostic test: Kidney Function Test (eGFR 42 mL/min).', hi:'डायग्नोस्टिक टेस्ट: किडनी फंक्शन टेस्ट (eGFR 42 mL/min)।' },
+    { date:'20 Aug 2026', en:'Prescription started: Amoxicillin 500mg for a bacterial infection.', hi:'प्रिस्क्रिप्शन शुरू: बैक्टीरियल संक्रमण हेतु Amoxicillin 500mg।' },
+    { date:'18 Aug 2026', en:'Diagnostic test: HbA1c / Blood Sugar panel — 7.1%.', hi:'डायग्नोस्टिक टेस्ट: HbA1c / ब्लड शुगर पैनल — 7.1%।' },
+    { date:'10 Jun 2026', en:'Diagnosis confirmed: Type 2 diabetes — Metformin started.', hi:'निदान पुष्टि: टाइप 2 डायबिटीज़ — Metformin शुरू।' },
+    { date:'02 Nov 2025', en:'Diagnosis confirmed: Hypothyroidism — Levothyroxine started.', hi:'निदान पुष्टि: हाइपोथायरॉइडिज़्म — Levothyroxine शुरू।' }
+  ];
+
+  var FAQ = [
+    { en:{ q:'How accurate is the prescription scan?', a:'This is a working prototype — scanning is simulated for demonstration. A production version would use real OCR trained on Indian prescription formats.' },
+      hi:{ q:'प्रिस्क्रिप्शन स्कैन कितनी सटीक है?', a:'यह एक कार्यशील प्रोटोटाइप है — स्कैनिंग प्रदर्शन हेतु अनुकरणित है। पूर्ण उत्पाद में भारतीय प्रिस्क्रिप्शन प्रारूपों पर प्रशिक्षित वास्तविक OCR का उपयोग होगा।' } },
+    { en:{ q:'Is my data safe?', a:'In this prototype, everything stays on your own device (browser storage) and is never uploaded anywhere. See our Privacy Policy for details.' },
+      hi:{ q:'क्या मेरा डेटा सुरक्षित है?', a:'इस प्रोटोटाइप में सब कुछ आपके डिवाइस (ब्राउज़र स्टोरेज) में ही रहता है और कहीं अपलोड नहीं होता। विवरण हेतु हमारी प्राइवेसी पॉलिसी देखें।' } },
+    { en:{ q:'What happens if I miss a dose?', a:'You get an on-screen alert, an alarm with sound if reminders are enabled, and you can notify your caregiver by SMS with one tap.' },
+      hi:{ q:'खुराक छूटने पर क्या होता है?', a:'आपको स्क्रीन पर चेतावनी मिलती है, रिमाइंडर चालू होने पर ध्वनि सहित अलार्म बजता है, और आप एक टैप में SMS द्वारा देखभालकर्ता को सूचित कर सकते हैं।' } },
+    { en:{ q:'Can my caregiver see my information?', a:'Yes — the Caregiver tab is designed for a family member to check your schedule, missed doses and ADR reports, and call you directly.' },
+      hi:{ q:'क्या मेरा देखभालकर्ता मेरी जानकारी देख सकता है?', a:'हाँ — देखभाल टैब परिवार के किसी सदस्य के लिए है, ताकि वे आपकी समय-सारणी, छूटी खुराक और ADR रिपोर्ट देख सकें और सीधे कॉल कर सकें।' } },
+    { en:{ q:'How do I contact support?', a:'Use the contact details below — we usually respond within a day.' },
+      hi:{ q:'सहायता से कैसे संपर्क करें?', a:'नीचे दिए गए संपर्क विवरण का उपयोग करें — हम आमतौर पर एक दिन में जवाब देते हैं।' } }
+  ];
+
   var T = {
     en:{
       eyebrow:'Interactive Prototype · v2',
@@ -601,7 +758,8 @@
       desc:'A working mock-up of the medicine-safety app — dosing by age, mechanism &amp; antidote lookups, ADR reporting, missed-dose alerts, an IVR side-effect check-in, and a caregiver view. Tap the tabs inside the phone to explore.',
       legend:['Verified','Needs attention','Risk flagged','Future / not in MVP'],
       tabs:['Home','Medicines','Reports','Caregiver','Future'],
-      screenTitles:{ home:['Home','Namaste, Rajesh ji'], medicines:['Medicines','4 active'], 'med-detail':['',''], reports:['Reports','Lab · ADR · Calls'], lab:['Lab report','Kidney function panel'], adr:['ADR report','Adverse reaction log'], ivr:['IVR check-in','Automated side-effect call'], caregiver:['Caregiver view','Rajesh Kumar'], future:['Coming soon','Planned after pilot'], scan:['Scan prescription','Point camera or upload a photo'] },
+      screenTitles:{ home:['Home','Namaste, Rajesh ji'], medicines:['Medicines','4 active'], 'med-detail':['',''], reports:['Reports','Lab · ADR · Calls'], lab:['Lab report','Kidney function panel'], adr:['ADR report','Adverse reaction log'], ivr:['IVR check-in','Automated side-effect call'], caregiver:['Caregiver view','Rajesh Kumar'], future:['Coming soon','Planned after pilot'], scan:['Scan prescription','Point camera or upload a photo'],
+        diagnostics:['Diagnostic reports','All reports'], 'diag-detail':['',''], doctor:['Book appointment','Choose a doctor'], 'doctor-book':['Choose a slot',''], history:['Medical history','Full timeline'], rewards:['Rewards','Coins & streaks'], settings:['Settings',''], help:['Help & support','FAQs and contact'], privacy:['Privacy policy','How your data is handled'] },
       notifTitle:'Missed dose alert', notifDesc:'Metformin 500mg · 2:00 PM dose not marked taken',
       markTaken:'Mark as taken', notify:'Notify caregiver',
       scheduleTitle:'Today’s schedule', scheduleBadge:'4 of 6 taken',
@@ -613,9 +771,11 @@
       dHeadMoa:'🧬 Mechanism of action', dHeadAntidote:'🆘 Antidote / drug of choice',
       dHeadContra:'🚫 Important contraindications', dInteraction:'Dose gap / interaction:',
       dHeadInteractions:'⚠️ Interactions with your other medicines', dNoInteractions:'No interactions flagged with your other current medicines right now.',
-      repLabName:'Lab report &amp; diagnosis', repLabSub:'Kidney function test · 12 Sep 2026',
+      repLabName:'Diagnostic reports', repLabSub:'3 reports on file',
       repAdrName:'ADR report', repAdrSub:'1 adverse reaction logged',
       repIvrName:'IVR side-effect check-in', repIvrSub:'Automated call for low-literacy users',
+      repDocName:'Book a doctor appointment', repDocSub:'Endocrinologist, GP & pharmacist slots',
+      repHistName:'Medical history', repHistSub:'Diagnoses, prescriptions & tests timeline',
       lab:{ uploaded:'Uploaded report', name:'CBC + Kidney Function Test', extracted:'Extracted', meta:'12 Sep 2026 · Apollo Diagnostics',
         summary:'Diagnosis summary', egfrL:'eGFR', egfrV:'42 mL/min (mildly reduced)', hba1cL:'HbA1c', hba1cV:'7.1%',
         condL:'Condition', condV:'Type 2 diabetes, well controlled', revL:'Reviewed by', revV:'Dr. S. Iyer (sample)',
@@ -656,6 +816,23 @@
         retakeBtn:'↻ Scan a different prescription',
         disclaimer:'Prototype only — extraction is simulated, not real OCR.'
       },
+      doc:{ intro:'Book a slot with your doctor or pharmacist. This is a demo booking — no real appointment is created.',
+        myApptsTitle:'My appointments', cancelBtn:'Cancel', slotLabel:'Choose a time slot',
+        bookBtn:'✓ Confirm appointment', confirmedMsg:'Appointment request sent (demo only).' },
+      rw:{ homeLabel:'Rewards', homeSubFmt:'{coins} coins · {streak}-day streak',
+        streakLabel:'{n}-day streak', badgesLabel:'Badges',
+        badge3:'3-day streak', badge7:'7-day streak', badge30:'30-day champion',
+        howTitle:'How you earn coins', howText:'+10 coins every time you mark a dose taken, plus a +50 bonus when every dose for the day is completed on time.' },
+      stHelpName:'Help & support', stHelpSub:'FAQs and contact',
+      stPrivName:'Privacy policy', stPrivSub:'How your data is handled',
+      help:{ contactTitle:'Contact us', email:'support@pharmasaathi.example', emailLabel:'Email support', callLabel:'Call helpline' },
+      priv:{ sections:[
+        ['What this prototype stores','Your dose schedule, taken/not-taken status, coins and streak, and language preference are stored only in your own browser (localStorage). Nothing is uploaded to any server.'],
+        ['What we don\'t collect','No name, phone number, health records or prescription photos leave your device in this prototype. Photos you "scan" are processed only in your browser and never uploaded.'],
+        ['Third-party services','This page loads fonts from Google Fonts and may use your browser\'s built-in voice engine for speech — no PharmaSaathi account or server is involved.'],
+        ['Not medical advice','All clinical content (dosing, interactions, antidotes) is simplified for demonstration and must not be used for real medical decisions.'],
+        ['Contact','Questions about this prototype: support@pharmasaathi.example']
+      ], updated:'Last updated: September 2026 · This is a prototype policy for demonstration purposes.' },
       footnote:'Sample patient, medicines and reports shown are illustrative for this prototype. Clinical content (dosing, MOA, antidotes, contraindications) is simplified for demonstration and is not medical advice.'
     },
     hi:{
@@ -664,7 +841,8 @@
       desc:'दवा-सुरक्षा ऐप का एक कार्यशील मॉक-अप — आयु अनुसार खुराक, क्रियाविधि व प्रतिविष जानकारी, ADR रिपोर्टिंग, छूटी खुराक की चेतावनी, IVR साइड-इफ़ेक्ट चेक-इन, और देखभालकर्ता व्यू। नीचे फ़ोन के टैब दबाकर देखें।',
       legend:['सत्यापित','ध्यान दें','जोखिम चिह्नित','भविष्य / MVP में नहीं'],
       tabs:['होम','दवाइयाँ','रिपोर्ट','देखभाल','भविष्य'],
-      screenTitles:{ home:['होम','नमस्ते, राजेश जी'], medicines:['दवाइयाँ','4 सक्रिय'], 'med-detail':['',''], reports:['रिपोर्ट','लैब · ADR · कॉल'], lab:['लैब रिपोर्ट','किडनी फंक्शन पैनल'], adr:['ADR रिपोर्ट','प्रतिकूल प्रतिक्रिया लॉग'], ivr:['IVR चेक-इन','स्वचालित साइड-इफ़ेक्ट कॉल'], caregiver:['देखभालकर्ता व्यू','राजेश कुमार'], future:['आने वाला','पायलट के बाद योजनाबद्ध'], scan:['प्रिस्क्रिप्शन स्कैन करें','कैमरा या फ़ोटो अपलोड करें'] },
+      screenTitles:{ home:['होम','नमस्ते, राजेश जी'], medicines:['दवाइयाँ','4 सक्रिय'], 'med-detail':['',''], reports:['रिपोर्ट','लैब · ADR · कॉल'], lab:['लैब रिपोर्ट','किडनी फंक्शन पैनल'], adr:['ADR रिपोर्ट','प्रतिकूल प्रतिक्रिया लॉग'], ivr:['IVR चेक-इन','स्वचालित साइड-इफ़ेक्ट कॉल'], caregiver:['देखभालकर्ता व्यू','राजेश कुमार'], future:['आने वाला','पायलट के बाद योजनाबद्ध'], scan:['प्रिस्क्रिप्शन स्कैन करें','कैमरा या फ़ोटो अपलोड करें'],
+        diagnostics:['डायग्नोस्टिक रिपोर्ट','सभी रिपोर्ट'], 'diag-detail':['',''], doctor:['अपॉइंटमेंट बुक करें','डॉक्टर चुनें'], 'doctor-book':['स्लॉट चुनें',''], history:['मेडिकल हिस्ट्री','पूरी समयरेखा'], rewards:['रिवॉर्ड्स','कॉइन्स व स्ट्रीक'], settings:['सेटिंग्स',''], help:['सहायता','FAQ और संपर्क'], privacy:['प्राइवेसी पॉलिसी','आपका डेटा कैसे संभाला जाता है'] },
       notifTitle:'छूटी हुई खुराक की चेतावनी', notifDesc:'Metformin 500mg · दोपहर 2:00 बजे की खुराक अभी दर्ज नहीं है',
       markTaken:'ली हुई दर्ज करें', notify:'देखभालकर्ता को सूचित करें',
       scheduleTitle:'आज की समय-सारणी', scheduleBadge:'6 में से 4 ली गईं',
@@ -676,9 +854,11 @@
       dHeadMoa:'🧬 क्रियाविधि (MOA)', dHeadAntidote:'🆘 प्रतिविष / प्राथमिक उपचार दवा',
       dHeadContra:'🚫 महत्वपूर्ण निषेध', dInteraction:'खुराक अंतराल / इंटरैक्शन:',
       dHeadInteractions:'⚠️ आपकी अन्य दवाइयों के साथ इंटरैक्शन', dNoInteractions:'फ़िलहाल आपकी अन्य दवाइयों के साथ कोई इंटरैक्शन चिह्नित नहीं है।',
-      repLabName:'लैब रिपोर्ट और निदान', repLabSub:'किडनी फंक्शन टेस्ट · 12 सितंबर 2026',
+      repLabName:'डायग्नोस्टिक रिपोर्ट', repLabSub:'3 रिपोर्ट उपलब्ध',
       repAdrName:'ADR रिपोर्ट', repAdrSub:'1 प्रतिकूल प्रतिक्रिया दर्ज',
       repIvrName:'IVR साइड-इफ़ेक्ट चेक-इन', repIvrSub:'कम साक्षरता वाले उपयोगकर्ताओं हेतु स्वचालित कॉल',
+      repDocName:'डॉक्टर अपॉइंटमेंट बुक करें', repDocSub:'एंडोक्राइनोलॉजिस्ट, GP व फार्मासिस्ट स्लॉट',
+      repHistName:'मेडिकल हिस्ट्री', repHistSub:'निदान, प्रिस्क्रिप्शन व टेस्ट की समयरेखा',
       lab:{ uploaded:'अपलोड की गई रिपोर्ट', name:'CBC + किडनी फंक्शन टेस्ट', extracted:'निकाला गया', meta:'12 सितंबर 2026 · Apollo Diagnostics',
         summary:'निदान सारांश', egfrL:'eGFR', egfrV:'42 mL/min (हल्की कमी)', hba1cL:'HbA1c', hba1cV:'7.1%',
         condL:'स्थिति', condV:'टाइप 2 डायबिटीज़, नियंत्रण में', revL:'समीक्षा की गई', revV:'डॉ. एस. अय्यर (उदाहरण)',
@@ -719,6 +899,23 @@
         retakeBtn:'↻ दूसरा प्रिस्क्रिप्शन स्कैन करें',
         disclaimer:'केवल प्रोटोटाइप — निष्कर्षण अनुकरणित है, असली OCR नहीं।'
       },
+      doc:{ intro:'अपने डॉक्टर या फार्मासिस्ट के साथ स्लॉट बुक करें। यह केवल डेमो बुकिंग है — कोई वास्तविक अपॉइंटमेंट नहीं बनता।',
+        myApptsTitle:'मेरी अपॉइंटमेंट्स', cancelBtn:'रद्द करें', slotLabel:'समय स्लॉट चुनें',
+        bookBtn:'✓ अपॉइंटमेंट की पुष्टि करें', confirmedMsg:'अपॉइंटमेंट अनुरोध भेजा गया (केवल डेमो)।' },
+      rw:{ homeLabel:'रिवॉर्ड्स', homeSubFmt:'{coins} कॉइन्स · {streak}-दिन की स्ट्रीक',
+        streakLabel:'{n}-दिन की स्ट्रीक', badgesLabel:'बैज',
+        badge3:'3-दिन स्ट्रीक', badge7:'7-दिन स्ट्रीक', badge30:'30-दिन चैंपियन',
+        howTitle:'कॉइन्स कैसे कमाएँ', howText:'हर बार खुराक ली हुई दर्ज करने पर +10 कॉइन्स, और दिन की सभी खुराकें समय पर पूरी होने पर +50 बोनस।' },
+      stHelpName:'सहायता', stHelpSub:'FAQ और संपर्क',
+      stPrivName:'प्राइवेसी पॉलिसी', stPrivSub:'आपका डेटा कैसे संभाला जाता है',
+      help:{ contactTitle:'हमसे संपर्क करें', email:'support@pharmasaathi.example', emailLabel:'ईमेल सहायता', callLabel:'हेल्पलाइन कॉल करें' },
+      priv:{ sections:[
+        ['यह प्रोटोटाइप क्या संग्रहीत करता है','आपकी खुराक समय-सारणी, ली/नहीं ली स्थिति, कॉइन्स व स्ट्रीक, और भाषा वरीयता केवल आपके ब्राउज़र (localStorage) में संग्रहीत होती है। कुछ भी किसी सर्वर पर अपलोड नहीं होता।'],
+        ['हम क्या एकत्र नहीं करते','इस प्रोटोटाइप में कोई नाम, फ़ोन नंबर, स्वास्थ्य रिकॉर्ड या प्रिस्क्रिप्शन फ़ोटो आपके डिवाइस से बाहर नहीं जाती। आपके "स्कैन" किए गए फ़ोटो केवल ब्राउज़र में प्रोसेस होते हैं, कभी अपलोड नहीं होते।'],
+        ['थर्ड-पार्टी सेवाएँ','यह पेज Google Fonts से फ़ॉन्ट लोड करता है और आवाज़ हेतु आपके ब्राउज़र के अंतर्निहित वॉइस इंजन का उपयोग कर सकता है — इसमें कोई PharmaSaathi खाता या सर्वर शामिल नहीं है।'],
+        ['यह चिकित्सीय सलाह नहीं है','सभी नैदानिक जानकारी (खुराक, इंटरैक्शन, प्रतिविष) प्रदर्शन हेतु सरल बनाई गई है और वास्तविक चिकित्सीय निर्णयों हेतु उपयोग न करें।'],
+        ['संपर्क','इस प्रोटोटाइप संबंधी प्रश्न: support@pharmasaathi.example']
+      ], updated:'अंतिम अपडेट: सितंबर 2026 · यह प्रदर्शन हेतु एक प्रोटोटाइप पॉलिसी है।' },
       footnote:'दिखाए गए मरीज़, दवाइयाँ और रिपोर्ट केवल उदाहरण हेतु हैं। नैदानिक जानकारी (खुराक, MOA, प्रतिविष, निषेध) प्रदर्शन हेतु सरल बनाई गई है और यह चिकित्सीय सलाह नहीं है।'
     }
   };
@@ -729,9 +926,13 @@
   var currentScreen = 'home';
   var openMedId = null;
 
-  var screens = ['home','medicines','med-detail','reports','lab','adr','ivr','caregiver','future','scan'];
-  var tabOf = { home:'home', medicines:'medicines', 'med-detail':'medicines', reports:'reports', lab:'reports', adr:'reports', ivr:'reports', caregiver:'caregiver', future:'future', scan:'home' };
-  var backTarget = { 'med-detail':'medicines', lab:'reports', adr:'reports', ivr:'reports', scan:'home' };
+  var screens = ['home','medicines','med-detail','reports','lab','adr','ivr','caregiver','future','scan',
+    'diagnostics','diag-detail','doctor','doctor-book','history','rewards','settings','help','privacy'];
+  var tabOf = { home:'home', medicines:'medicines', 'med-detail':'medicines', reports:'reports', lab:'reports', adr:'reports', ivr:'reports', caregiver:'caregiver', future:'future', scan:'home',
+    diagnostics:'reports', 'diag-detail':'reports', doctor:'reports', 'doctor-book':'reports', history:'reports', rewards:'home' };
+  var backTarget = { 'med-detail':'medicines', lab:'reports', adr:'reports', ivr:'reports', scan:'home',
+    diagnostics:'reports', 'diag-detail':'diagnostics', doctor:'reports', 'doctor-book':'doctor', history:'reports', rewards:'home',
+    settings:'home', help:'settings', privacy:'settings' };
 
   function badgeClass(s){ return s === 'good' ? 'good' : (s === 'risk' ? 'risk' : 'warn'); }
   function badgeLabel(t,s){ return s === 'good' ? t.badgeGood : (s === 'risk' ? t.badgeRisk : t.badgeWarn); }
@@ -833,7 +1034,9 @@
     try { return localStorage.getItem('ps_taken_'+todayKey()+'_'+doseId) === '1'; } catch(e){ return false; }
   }
   function markTaken(doseId){
+    var already = isTaken(doseId);
     try { localStorage.setItem('ps_taken_'+todayKey()+'_'+doseId, '1'); } catch(e){}
+    if (!already) awardDoseCoins();
   }
   function unmarkTaken(doseId){
     try { localStorage.removeItem('ps_taken_'+todayKey()+'_'+doseId); } catch(e){}
@@ -964,6 +1167,192 @@
   }
   setInterval(checkAlarms, 20000);
 
+  /* ================= REWARDS & COINS ================= */
+  function getCoins(){ try { return parseInt(localStorage.getItem('ps_coins')||'0',10); } catch(e){ return 0; } }
+  function addCoins(n){ try { localStorage.setItem('ps_coins', String(getCoins()+n)); } catch(e){} }
+  function getStreak(){ try { return parseInt(localStorage.getItem('ps_streak')||'0',10); } catch(e){ return 0; } }
+  function setStreak(n){ try { localStorage.setItem('ps_streak', String(n)); } catch(e){} }
+  function getLastFullDay(){ try { return localStorage.getItem('ps_last_full_day') || ''; } catch(e){ return ''; } }
+  function setLastFullDay(k){ try { localStorage.setItem('ps_last_full_day', k); } catch(e){} }
+
+  function awardDoseCoins(){
+    addCoins(10);
+    var allTaken = SCHEDULE.every(function(d){ return doseState(d) === 'taken'; });
+    if (allTaken){
+      var tk = todayKey();
+      if (getLastFullDay() !== tk){
+        setStreak(getStreak()+1);
+        addCoins(50);
+        setLastFullDay(tk);
+      }
+    }
+  }
+
+  function renderRewardsHomeWidget(){
+    var t = T[LANG].rw;
+    document.getElementById('rw_home_label').textContent = t.homeLabel;
+    document.getElementById('rw_home_sub').textContent = t.homeSubFmt.replace('{coins}', getCoins()).replace('{streak}', getStreak());
+  }
+
+  function renderRewards(){
+    var t = T[LANG].rw;
+    var coins = getCoins();
+    var streak = getStreak();
+    var badges = [ { min:3, ic:'🔥', lbl:t.badge3 }, { min:7, ic:'🌟', lbl:t.badge7 }, { min:30, ic:'🏆', lbl:t.badge30 } ];
+    var badgeHtml = badges.map(function(b){
+      var unlocked = streak >= b.min;
+      return '<div class="badge-tile'+(unlocked?'':' locked')+'"><span class="ic">'+b.ic+'</span><span class="lbl">'+b.lbl+'</span></div>';
+    }).join('');
+    document.getElementById('rewardsBody').innerHTML =
+      '<div class="reward-hero"><span class="coins">🪙 '+coins+'</span><span class="streak">'+t.streakLabel.replace('{n}',streak)+'</span></div>' +
+      '<span class="section-label">'+t.badgesLabel+'</span>' +
+      '<div class="badge-grid">'+badgeHtml+'</div>' +
+      '<div class="card flat" style="background:var(--surface-2)"><span class="card-title">'+t.howTitle+'</span><p class="muted" style="margin-top:6px">'+t.howText+'</p></div>';
+  }
+
+  /* ================= DIAGNOSTIC REPORTS ================= */
+  var openDiagIndex = null;
+  function openDiag(i){ openDiagIndex = i; renderDiagDetail(); go('diag-detail'); }
+  window.openDiag = openDiag;
+
+  function renderDiagnosticsList(){
+    var t = T[LANG];
+    var el = document.getElementById('diagList');
+    if (!el) return;
+    el.innerHTML =
+      '<button class="medcard" type="button" onclick="go(\'lab\')">' +
+        '<span class="pill-ic">🧪</span><span class="mid"><span class="mname">'+t.lab.name+'</span><span class="mdose">'+t.lab.meta+'</span></span><span class="chev">›</span>' +
+      '</button>' +
+      DIAGNOSTICS.map(function(d,i){
+        var dd = d[LANG];
+        return '<button class="medcard" type="button" onclick="openDiag('+i+')">' +
+          '<span class="pill-ic">'+d.icon+'</span><span class="mid"><span class="mname">'+dd.name+'</span><span class="mdose">'+dd.sub+'</span></span><span class="chev">›</span>' +
+        '</button>';
+      }).join('');
+  }
+
+  function renderDiagDetail(){
+    if (openDiagIndex === null) return;
+    var d = DIAGNOSTICS[openDiagIndex];
+    var dd = d[LANG];
+    var rowsHtml = dd.rows.map(function(r){ return '<div><span>'+r[0]+'</span>'+r[1]+'</div>'; }).join('');
+    document.getElementById('diagDetail').innerHTML =
+      '<div class="report-doc"><h3>'+dd.summary+'</h3><p class="muted" style="margin-bottom:8px">'+dd.sub+'</p>' +
+      '<div class="meta">'+rowsHtml+'</div><hr><p>'+dd.note+'</p></div>' +
+      '<div class="callout good"><span>✅</span><span>'+dd.linkText+'</span></div>';
+  }
+
+  /* ================= DOCTOR APPOINTMENTS ================= */
+  function getAppointments(){ try { return JSON.parse(localStorage.getItem('ps_appointments') || '[]'); } catch(e){ return []; } }
+  function saveAppointments(list){ try { localStorage.setItem('ps_appointments', JSON.stringify(list)); } catch(e){} }
+  function cancelAppointment(idx){
+    var list = getAppointments();
+    list.splice(idx,1);
+    saveAppointments(list);
+    renderDoctor();
+  }
+  window.cancelAppointment = cancelAppointment;
+
+  var openDoctorId = null;
+  var pickedSlot = null;
+  function openDoctorBook(id){ openDoctorId = id; pickedSlot = null; renderDoctorBook(); go('doctor-book'); }
+  window.openDoctorBook = openDoctorBook;
+  function pickSlot(slot){ pickedSlot = slot; renderDoctorBook(); }
+  window.pickSlot = pickSlot;
+
+  function confirmBooking(){
+    if (!openDoctorId || !pickedSlot) return;
+    var list = getAppointments();
+    list.push({ doctorId: openDoctorId, slot: pickedSlot });
+    saveAppointments(list);
+    pickedSlot = null;
+    go('doctor');
+    renderDoctor();
+    alert(T[LANG].doc.confirmedMsg);
+  }
+  window.confirmBooking = confirmBooking;
+
+  function renderDoctor(){
+    var t = T[LANG];
+    var appts = getAppointments();
+    var apptsHtml = '';
+    if (appts.length){
+      apptsHtml = '<div class="card"><span class="card-title">'+t.doc.myApptsTitle+'</span>' +
+        appts.map(function(a,i){
+          var doc = DOCTORS.filter(function(d){ return d.id === a.doctorId; })[0];
+          var name = doc ? doc[LANG].name : a.doctorId;
+          return '<div class="row" style="margin-top:8px"><span class="muted">'+name+' · '+a.slot+'</span>' +
+            '<button class="btn outline sm" type="button" onclick="cancelAppointment('+i+')">'+t.doc.cancelBtn+'</button></div>';
+        }).join('') + '</div>';
+    }
+    var listHtml = DOCTORS.map(function(d){
+      var dd = d[LANG];
+      return '<button class="medcard" type="button" onclick="openDoctorBook(\''+d.id+'\')">' +
+        '<span class="pill-ic">'+d.icon+'</span><span class="mid"><span class="mname">'+dd.name+'</span><span class="mdose">'+dd.spec+' · '+dd.place+'</span></span><span class="chev">›</span>' +
+      '</button>';
+    }).join('');
+    document.getElementById('doctorBody').innerHTML =
+      '<p class="muted">'+t.doc.intro+'</p>' + apptsHtml +
+      '<div style="display:flex;flex-direction:column;gap:10px">'+listHtml+'</div>';
+  }
+
+  function renderDoctorBook(){
+    if (!openDoctorId) return;
+    var t = T[LANG];
+    var doc = DOCTORS.filter(function(d){ return d.id === openDoctorId; })[0];
+    if (!doc) return;
+    var dd = doc[LANG];
+    var slotsHtml = dd.slots.map(function(s){
+      return '<button class="slot-btn" type="button" aria-pressed="'+(pickedSlot===s?'true':'false')+'" onclick="pickSlot(\''+s+'\')">'+s+'</button>';
+    }).join('');
+    document.getElementById('doctorBookBody').innerHTML =
+      '<div class="card"><div class="card-title">'+dd.name+'</div><p class="muted" style="margin-top:3px">'+dd.spec+' · '+dd.place+'</p></div>' +
+      '<span class="section-label">'+t.doc.slotLabel+'</span>' +
+      '<div class="slot-grid">'+slotsHtml+'</div>' +
+      '<button class="btn primary" type="button" onclick="confirmBooking()"'+(pickedSlot?'':' disabled')+'>'+t.doc.bookBtn+'</button>';
+  }
+
+  /* ================= MEDICAL HISTORY ================= */
+  function renderHistory(){
+    var el = document.getElementById('historyBody');
+    if (!el) return;
+    el.innerHTML = '<div class="timeline">' + HISTORY.map(function(h){
+      return '<div class="tl-item"><span class="tl-dot"></span><div><div class="tl-date">'+h.date+'</div><div class="tl-text">'+h[LANG]+'</div></div></div>';
+    }).join('') + '</div>';
+  }
+
+  /* ================= SETTINGS / HELP / PRIVACY ================= */
+  function renderSettingsHub(){
+    var t = T[LANG];
+    document.getElementById('st_helpName').textContent = t.stHelpName;
+    document.getElementById('st_helpSub').textContent = t.stHelpSub;
+    document.getElementById('st_privName').textContent = t.stPrivName;
+    document.getElementById('st_privSub').textContent = t.stPrivSub;
+  }
+
+  function renderHelp(){
+    var t = T[LANG];
+    var faqHtml = FAQ.map(function(f){
+      var d = f[LANG];
+      return '<details><summary>'+d.q+'</summary><p>'+d.a+'</p></details>';
+    }).join('');
+    document.getElementById('helpBody').innerHTML =
+      '<div class="faq" style="display:flex;flex-direction:column;gap:10px">'+faqHtml+'</div>' +
+      '<div class="card"><span class="card-title">'+t.help.contactTitle+'</span>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">' +
+      '<a class="btn outline" href="mailto:'+t.help.email+'">✉️&nbsp; '+t.help.emailLabel+'</a>' +
+      '<a class="btn outline" href="tel:'+CONTACTS.supportPhone+'">📞&nbsp; '+t.help.callLabel+'</a>' +
+      '</div></div>';
+  }
+
+  function renderPrivacy(){
+    var t = T[LANG].priv;
+    document.getElementById('privacyBody').innerHTML =
+      '<div class="report-doc">' +
+      t.sections.map(function(s){ return '<h3 style="margin-top:12px">'+s[0]+'</h3><p>'+s[1]+'</p>'; }).join('') +
+      '<hr><p class="muted">'+t.updated+'</p></div>';
+  }
+
   function openMed(id){ openMedId = id; renderMedDetail(); go('med-detail'); }
   window.openMed = openMed;
 
@@ -975,6 +1364,10 @@
     document.getElementById('r_adrSub').textContent = t.repAdrSub;
     document.getElementById('r_ivrName').textContent = t.repIvrName;
     document.getElementById('r_ivrSub').textContent = t.repIvrSub;
+    document.getElementById('r_docName').textContent = t.repDocName;
+    document.getElementById('r_docSub').textContent = t.repDocSub;
+    document.getElementById('r_histName').textContent = t.repHistName;
+    document.getElementById('r_histSub').textContent = t.repHistSub;
   }
 
   function renderLab(){
@@ -1198,6 +1591,7 @@
     }
     renderSchedule();
     updateReminderPermCard();
+    renderRewardsHomeWidget();
   }
 
   function updateHeader(){
@@ -1232,6 +1626,15 @@
     renderCaregiver();
     renderFuture();
     renderScan();
+    renderDiagnosticsList();
+    if (openDiagIndex !== null) renderDiagDetail();
+    renderDoctor();
+    if (openDoctorId) renderDoctorBook();
+    renderHistory();
+    renderRewards();
+    renderSettingsHub();
+    renderHelp();
+    renderPrivacy();
     updateHeader();
     document.querySelectorAll('[data-lang]').forEach(function(b){
       b.setAttribute('aria-pressed', b.dataset.lang === LANG ? 'true' : 'false');
@@ -1252,11 +1655,22 @@
   });
 
   /* ================= NAV ================= */
+  /* screens whose content depends on state that can change while elsewhere in the app —
+     re-render them fresh every time the user navigates in, not just at load/language-switch */
+  var screenRenderers = {
+    home: renderHome,
+    caregiver: renderCaregiver,
+    rewards: renderRewards,
+    doctor: renderDoctor,
+    diagnostics: renderDiagnosticsList,
+    history: renderHistory
+  };
   function go(name){
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     stopSpeakAnim();
     screens.forEach(function(s){ document.getElementById('screen-'+s).hidden = (s !== name); });
     currentScreen = name;
+    if (screenRenderers[name]) screenRenderers[name]();
     updateHeader();
     document.getElementById('content').scrollTop = 0;
   }
