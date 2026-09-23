@@ -1161,6 +1161,7 @@
       '<div class="detail-block card"><span class="h">'+t.dHeadAntidote+'</span><p>'+d.antidote+'</p></div>' +
       '<div class="detail-block card"><span class="h">'+t.dHeadContra+'</span><ul>'+contraList+'</ul></div>' +
       crossHtml + generalNote;
+    el.insertAdjacentHTML('afterbegin', listenBtnHtml(m));
   }
 
   /* a medicine that isn't in the safety catalog (added manually) — we can track it and
@@ -1180,6 +1181,7 @@
       '<button class="btn '+(isStopped ? 'primary' : 'outline')+' sm" type="button" onclick="setMedStatus(\''+m.id+'\', \''+(isStopped ? 'active' : 'stopped')+'\')">'+(isStopped ? t.medReactivateBtn : t.medStopBtn)+'</button></div></div>' +
       timesCardHtml(m) +
       '<div class="callout warn"><span>⚠️</span><span>'+x.customNote+'</span></div>';
+    document.getElementById('medDetail').insertAdjacentHTML('afterbegin', listenBtnHtml(m));
   }
   // interaction severity for medicines that still carry a general (non-drug-specific) note
   var INTERACTION_LEVEL = { metformin:'warn', levothyroxine:'warn', paracetamol:'warn' };
@@ -2075,7 +2077,25 @@
     'prednisolone methylprednisolone dexamethasone hydrocortisone deflazacort betamethasone allopurinol febuxostat colchicine alendronate risedronate raloxifene tamsulosin silodosin finasteride dutasteride sildenafil tadalafil tranexamic methotrexate leflunomide sulfasalazine azathioprine tacrolimus cyclosporine ' +
     'pyridoxine methylcobalamin cyanocobalamin cholecalciferol calcitriol calcium ferrous ferric magnesium multivitamin vitamin thiamine ascorbic biotin ' +
     'dolo crocin calpol combiflam brufen voveran zerodol ultracet augmentin azithral taxim monocef cifran ciplox oflox flagyl pantop nexpro omez aciloc zinetac domstal ondem emeset cetzine okacet montair levocet allegra sinarest benadryl asthalin deriphyllin ascoril grilinctus ' +
-    'glycomet glucophage amaryl glimestar januvia galvus jalra volix eltroxin thyronorm telma telmikind amlong stamlo amlodac atorva storvas rosuvas clopilet ecosprin deplatt lasix aldactone shelcal calcirol neurobion becosules limcee folvite evion supradyn zincovit gelusil digene cyclopam meftal dexorange cremaffin duphalac').split(' ');
+    'glycomet glucophage amaryl glimestar januvia galvus jalra volix eltroxin thyronorm telma telmikind amlong stamlo amlodac atorva storvas rosuvas clopilet ecosprin deplatt lasix aldactone shelcal calcirol neurobion becosules limcee folvite evion supradyn zincovit gelusil digene cyclopam meftal dexorange cremaffin duphalac ' +
+    /* international / hospital-pad names and more generics */
+    'betaloc lopressor toprol seloken tenormin inderal cimetidine tagamet dorzolamide dorzolamidum trusopt timolol latanoprost travoprost bimatoprost brimonidine brinzolamide pilocarpine acetazolamide ' +
+    'oxprenolol pindolol sotalol nadolol labetalol acebutolol captopril benazepril quinapril fosinopril trandolapril nicardipine felodipine lercanidipine prazosin doxazosin terazosin minoxidil amiloride triamterene bumetanide ' +
+    'simvastatin lovastatin pitavastatin gemfibrozil niacin amiodarone flecainide propafenone dronedarone adenosine ivabradine sacubitril heparin enoxaparin dalteparin ' +
+    'ranitidine nizatidine misoprostol bismuth mesalamine mesalazine budesonide loperamide rifaximin ' +
+    'penicillin flucloxacillin dicloxacillin piperacillin tazobactam meropenem imipenem ertapenem vancomycin teicoplanin colistin cefaclor cefprozil cefepime ceftazidime aztreonam tobramycin neomycin streptomycin ' +
+    'nystatin griseofulvin voriconazole amphotericin ganciclovir famciclovir tenofovir lamivudine zidovudine efavirenz dolutegravir ritonavir lopinavir atazanavir ribavirin sofosbuvir ' +
+    'codeine morphine oxycodone fentanyl buprenorphine naloxone naltrexone methadone hydroxyzine promethazine prochlorperazine meclizine dimenhydrinate ' +
+    'buspirone trazodone bupropion imipramine clomipramine doxepin lorazepam temazepam nitrazepam midazolam phenobarbital primidone ethosuximide zonisamide lacosamide vigabatrin ' +
+    'chlorpromazine clozapine ziprasidone paliperidone lurasidone fluphenazine trifluoperazine benztropine trihexyphenidyl selegiline rasagiline amantadine entacapone baclofen tizanidine methocarbamol cyclobenzaprine orphenadrine ' +
+    'rizatriptan zolmitriptan naratriptan ergotamine pizotifen glyceryl ' +
+    'prednisone triamcinolone fludrocortisone mometasone clobetasol beclomethasone ciclesonide zafirlukast cromolyn ' +
+    'glibenclamide repaglinide nateglinide tolbutamide chlorpropamide exenatide liraglutide semaglutide dulaglutide ' +
+    'liothyronine propylthiouracil desmopressin cabergoline bromocriptine estradiol progesterone norethisterone medroxyprogesterone levonorgestrel ethinylestradiol clomiphene letrozole anastrozole tamoxifen ' +
+    'oxybutynin tolterodine solifenacin mirabegron bethanechol phenazopyridine ' +
+    'folic folate iron zinc potassium sodium bicarbonate ' +
+    'cyproheptadine diphenhydramine doxylamine ranitidine azelastine ketotifen olopatadine ' +
+    'ciprofloxacin ofloxacin chloramphenicol tobramycin gentamicin ').split(' ');
 
   var FORM_RE = /^\s*(?:\(?[0-9A-Za-z]{1,2}\s*[\).:\-]?\s*)?(?:tab(?:let)?s?|cap(?:sule)?s?|syp|syr|syrup|susp(?:ension)?|inj(?:ection)?|drops?|oint(?:ment)?|cream|gel|lotion|sachet|powder|neb|spray|inhaler)\b[\.\s:\-]*/i;
   var HEADER_RE = /\b(?:dr\.?|doctor|clinic|hospital|centre|center|registration|reg\.? ?no|phone|mobile|mob|date|name|age|sex|address|signature|patient|opd|mbbs|diagnosis|advice|follow ?up|review|next visit|weight|pulse)\b/i;
@@ -2107,13 +2127,41 @@
     var re = /(?:^|[^0-9OoSsIl.])([0-9OoSsIl]{1,5}(?:\.\d+)?)\s?(mg|mcg|µg|ug|g|m[l1iI]|iu|%)(?![a-z])/g, g;
     while ((g = re.exec(str))){
       var raw = g[1], num = raw.replace(/[Ss]/g, '5').replace(/[Oo]/g, '0').replace(/[Il]/g, '1');
-      if (!/[0-9]/.test(raw) && raw.length !== 1) continue;        // "Smg" is fine, a random word is not
       if (!(parseFloat(num) > 0)) continue;
       var u = g[2].toLowerCase();
       if (/^m[1i]$/.test(u)) u = 'ml';
       return num + ' ' + u;
     }
     return '';
+  }
+  /* "1 tab", "2 caps", "5 ml" -> how much to take each time */
+  function parseQty(s){
+    var m = String(s).toLowerCase().match(/(?:^|[\s\-–—(])(\d(?:\.\d)?|½|one|two|half)\s*(tab(?:let)?s?|cap(?:sule)?s?|tsp|spoons?|drops?|puffs?)(?![a-z])/);
+    if (!m) return '';
+    var n = { one:'1', two:'2', half:'½' }[m[1]] || m[1], u = m[2].charAt(0);
+    var unit = u === 't' && m[2].indexOf('ab') === 1 ? 'tablet' : (u === 'c' ? 'capsule' : (m[2].indexOf('tsp') === 0 || u === 's' ? 'teaspoon' : (u === 'd' ? 'drop' : (u === 'p' ? 'puff' : 'tablet'))));
+    return n + ' ' + unit + (n !== '1' && n !== '½' && unit !== 'teaspoon' ? 's' : '');
+  }
+  function fmt12(t){
+    var p = String(t).split(':'), h = parseInt(p[0], 10), mi = p[1] || '00';
+    return (h % 12 || 12) + ':' + mi + ' ' + (h < 12 ? 'AM' : 'PM');
+  }
+  function dayPart(t){
+    var h = parseInt(String(t).split(':')[0], 10);
+    var en = h < 12 ? 'morning' : (h < 17 ? 'afternoon' : (h < 21 ? 'evening' : 'night'));
+    var hi = h < 12 ? 'सुबह' : (h < 17 ? 'दोपहर' : (h < 21 ? 'शाम' : 'रात'));
+    return LANG === 'hi' ? hi : en;
+  }
+  /* "Twice a day: 8:00 AM (morning) · 8:00 PM (evening)" */
+  function timesWords(times, lang){
+    var l = lang || LANG;
+    if (!times || !times.length) return '';
+    var counts = { en:['', 'Once a day', 'Twice a day', 'Three times a day', 'Four times a day'], hi:['', 'दिन में एक बार', 'दिन में दो बार', 'दिन में तीन बार', 'दिन में चार बार'] };
+    var sorted = times.slice().sort();
+    var saved = LANG; LANG = l;
+    var parts = sorted.map(function(t){ return fmt12(t) + ' (' + dayPart(t) + ')'; });
+    LANG = saved;
+    return (counts[l][sorted.length] ? counts[l][sorted.length] + ': ' : '') + parts.join(' · ');
   }
   function parseDuration(s){
     var m = String(s).toLowerCase().match(/(?:\bx|×|\bfor)\s*(\d{1,3})\s*(days?|d\b|weeks?|wks?|months?)/);
@@ -2142,7 +2190,22 @@
     var m = String(text).match(/(\d+(?:\.\d+)?)\s?(mg|mcg|µg|ug|g|ml|iu)/i);
     return m ? (parseFloat(m[1]) + m[2].toLowerCase().replace('µg','mcg').replace('ug','mcg')) : '';
   }
-  var CONF_RANK = { catalog:5, 'catalog-fuzzy':4, dict:3, form:2, weak:1 };
+  var CONF_RANK = { catalog:5, 'catalog-fuzzy':4, dict:3, 'dict-fuzzy':2.5, form:2, weak:1 };
+  /* handwriting garbles several letters at once ("Cunetidune" for Cimetidine). Only used for lines
+     that already look like a prescription line (strength/quantity + timing), and always shown as
+     "looks like X — check", never as a confirmed match. */
+  function looseDictHit(tokens){
+    var best = null;
+    tokens.forEach(function(tok){
+      if (tok.length < 6) return;
+      DRUG_NAMES.forEach(function(term){
+        if (term.length < 6 || Math.abs(tok.length - term.length) > 3) return;
+        var max = Math.floor(term.length * 0.3), d = editDistance(tok, term, max);
+        if (d <= max && (!best || d / term.length < best.ratio)) best = { term:term, ratio:d / term.length };
+      });
+    });
+    return best;
+  }
 
   function extractCandidates(rawText){
     var items = [], seen = {};
@@ -2155,7 +2218,8 @@
       var strength = parseDose(line), freq = parseFrequency(line);
       var numbered = /^\s*\(?\d{1,2}\s*[\).:\-]\s*\S/.test(line);
       var known = !!(cat || dict || hasForm);
-      if (!(known || (numbered && (strength || freq)) || (strength && freq))) return;
+      var wordy = /[A-Za-z]{5,}/.test(line.replace(/\b(?:tablets?|capsules?|twice|thrice|daily|once|morning|night|after|before|food|meals?|days?|weeks?)\b/gi, ''));
+      if (!(known || (numbered && (strength || freq)) || (strength && freq) || (freq && freq.length && wordy && (parseQty(line) || looseDictHit(tokens))))) return;
       if (HEADER_RE.test(line) && !known) return;
       var name = extractName(line);
       if (!known && !/[A-Za-z]{4,}/.test(name)) return;
@@ -2167,8 +2231,12 @@
       if (cat && cat.dist > 0) name = titleCase(cat.term);
       else if (!cat && dict && dict.dist > 0) name = titleCase(dict.term);
       var conf = cat ? (cat.dist === 0 ? 'catalog' : 'catalog-fuzzy') : (dict ? 'dict' : (hasForm ? 'form' : 'weak'));
-      var it = { raw:line, name:name, medId:cat ? cat.med.id : null, dose:strength, duration:parseDuration(line),
-                 times:freq, conf:conf, include:conf !== 'weak' };
+      if (!cat && !dict && (strength || parseQty(line)) && freq){
+        var loose = looseDictHit(tokens);
+        if (loose){ name = titleCase(loose.term); conf = 'dict-fuzzy'; }
+      }
+      var it = { raw:line, name:name, medId:cat ? cat.med.id : null, dose:strength, qty:parseQty(line), duration:parseDuration(line),
+                 times:freq, conf:conf, include:conf !== 'weak' || !!(strength && freq) };
       var key = it.medId || (dict ? dict.term : name.toLowerCase());
       if (seen[key]) return;
       seen[key] = true;
@@ -2190,13 +2258,17 @@
         var ex = byKey[key];
         if (!ex){ byKey[key] = it; out.push(it); return; }
         if (CONF_RANK[it.conf] > CONF_RANK[ex.conf]) { ex.conf = it.conf; ex.medId = it.medId || ex.medId; }
-        ['dose','duration'].forEach(function(k){ if (!ex[k]) ex[k] = it[k]; });
+        ['dose','qty','duration'].forEach(function(k){ if (!ex[k]) ex[k] = it[k]; });
         if (!ex.times) ex.times = it.times;
       });
     });
     var kept = [];
     out.slice().sort(function(a, b){ return CONF_RANK[b.conf] - CONF_RANK[a.conf]; }).forEach(function(it){
-      var dup = kept.some(function(k){ return lineSimilarity(it, k) >= (it.conf === 'weak' ? 0.5 : 0.75); });
+      var dup = kept.some(function(k){
+        if (lineSimilarity(it, k) >= (it.conf === 'weak' ? 0.5 : 0.75)) return true;
+        // the same line misread differently by another pass: identical strength + timing + first letter
+        return it.conf === 'weak' && it.dose && it.dose === k.dose && JSON.stringify(it.times) === JSON.stringify(k.times) && it.name.charAt(0).toLowerCase() === k.name.charAt(0).toLowerCase();
+      });
       if (!dup) kept.push(it);
     });
     return out.filter(function(it){ return kept.indexOf(it) !== -1; });
@@ -2230,6 +2302,8 @@
   }
   window.startScan = startScan;
 
+  function scanEditDose(i, val){ if (scanItems[i]){ scanItems[i].dose = clean(val).slice(0, 20); renderScan(); } }
+  window.scanEditDose = scanEditDose;
   function scanToggle(i, val){ if (scanItems[i]) scanItems[i].include = !!val; }
   /* fixing a misread name re-checks it against the safety catalog straight away */
   function scanEdit(i, val){
@@ -2364,6 +2438,16 @@
       }
       var found = mergeCandidates(texts.map(extractCandidates));
       var strongCount = function(list){ return list.filter(function(x){ return CONF_RANK[x.conf] >= 3; }).length; };
+      /* handwriting: a different layout guess often recovers lines the first two passes missed */
+      if (texts.length === variants.length && found.length < 4 && strongCount(found) < 4){
+        scanStepTotal = variants.length + 1; scanStep = scanStepTotal; scanProgressPct = 0; renderScan();
+        ocrProgressCb = function(p){ scanProgressPct = Math.round(p * 100); renderScan(); };
+        await worker.setParameters({ tessedit_pageseg_mode:'4', preserve_interword_spaces:'1' });
+        var r3 = await worker.recognize(variants[0].canvas);
+        texts.push((r3 && r3.data && r3.data.text) || '');
+        found = mergeCandidates(texts.map(extractCandidates));
+        await worker.setParameters({ tessedit_pageseg_mode:'6', preserve_interword_spaces:'1' });
+      }
       var degrees = [90, 270, 180];
       for (var d = 0; d < degrees.length && strongCount(found) < 2; d++){
         scanStep = variants.length + d + 1; scanStepTotal = variants.length + degrees.length; scanProgressPct = 0; renderScan();
@@ -2400,7 +2484,7 @@
       if (!medId && (!name || MEDS.some(function(m){ return m.custom && m.en.name.toLowerCase() === name.toLowerCase(); }))){ skipped++; return; }
       var cm = medId ? catalogMed(medId) : null;
       var times = it.times ? it.times : (cm ? scheduleTimesFor(cm.en.doseLine) : ['08:00']);
-      var note = [it.dose, it.duration ? 'for ' + it.duration : ''].filter(Boolean).join(' · ');
+      var note = [it.dose, it.qty, it.duration ? 'for ' + it.duration : ''].filter(Boolean).join(' · ');
       items.push({ medId:medId, customName:name, customDose:note, times:times });
     });
     if (!items.length){ toast(skipped ? X().manual.already : X().scanX.nothing); return; }
@@ -2494,16 +2578,16 @@
       var rows = scanItems.map(function(it, i){
         var already = it.medId ? MEDS.some(function(m){ return m.id === it.medId; }) : false;
         var cm = it.medId ? catalogMed(it.medId) : null;
-        var badge = { catalog:['good', sx.bCatalog], 'catalog-fuzzy':['warn', sx.bFuzzy], dict:['warn', sx.bDict], form:['warn', sx.bForm], weak:['risk', sx.bWeak] }[it.conf];
+        var badge = { catalog:['good', sx.bCatalog], 'catalog-fuzzy':['warn', sx.bFuzzy], dict:['warn', sx.bDict], 'dict-fuzzy':['warn', sx.bLoose], form:['warn', sx.bForm], weak:['warn', sx.bWeak] }[it.conf];
         var mm = strengthMismatch(it);
-        var timesTxt = it.times ? (it.times.length ? it.times.join(' · ') : sx.asNeeded) : sx.timesGuess.replace('{t}', (cm ? scheduleTimesFor(cm.en.doseLine) : ['08:00']).join(' · '));
-        var meta = [it.dose, it.duration ? sx.forDur.replace('{d}', it.duration) : ''].filter(Boolean).join(' · ');
+        var timesTxt = it.times ? (it.times.length ? timesWords(it.times) : sx.asNeeded) : sx.timesGuess.replace('{t}', timesWords(cm ? scheduleTimesFor(cm.en.doseLine) : ['08:00']));
+        var meta = [it.qty ? sx.take + ' ' + it.qty : '', it.duration ? sx.forDur.replace('{d}', it.duration) : ''].filter(Boolean).join(' · ');
         return '<div class="card" style="padding:12px;'+(already ? 'opacity:.6' : '')+'"><div class="row" style="align-items:flex-start;gap:10px">' +
           '<input type="checkbox" style="width:20px;height:20px;margin-top:10px;accent-color:var(--accent)" '+(it.include && !already ? 'checked' : '')+(already ? ' disabled' : '')+' onchange="scanToggle('+i+',this.checked)" aria-label="'+esc(it.name)+'">' +
           '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">' +
             '<div class="field"><input type="text" maxlength="60" value="'+esc(it.name)+'" onchange="scanEdit('+i+',this.value)" aria-label="'+esc(sx.nameLabel)+'"></div>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="badge '+badge[0]+'">'+(already ? s.alreadyTaking : badge[1].replace('{name}', cm ? esc(cm.en.name) : ''))+'</span></div>' +
-            (meta ? '<span class="muted">'+esc(meta)+'</span>' : '') +
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="badge '+badge[0]+'" style="white-space:normal;text-align:left;line-height:1.3">'+(already ? s.alreadyTaking : badge[1].replace('{name}', cm ? esc(cm.en.name) : esc(it.name)))+'</span></div>' +
+            '<div class="row" style="gap:8px;justify-content:flex-start;flex-wrap:wrap"><div class="field" style="width:120px"><input type="text" maxlength="20" placeholder="'+esc(sx.doseLabel)+'" value="'+esc(it.dose)+'" onchange="scanEditDose('+i+',this.value)" aria-label="'+esc(sx.doseLabel)+'"></div>'+(meta ? '<span class="muted">'+esc(meta)+'</span>' : '')+'</div>' +
             '<span class="muted">⏰ '+esc(timesTxt)+'</span>' +
             (mm ? '<div class="callout warn" style="padding:8px 10px"><span>⚠️</span><span>'+sx.mismatch.replace('{a}', esc(it.dose)).replace(/\{b\}/g, esc(mm))+'</span></div>' : '') +
             '<span class="muted" style="font-size:.7rem">'+sx.readAs+' “'+esc(it.raw)+'”</span>' +
@@ -2511,7 +2595,8 @@
       }).join('');
       el.innerHTML = preview +
         '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanItems.length+'</span></div><hr>' +
-        '<p class="muted">'+sx.editHint+'</p></div>' + rows + rawBlock +
+        '<p class="muted">'+sx.editHint+'</p>' +
+        '<button class="btn outline sm" type="button" onclick="speakScan()" style="margin-top:8px">🔊 '+sx.readAloud+'</button></div>' + rows + rawBlock +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+sx.addMissing+'</button>' +
         '<button class="btn ghost" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
@@ -2733,31 +2818,126 @@
     document.querySelectorAll('#homeWave i').forEach(function(b){ b.style.height = '5px'; });
   }
 
-  /* pick the warmest-sounding available voice instead of the OS default robotic one */
+  /* pick the warmest-sounding available voice for THIS language only — a Hindi sentence
+     read by an English voice is silence or nonsense, so never fall back to a different language */
   var cachedVoices = [];
-  function loadVoices(){ if ('speechSynthesis' in window) cachedVoices = window.speechSynthesis.getVoices(); }
+  function loadVoices(){ if ('speechSynthesis' in window) cachedVoices = window.speechSynthesis.getVoices() || []; }
   if ('speechSynthesis' in window){
     loadVoices();
     window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function voicesReady(){
+    return new Promise(function(resolve){
+      loadVoices();
+      if (cachedVoices.length) return resolve(cachedVoices);
+      var done = false;
+      function fin(){ if (done) return; done = true; loadVoices(); resolve(cachedVoices); }
+      window.speechSynthesis.addEventListener('voiceschanged', fin);
+      setTimeout(fin, 1500);
+    });
   }
   function pickVoice(lang){
     var voices = cachedVoices.length ? cachedVoices : (('speechSynthesis' in window) ? window.speechSynthesis.getVoices() : []);
     var wantHi = lang === 'hi';
     var matches = voices.filter(function(v){ return wantHi ? /^hi/i.test(v.lang) : /^en/i.test(v.lang); });
     var natural = matches.filter(function(v){ return /Google|Natural|Neural|Wavenet|Online/i.test(v.name); });
-    return natural[0] || matches[0] || voices[0] || null;
+    var indian = matches.filter(function(v){ return /IN$|_IN/i.test(v.lang); });
+    return natural[0] || indian[0] || matches[0] || null;
   }
   function speakFriendly(text, lang){
     if (!('speechSynthesis' in window)) return null;
     var utter = new SpeechSynthesisUtterance(text);
     utter.lang = lang === 'hi' ? 'hi-IN' : 'en-IN';
     var v = pickVoice(lang);
-    if (v) utter.voice = v;
+    if (v){ utter.voice = v; utter.lang = v.lang; }
     utter.rate = 0.94;   // a touch slower than default — reads as calmer, less clipped
     utter.pitch = 1.06;  // slightly warmer than the flat default pitch
     utter.volume = 1;
     return utter;
   }
+  /* speak in the app language when a voice exists; otherwise say so and read the English
+     version, so the person is never left with silence or a wall of unreadable text */
+  async function speakBoth(enText, hiText, onEnd){
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!('speechSynthesis' in window)){
+      toast(LANG === 'en' ? 'This browser cannot read aloud.' : 'यह ब्राउज़र आवाज़ में नहीं पढ़ सकता।');
+      return false;
+    }
+    window.speechSynthesis.cancel(); stopSpeakAnim();
+    await voicesReady();
+    var lang = LANG, text = lang === 'hi' ? hiText : enText;
+    if (lang === 'hi' && !pickVoice('hi')){
+      if (!pickVoice('en') && !cachedVoices.length){
+        toast('यह डिवाइस आवाज़ नहीं दे रहा — सेटिंग्स में टेक्स्ट-टू-स्पीच आवाज़ इंस्टॉल करें।');
+        return false;
+      }
+      toast('इस डिवाइस पर हिंदी आवाज़ इंस्टॉल नहीं है — अंग्रेज़ी में पढ़कर सुना रहे हैं। (Settings → Speech में हिंदी आवाज़ जोड़ें)');
+      lang = 'en'; text = enText;
+    } else if (!cachedVoices.length){
+      toast(lang === 'en' ? 'No voice is installed on this device — install a text-to-speech voice in system settings.' : 'यह डिवाइस आवाज़ नहीं दे रहा — सेटिंग्स में टेक्स्ट-टू-स्पीच आवाज़ इंस्टॉल करें।');
+      return false;
+    }
+    var utter = speakFriendly(text, lang), started = false;
+    utter.onstart = function(){ started = true; };
+    utter.onend = utter.onerror = function(){ stopSpeakAnim(); if (onEnd) onEnd(); };
+    if (!reduced){
+      speakInterval = setInterval(function(){
+        document.querySelectorAll('#homeWave i').forEach(function(b){ b.style.height = (5+Math.round(Math.random()*17))+'px'; });
+      }, 160);
+    }
+    window.speechSynthesis.speak(utter);
+    setTimeout(function(){
+      if (!started && !window.speechSynthesis.speaking){
+        stopSpeakAnim();
+        toast(LANG === 'en' ? 'The voice did not start — check your device volume and voice settings.' : 'आवाज़ शुरू नहीं हुई — डिवाइस की आवाज़ और वॉइस सेटिंग्स जाँचें।');
+      }
+    }, 2500);
+    return true;
+  }
+  function inLang(l, fn){ var saved = LANG; LANG = l; try { return fn(); } finally { LANG = saved; } }
+
+  /* "Twice a day: 8:00 AM (morning) · 8:00 PM (evening)" -> "twice a day, at 8:00 AM, 8:00 PM" for a voice */
+  function spokenTimes(times, l){
+    var out = timesWords(times, l).replace(/ \([^)]*\)/g, '').replace(/^([^:]+): /, l === 'en' ? '$1, at ' : '$1, ').replace(/ · /g, ', ');
+    return l === 'en' ? out.charAt(0).toLowerCase() + out.slice(1) : out;
+  }
+  function medSpeech(m, l){
+    return inLang(l, function(){
+      var name = m[l].name, times = SCHEDULE.filter(function(x){ return x.medId === m.id; }).map(function(x){ return x.time; });
+      var when = times.length
+        ? (l === 'en' ? 'Take it ' + spokenTimes(times, 'en') + '.' : spokenTimes(times, 'hi') + ' लें।')
+        : (l === 'en' ? 'No reminder time is set.' : 'कोई रिमाइंडर समय तय नहीं है।');
+      var body = m.custom
+        ? (m[l].doseLine || '') + (l === 'en' ? ' This medicine is not in our safety database, so it has not been checked for interactions. Please ask your pharmacist.' : ' यह दवा हमारे सुरक्षा डेटाबेस में नहीं है, इसलिए इसकी इंटरैक्शन जाँच नहीं हुई। कृपया अपने फार्मासिस्ट से पूछें।')
+        : (m[l].use || '');
+      body = String(body).trim(); if (body && !/[.।!?]$/.test(body)) body += '.';
+      var inter = (!m.custom && getInteractions(m.id)[0]) ? ' ' + getInteractions(m.id)[0][l] : '';
+      return name + '. ' + body + ' ' + when + inter;
+    });
+  }
+  function speakMed(id){
+    var m = MEDS.filter(function(x){ return x.id === id; })[0];
+    if (m) speakBoth(medSpeech(m, 'en'), medSpeech(m, 'hi'));
+  }
+  window.speakMed = speakMed;
+  function listenBtnHtml(m){
+    return '<button class="btn outline sm" type="button" onclick="speakMed(\'' + m.id + '\')" style="align-self:flex-start">🔊 ' + (LANG === 'en' ? 'Listen' : 'सुनें') + '</button>';
+  }
+  function scanSpeech(l){
+    return inLang(l, function(){
+      var parts = scanItems.filter(function(it){ return it.include; }).map(function(it){
+        var bits = [it.name];
+        if (it.dose) bits.push(it.dose.replace(' mg', l === 'en' ? ' milligram' : ' मिलीग्राम'));
+        if (it.qty) bits.push(it.qty);
+        if (it.times && it.times.length) bits.push(spokenTimes(it.times, l));
+        else if (it.times && !it.times.length) bits.push(l === 'en' ? 'only when needed' : 'सिर्फ़ ज़रूरत पड़ने पर');
+        return bits.join(', ');
+      });
+      return (l === 'en' ? 'I found ' + parts.length + ' medicines. ' : 'मुझे ' + parts.length + ' दवाइयाँ मिलीं। ') + parts.join('. ') + '.';
+    });
+  }
+  function speakScan(){ speakBoth(scanSpeech('en'), scanSpeech('hi')); }
+  window.speakScan = speakScan;
 
   function buildSpeechText(){
     var t = T[LANG];
@@ -2786,22 +2966,7 @@
     return greeting + ' ' + summary + nextLine + ' ' + safetyLine;
   }
   document.getElementById('listenBtn').addEventListener('click', function(){
-    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!('speechSynthesis' in window)){
-      if (!reduced) document.querySelectorAll('#homeWave i').forEach(function(b){ b.style.height = (5+Math.round(Math.random()*17))+'px'; });
-      alert(LANG === 'en' ? 'Voice playback is not supported in this browser.' : 'इस ब्राउज़र में आवाज़ चलाना समर्थित नहीं है।');
-      return;
-    }
-    window.speechSynthesis.cancel();
-    stopSpeakAnim();
-    var utter = speakFriendly(buildSpeechText(), LANG);
-    if (!reduced){
-      speakInterval = setInterval(function(){
-        document.querySelectorAll('#homeWave i').forEach(function(b){ b.style.height = (5+Math.round(Math.random()*17))+'px'; });
-      }, 160);
-    }
-    utter.onend = utter.onerror = stopSpeakAnim;
-    window.speechSynthesis.speak(utter);
+    speakBoth(inLang('en', buildSpeechText), inLang('hi', buildSpeechText));
   });
 
   /* IVR simulation — the call itself is always spoken in Hindi, regardless of UI language */
@@ -2934,7 +3099,8 @@
         editHint:'PharmaSaathi read these from your photo. Fix any name that is wrong, untick anything that is not a medicine, then add.',
         nameLabel:'Medicine name', readAs:'Read as:',
         bCatalog:'✓ In safety database', bFuzzy:'≈ Looks like {name} — check', bDict:'Name recognised — not safety-checked',
-        bForm:'Please check this name', bWeak:'Unsure — is this a medicine?',
+        bForm:'Please check this name', bWeak:'Not in my medicine list — check the spelling',
+        take:'Take', doseLabel:'Strength (e.g. 500 mg)', readAloud:'Read these aloud', bLoose:'≈ Looks like {name} — check the spelling',
         timesGuess:'no timing found on the paper — will use {t} (change it later)', forDur:'for {d}',
         mismatch:'Your paper says {a}, but the database entry is {b} — its dosing information is for {b}.',
         addMissing:'Add a medicine that was missed', nothing:'Tick at least one medicine to add.', asNeeded:'as needed — no fixed reminders'
@@ -3029,7 +3195,8 @@
         editHint:'PharmaSaathi ने ये आपकी फ़ोटो से पढ़ा है। जो नाम गलत हो उसे ठीक करें, जो दवा नहीं है उसे अनचेक करें, फिर जोड़ें।',
         nameLabel:'दवा का नाम', readAs:'ऐसा पढ़ा:',
         bCatalog:'✓ सुरक्षा डेटाबेस में', bFuzzy:'≈ {name} जैसा लगता है — जाँचें', bDict:'नाम पहचाना — सुरक्षा जाँच नहीं हुई',
-        bForm:'कृपया यह नाम जाँचें', bWeak:'पक्का नहीं — क्या यह दवा है?',
+        bForm:'कृपया यह नाम जाँचें', bWeak:'मेरी दवा-सूची में नहीं — वर्तनी जाँचें',
+        take:'खुराक:', doseLabel:'मात्रा (जैसे 500 mg)', readAloud:'ये नाम सुनें', bLoose:'≈ यह {name} जैसा लगता है — वर्तनी जाँचें',
         timesGuess:'कागज़ पर समय नहीं मिला — {t} रखा जाएगा (बाद में बदलें)', forDur:'{d} के लिए',
         mismatch:'आपके कागज़ पर {a} है, पर डेटाबेस एंट्री {b} की है — उसकी खुराक जानकारी {b} के लिए है।',
         addMissing:'छूटी हुई दवा जोड़ें', nothing:'जोड़ने के लिए कम से कम एक दवा चुनें।', asNeeded:'ज़रूरत पड़ने पर — कोई तय रिमाइंडर नहीं'
