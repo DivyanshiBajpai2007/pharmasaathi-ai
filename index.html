@@ -5,6 +5,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <title>PharmaSaathi AI</title>
 <style>
   :root{
@@ -855,16 +856,20 @@
                 ['🔮','Predictive medicine availability','Forecast which nearby pharmacies are likely to have a medicine in stock before the patient travels.'] ] },
       scan:{
         dropTitle:'Take a photo or upload your prescription',
-        dropHint:'JPG or PNG · prototype only, nothing is uploaded anywhere',
+        dropHint:'JPG or PNG · read entirely in your browser, never uploaded anywhere',
         chooseBtn:'📷&nbsp; Choose photo',
         analyzing:'Reading your prescription…',
-        extractedTitle:'Extracted from prescription',
-        confidence:'Match confidence',
+        extractedTitle:'Medicines recognized',
+        matchesFound:' matched', confHigh:'✓ Match', confMedium:'⚠ Check name',
         fieldName:'Medicine', fieldDose:'Dose', fieldUse:'For',
-        foundMany:' medicines found — untick anything you don\'t want to add.',
+        verifyWarning:'AI read this from your photo — please verify each name against the paper prescription before adding.',
+        alreadyTaking:'Already in your medicine list',
+        ocrFailed:'The OCR engine couldn\'t load (check your internet connection) — nothing was read from this photo.',
+        noMatch:'PharmaSaathi couldn\'t recognize any known medicine name in this photo. Try a clearer, well-lit photo of the printed text, or a different prescription.',
+        rawTextLabel:'What PharmaSaathi actually read from the photo',
         addBtn:'➕&nbsp; Add selected to my medicines',
         retakeBtn:'↻ Scan a different prescription',
-        disclaimer:'Prototype only — extraction is simulated, not real OCR.'
+        disclaimer:'Real OCR (Tesseract.js), matched against a limited demo catalog — always double-check against the paper prescription.'
       },
       doc:{ intro:'Book a slot with your doctor or pharmacist. This is a demo booking — no real appointment is created.',
         myApptsTitle:'My appointments', cancelBtn:'Cancel', slotLabel:'Choose a time slot',
@@ -953,16 +958,20 @@
                 ['🔮','दवा उपलब्धता का पूर्वानुमान','मरीज़ के जाने से पहले अनुमान — आस-पास किस फार्मेसी में दवा मिलने की संभावना अधिक है।'] ] },
       scan:{
         dropTitle:'अपने प्रिस्क्रिप्शन की फ़ोटो लें या अपलोड करें',
-        dropHint:'JPG या PNG · केवल प्रोटोटाइप, कहीं कुछ अपलोड नहीं होता',
+        dropHint:'JPG या PNG · पूरी तरह आपके ब्राउज़र में पढ़ी जाती है, कहीं अपलोड नहीं होती',
         chooseBtn:'📷&nbsp; फ़ोटो चुनें',
         analyzing:'आपका प्रिस्क्रिप्शन पढ़ा जा रहा है…',
-        extractedTitle:'प्रिस्क्रिप्शन से निकाली गई जानकारी',
-        confidence:'मिलान की सटीकता',
+        extractedTitle:'पहचानी गई दवाइयाँ',
+        matchesFound:' मिलान', confHigh:'✓ मिलान', confMedium:'⚠ नाम जाँचें',
         fieldName:'दवा', fieldDose:'खुराक', fieldUse:'किसलिए',
-        foundMany:' दवाइयाँ मिलीं — जो नहीं जोड़नी उसे अनचेक करें।',
+        verifyWarning:'AI ने यह आपकी फ़ोटो से पढ़ा है — जोड़ने से पहले हर नाम कागज़ी प्रिस्क्रिप्शन से मिलाकर पुष्टि करें।',
+        alreadyTaking:'पहले से आपकी दवा सूची में है',
+        ocrFailed:'OCR इंजन लोड नहीं हो सका (इंटरनेट कनेक्शन जाँचें) — इस फ़ोटो से कुछ नहीं पढ़ा जा सका।',
+        noMatch:'PharmaSaathi इस फ़ोटो में किसी ज्ञात दवा का नाम नहीं पहचान सका। छपे हुए टेक्स्ट की स्पष्ट, अच्छी रोशनी वाली फ़ोटो लें, या कोई अन्य प्रिस्क्रिप्शन आज़माएँ।',
+        rawTextLabel:'PharmaSaathi ने फ़ोटो से वास्तव में क्या पढ़ा',
         addBtn:'➕&nbsp; चुनी गई दवाइयाँ जोड़ें',
         retakeBtn:'↻ दूसरा प्रिस्क्रिप्शन स्कैन करें',
-        disclaimer:'केवल प्रोटोटाइप — निष्कर्षण अनुकरणित है, असली OCR नहीं।'
+        disclaimer:'असली OCR (Tesseract.js), एक सीमित डेमो कैटलॉग से मिलान किया गया — हमेशा कागज़ी प्रिस्क्रिप्शन से दोबारा जाँच करें।'
       },
       doc:{ intro:'अपने डॉक्टर या फार्मासिस्ट के साथ स्लॉट बुक करें। यह केवल डेमो बुकिंग है — कोई वास्तविक अपॉइंटमेंट नहीं बनता।',
         myApptsTitle:'मेरी अपॉइंटमेंट्स', cancelBtn:'रद्द करें', slotLabel:'समय स्लॉट चुनें',
@@ -1726,15 +1735,58 @@
         contraindications:['गंभीर किडनी रोग (खुराक समायोजन आवश्यक)','Cetirizine/hydroxyzine से ज्ञात अतिसंवेदनशीलता'] } }
   ];
 
-  var scanState = 'idle'; // idle | analyzing | done
+  /* Brand-name / spelling aliases so real OCR text (which reads whatever brand
+     name is printed on an Indian prescription) can be matched back to our
+     catalog, not just the exact generic name. */
+  var MED_ALIASES = {
+    metformin: ['metformin','glycomet','glucophage','carbophage'],
+    amoxicillin: ['amoxicillin','amoxil','mox','novamox','amoxycillin'],
+    levothyroxine: ['levothyroxine','thyronorm','eltroxin','thyrox'],
+    paracetamol: ['paracetamol','acetaminophen','crocin','dolo','calpol','paracip'],
+    ibuprofen: ['ibuprofen','brufen','ibugesic'],
+    omeprazole: ['omeprazole','omez','ocid','prilosec'],
+    azithromycin: ['azithromycin','azithral','zithromax','aziwok'],
+    cetirizine: ['cetirizine','cetzine','alerid','zyrtec']
+  };
+  function fullCatalog(){
+    var seen = {}, list = [];
+    MEDS.concat(SCAN_RESULTS).forEach(function(m){
+      if (!seen[m.id]){ seen[m.id] = true; list.push(m); }
+    });
+    return list;
+  }
+  /* real OCR text is noisy — score each candidate so obvious matches (generic
+     name or an exact brand alias) rank above weaker substring hits */
+  function matchMedicinesFromText(rawText){
+    var text = (rawText || '').toLowerCase();
+    var matches = [];
+    fullCatalog().forEach(function(m){
+      var aliases = MED_ALIASES[m.id] || [m.id];
+      var best = null;
+      aliases.forEach(function(a){
+        if (text.indexOf(a) !== -1 && (!best || a.length > best.length)) best = a;
+      });
+      if (best){
+        matches.push({ med:m, matchedOn:best, confidence: best === m.id || best === m.en.name.split(' ')[0].toLowerCase() ? 'high' : 'medium' });
+      }
+    });
+    return matches;
+  }
+
+  var scanState = 'idle'; // idle | analyzing | done | no-match | ocr-failed
   var scanImageUrl = null;
   var scanSelected = {};
+  var scanMatches = [];
+  var scanRawText = '';
+  var scanProgressPct = 0;
 
   function startScan(){
     scanState = 'idle';
     scanImageUrl = null;
     scanSelected = {};
-    SCAN_RESULTS.forEach(function(r){ scanSelected[r.id] = true; });
+    scanMatches = [];
+    scanRawText = '';
+    scanProgressPct = 0;
     var input = document.getElementById('scanFileInput');
     if (input) input.value = '';
     renderScan();
@@ -1751,15 +1803,48 @@
     reader.onload = function(e){
       scanImageUrl = e.target.result;
       scanState = 'analyzing';
+      scanProgressPct = 0;
       renderScan();
-      setTimeout(function(){ scanState = 'done'; renderScan(); }, 1500);
+      runOcr(file);
     };
     reader.readAsDataURL(file);
   }
 
+  /* this is real OCR (Tesseract.js, runs in-browser, no account/API key
+     needed) — not a canned result. Accuracy depends entirely on the photo:
+     it reads clear printed/typed text well, handwriting poorly, same as any
+     OCR engine. The raw text is always shown so nothing is hidden from the
+     patient if the reading is wrong. */
+  function runOcr(file){
+    if (typeof Tesseract === 'undefined'){
+      scanState = 'ocr-failed';
+      renderScan();
+      return;
+    }
+    Tesseract.recognize(file, 'eng', {
+      logger: function(m){
+        if (m.status === 'recognizing text' && typeof m.progress === 'number'){
+          scanProgressPct = Math.round(m.progress * 100);
+          renderScan();
+        }
+      }
+    }).then(function(result){
+      scanRawText = (result && result.data && result.data.text) || '';
+      scanMatches = matchMedicinesFromText(scanRawText);
+      scanSelected = {};
+      scanMatches.forEach(function(x){ scanSelected[x.med.id] = true; });
+      scanState = scanMatches.length ? 'done' : 'no-match';
+      renderScan();
+    }).catch(function(){
+      scanState = 'ocr-failed';
+      renderScan();
+    });
+  }
+
   function addScannedMeds(){
     var added = [];
-    SCAN_RESULTS.forEach(function(r){
+    scanMatches.forEach(function(x){
+      var r = x.med;
       if (scanSelected[r.id] && !MEDS.some(function(m){ return m.id === r.id; })){
         MEDS.push(r);
         added.push(r.id);
@@ -1840,22 +1925,49 @@
         '<div class="scan-preview">' +
           (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') +
           '<div class="spinner"></div>' +
-          '<span class="muted">'+s.analyzing+'</span>' +
+          '<span class="muted">'+s.analyzing+(scanProgressPct ? ' '+scanProgressPct+'%' : '')+'</span>' +
         '</div>';
+    } else if (scanState === 'ocr-failed'){
+      el.innerHTML =
+        '<div class="scan-preview">' + (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') + '</div>' +
+        '<div class="callout risk"><span>⚠️</span><span>'+s.ocrFailed+'</span></div>' +
+        '<button class="btn primary" type="button" onclick="startScan()">'+s.retakeBtn+'</button>';
+    } else if (scanState === 'no-match'){
+      el.innerHTML =
+        '<div class="scan-preview">' + (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') + '</div>' +
+        '<div class="callout warn"><span>🔍</span><span>'+s.noMatch+'</span></div>' +
+        (scanRawText.trim()
+          ? '<details><summary>'+s.rawTextLabel+'</summary><p style="margin-top:6px;white-space:pre-wrap;font-size:.78rem">'+scanRawText.replace(/</g,'&lt;')+'</p></details>'
+          : '') +
+        '<button class="btn primary" type="button" onclick="startScan()">'+s.retakeBtn+'</button>';
     } else if (scanState === 'done'){
-      var itemsHtml = SCAN_RESULTS.map(function(r){
-        var d = r[LANG];
+      var itemsHtml = scanMatches.map(function(x){
+        var r = x.med, d = r[LANG];
+        var already = MEDS.some(function(m){ return m.id === r.id; });
+        if (already){
+          return '<div class="scan-check" style="opacity:.7;cursor:default">' +
+            '<span class="badge good" style="flex:0 0 auto">✓</span>' +
+            '<span class="mid"><span class="mname">'+d.name+'</span><span class="mdose">'+s.alreadyTaking+'</span></span>' +
+          '</div>';
+        }
         var checked = scanSelected[r.id] ? 'checked' : '';
+        var confBadge = x.confidence === 'high'
+          ? '<span class="badge good" style="flex:0 0 auto">'+s.confHigh+'</span>'
+          : '<span class="badge warn" style="flex:0 0 auto">'+s.confMedium+'</span>';
         return '<label class="scan-check">' +
           '<input type="checkbox" '+checked+' onchange="toggleScanSelect(\''+r.id+'\', this.checked)">' +
           '<span class="mid"><span class="mname">'+d.name+'</span><span class="mdose">'+d.doseLine+' · '+d.use+'</span></span>' +
+          confBadge +
         '</label>';
       }).join('');
       el.innerHTML =
         '<div class="scan-preview">' + (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') + '</div>' +
-        '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+s.confidence+' 92%</span></div><hr>' +
-        '<p class="muted" style="margin-bottom:6px">'+SCAN_RESULTS.length+s.foundMany+'</p>' +
+        '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanMatches.length+s.matchesFound+'</span></div><hr>' +
+        '<p class="muted" style="margin-bottom:6px">'+s.verifyWarning+'</p>' +
         '<div style="display:flex;flex-direction:column;gap:8px">'+itemsHtml+'</div></div>' +
+        (scanRawText.trim()
+          ? '<details><summary>'+s.rawTextLabel+'</summary><p style="margin-top:6px;white-space:pre-wrap;font-size:.78rem">'+scanRawText.replace(/</g,'&lt;')+'</p></details>'
+          : '') +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
         '<p class="muted" style="text-align:center">'+s.disclaimer+'</p>';
