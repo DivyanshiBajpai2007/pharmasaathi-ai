@@ -361,7 +361,7 @@
         <button type="button" data-lang="en" aria-pressed="true">EN</button>
         <button type="button" data-lang="hi" aria-pressed="false">हि</button>
       </div>
-      <button class="iconbtn" id="settingsBtn" type="button" aria-label="Settings" onclick="go('settings')">⚙️</button>
+      <button class="iconbtn" id="settingsBtn" type="button" aria-label="Profile" onclick="go('future')">⚙️</button>
     </div>
 
     <div class="content" id="content">
@@ -401,12 +401,6 @@
           <span class="muted" style="font-size:.72rem" id="h_listenLabel">Listen</span>
         </div>
 
-        <button class="medcard" type="button" onclick="go('rewards')" id="rewardsCard">
-          <span class="pill-ic">🏆</span>
-          <span class="mid"><span class="mname" id="rw_home_label">Rewards</span><span class="mdose" id="rw_home_sub">0 coins · 0-day streak</span></span>
-          <span class="chev">›</span>
-        </button>
-
         <button class="btn primary" type="button" onclick="startScan()" id="h_scanBtn">📷&nbsp; Scan a new prescription</button>
 
         <div class="card flat" style="background:var(--surface-2)">
@@ -415,13 +409,39 @@
             <span class="badge warn" id="h_safetyBadge">1 needs attention</span>
           </div>
           <p class="muted" style="margin-top:6px" id="h_safetyDesc"></p>
+          <a class="btn outline sm" id="h_safetyContactBtn" href="#" style="margin-top:10px;width:100%" hidden></a>
+        </div>
+
+        <div class="row" style="gap:10px">
+          <button class="medcard" type="button" onclick="go('reports')" style="flex-direction:column;text-align:center;gap:6px;padding:14px 8px">
+            <span class="pill-ic" style="margin:0 auto">📄</span><span class="mid" style="text-align:center"><span class="mname" id="qa_health" style="font-size:.78rem">Health</span></span>
+          </button>
+          <button class="medcard" type="button" onclick="go('caregiver')" style="flex-direction:column;text-align:center;gap:6px;padding:14px 8px">
+            <span class="pill-ic" style="margin:0 auto">👪</span><span class="mid" style="text-align:center"><span class="mname" id="qa_care" style="font-size:.78rem">Care</span></span>
+          </button>
+          <button class="medcard" type="button" onclick="go('doctor')" style="flex-direction:column;text-align:center;gap:6px;padding:14px 8px">
+            <span class="pill-ic" style="margin:0 auto">👨‍⚕️</span><span class="mid" style="text-align:center"><span class="mname" id="qa_doctor" style="font-size:.78rem">Doctor</span></span>
+          </button>
         </div>
       </section>
 
-      <!-- MEDICINES LIST -->
+      <!-- MEDICINES / PRESCRIPTION CENTER -->
       <section class="screen" id="screen-medicines" hidden>
-        <p class="section-label" id="m_count">4 active medicines</p>
+        <button class="btn primary" type="button" onclick="startScan()">📷&nbsp; <span id="pc_scanLabel">Scan / upload prescription</span></button>
+        <p class="section-label" id="pc_myRx">My prescriptions</p>
+        <div id="rxList" style="display:flex;flex-direction:column;gap:10px"></div>
+        <p class="section-label" id="m_count" style="margin-top:6px">4 active medicines</p>
         <div id="medList" style="display:flex;flex-direction:column;gap:10px"></div>
+      </section>
+
+      <!-- PRESCRIPTION DETAIL -->
+      <section class="screen" id="screen-rx-detail" hidden>
+        <div id="rxDetailBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <!-- SAFETY CHECK RESULT -->
+      <section class="screen" id="screen-safety-check" hidden>
+        <div id="safetyCheckBody" style="display:flex;flex-direction:column;gap:14px"></div>
       </section>
 
       <!-- SCAN PRESCRIPTION -->
@@ -445,11 +465,6 @@
         <button class="medcard" type="button" onclick="go('adr')">
           <span class="pill-ic">📋</span>
           <span class="mid"><span class="mname" id="r_adrName">ADR report</span><span class="mdose" id="r_adrSub">1 adverse reaction logged</span></span>
-          <span class="chev">›</span>
-        </button>
-        <button class="medcard" type="button" onclick="go('ivr')">
-          <span class="pill-ic">📞</span>
-          <span class="mid"><span class="mname" id="r_ivrName">IVR side-effect check-in</span><span class="mdose" id="r_ivrSub">Automated call for low-literacy users</span></span>
           <span class="chev">›</span>
         </button>
         <button class="medcard" type="button" onclick="go('doctor')">
@@ -491,8 +506,24 @@
         <div id="cgBody" style="display:flex;flex-direction:column;gap:14px"></div>
       </section>
 
-      <!-- FUTURE -->
+      <!-- PROFILE -->
       <section class="screen" id="screen-future" hidden>
+        <button class="medcard" type="button" onclick="go('rewards')">
+          <span class="pill-ic">🌟</span>
+          <span class="mid"><span class="mname" id="pr_rewardsName">Adherence rewards</span><span class="mdose" id="pr_rewardsSub">0 coins · 0-day streak</span></span>
+          <span class="chev">›</span>
+        </button>
+        <button class="medcard" type="button" onclick="go('help')">
+          <span class="pill-ic">❓</span>
+          <span class="mid"><span class="mname" id="st_helpName">Help &amp; support</span><span class="mdose" id="st_helpSub">FAQs and contact</span></span>
+          <span class="chev">›</span>
+        </button>
+        <button class="medcard" type="button" onclick="go('privacy')">
+          <span class="pill-ic">🔒</span>
+          <span class="mid"><span class="mname" id="st_privName">Privacy policy</span><span class="mdose" id="st_privSub">How your data is handled</span></span>
+          <span class="chev">›</span>
+        </button>
+        <p class="section-label" id="pr_roadmapLabel" style="margin-top:6px">Coming soon</p>
         <div id="futureBody" style="display:flex;flex-direction:column;gap:14px"></div>
       </section>
 
@@ -526,20 +557,6 @@
         <div id="rewardsBody" style="display:flex;flex-direction:column;gap:14px"></div>
       </section>
 
-      <!-- SETTINGS HUB -->
-      <section class="screen" id="screen-settings" hidden>
-        <button class="medcard" type="button" onclick="go('help')">
-          <span class="pill-ic">❓</span>
-          <span class="mid"><span class="mname" id="st_helpName">Help &amp; support</span><span class="mdose" id="st_helpSub">FAQs and contact</span></span>
-          <span class="chev">›</span>
-        </button>
-        <button class="medcard" type="button" onclick="go('privacy')">
-          <span class="pill-ic">🔒</span>
-          <span class="mid"><span class="mname" id="st_privName">Privacy policy</span><span class="mdose" id="st_privSub">How your data is handled</span></span>
-          <span class="chev">›</span>
-        </button>
-      </section>
-
       <!-- HELP & SUPPORT -->
       <section class="screen" id="screen-help" hidden>
         <div id="helpBody" style="display:flex;flex-direction:column;gap:14px"></div>
@@ -555,9 +572,9 @@
     <nav class="tabbar" id="tabbar">
       <button data-tab="home" aria-current="true" type="button"><span class="ic">🏠</span><span class="tb-label">Home</span></button>
       <button data-tab="medicines" type="button"><span class="ic">💊</span><span class="tb-label">Medicines</span></button>
-      <button data-tab="reports" type="button"><span class="ic">📄</span><span class="tb-label">Reports</span></button>
-      <button data-tab="caregiver" type="button"><span class="ic">👪</span><span class="tb-label">Caregiver</span></button>
-      <button data-tab="future" type="button"><span class="ic">✨</span><span class="tb-label">Future</span></button>
+      <button data-tab="reports" type="button"><span class="ic">🩺</span><span class="tb-label">Health</span></button>
+      <button data-tab="caregiver" type="button"><span class="ic">👪</span><span class="tb-label">Care</span></button>
+      <button data-tab="future" type="button"><span class="ic">👤</span><span class="tb-label">Profile</span></button>
     </nav>
 
     <div class="alarm-overlay" id="alarmOverlay" hidden>
@@ -729,6 +746,15 @@
       hi:{ name:'डॉ. ए. शर्मा', spec:'फार्मासिस्ट परामर्श', place:'PharmaSaathi पार्टनर फार्मेसी', slots:['दोपहर 12:00','दोपहर 3:00'] } }
   ];
 
+  /* one prescription can cover several medicines — this is what the whole
+     Scan → Verify → Safety Check → Schedule journey is built around */
+  var PRESCRIPTIONS = [
+    { id:'rx1', doctorId:'iyer', date:'10 Jun 2026', medIds:['metformin'] },
+    { id:'rx2', doctorId:'mehta', date:'02 Nov 2025', medIds:['levothyroxine'] },
+    { id:'rx3', doctorId:'sharma', date:'20 Aug 2026', medIds:['amoxicillin','ibuprofen'] },
+    { id:'rx4', doctorId:null, selfLabel:{en:'Self-reported',hi:'स्व-रिपोर्टित'}, date:'—', medIds:['paracetamol','omeprazole'] }
+  ];
+
   var HISTORY = [
     { date:'15 Sep 2026', en:'ADR reported: mild rash linked to Amoxicillin.', hi:'ADR दर्ज: Amoxicillin से जुड़ा हल्का रैश।' },
     { date:'12 Sep 2026', en:'Diagnostic test: Kidney Function Test (eGFR 42 mL/min).', hi:'डायग्नोस्टिक टेस्ट: किडनी फंक्शन टेस्ट (eGFR 42 mL/min)।' },
@@ -757,8 +783,16 @@
       tagline:'“If you can’t read it, PharmaSaathi speaks.”',
       desc:'A working mock-up of the medicine-safety app — dosing by age, mechanism &amp; antidote lookups, ADR reporting, missed-dose alerts, an IVR side-effect check-in, and a caregiver view. Tap the tabs inside the phone to explore.',
       legend:['Verified','Needs attention','Risk flagged','Future / not in MVP'],
-      tabs:['Home','Medicines','Reports','Caregiver','Future'],
-      screenTitles:{ home:['Home','Namaste, Rajesh ji'], medicines:['Medicines','4 active'], 'med-detail':['',''], reports:['Reports','Lab · ADR · Calls'], lab:['Lab report','Kidney function panel'], adr:['ADR report','Adverse reaction log'], ivr:['IVR check-in','Automated side-effect call'], caregiver:['Caregiver view','Rajesh Kumar'], future:['Coming soon','Planned after pilot'], scan:['Scan prescription','Point camera or upload a photo'],
+      tabs:['Home','Medicines','Health','Care','Profile'],
+      pcScanLabel:'Scan / upload prescription', pcMyRx:'My prescriptions',
+      qaHealth:'Health', qaCare:'Care', qaDoctor:'Doctor',
+      rx:{ medsTitle:'Medicines in this prescription', viewScheduleBtn:'📅 View my schedule', safetyCheckBtn:'🛡️ Run safety check' },
+      safety:{ title:'PharmaSaathi Safety Check', checkMeds:'{n} medicines identified', checkDose:'Dosage instructions detected',
+        whyLabel:'Why am I seeing this warning?', whyText:'PharmaSaathi checks your confirmed medicines against a known list of drug pairs, allergy conflicts and duplicate ingredients. A warning means the combination needs a professional look — it does not mean you\'ve done anything wrong.',
+        noInteractions:'No interactions detected among your current medicines.',
+        viewScheduleBtn:'📅 View my schedule', contactPharmacistBtn:'🩺 Contact pharmacist' },
+      screenTitles:{ home:['Home','Namaste, Rajesh ji'], medicines:['Medicines','4 active'], 'med-detail':['',''], reports:['Health','Reports · History · Appointments'], lab:['Lab report','Kidney function panel'], adr:['ADR report','Adverse reaction log'], ivr:['IVR check-in','Automated side-effect call'], caregiver:['Care','Caregiver & family support'], future:['Profile','Rewards, help & settings'], scan:['Scan prescription','Point camera or upload a photo'],
+        'rx-detail':['Prescription',''], 'safety-check':['Safety check','Medicine safety review'],
         diagnostics:['Diagnostic reports','All reports'], 'diag-detail':['',''], doctor:['Book appointment','Choose a doctor'], 'doctor-book':['Choose a slot',''], history:['Medical history','Full timeline'], rewards:['Rewards','Coins & streaks'], settings:['Settings',''], help:['Help & support','FAQs and contact'], privacy:['Privacy policy','How your data is handled'] },
       notifTitle:'Missed dose alert', notifDesc:'Metformin 500mg · 2:00 PM dose not marked taken',
       markTaken:'Mark as taken', notify:'Notify caregiver',
@@ -797,7 +831,8 @@
         missedL:'Missed dose:', missedV:'Metformin 500mg, today 2:00 PM — not yet marked taken.',
         adrL:'ADR flagged:', adrV:'Mild rash reported for Amoxicillin — pharmacist reviewing.',
         call:'📱&nbsp; Call Rajesh ji', callAlert:'Prototype only — this would place a real call to Rajesh ji.',
-        viewMeds:'💊&nbsp; View full medicine list', viewAdr:'📋&nbsp; View ADR report' },
+        viewMeds:'💊&nbsp; View full medicine list', viewAdr:'📋&nbsp; View ADR report',
+        ivrName:'IVR side-effect check-in', ivrSub:'Automated call for low-literacy users' },
       future:{ intro:'Planned after pilot validation — not part of the current MVP.',
         items:[ ['🪪','Ayushman Card integration','Link the patient’s health ID so guidance accounts for their scheme coverage.'],
                 ['🔗','ABDM interoperability','Sync records via the Ayushman Bharat Digital Mission health ID across clinics and pharmacies.'],
@@ -840,8 +875,16 @@
       tagline:'“अगर आप इसे पढ़ नहीं पा रहे, तो PharmaSaathi बोलकर बताएगा।”',
       desc:'दवा-सुरक्षा ऐप का एक कार्यशील मॉक-अप — आयु अनुसार खुराक, क्रियाविधि व प्रतिविष जानकारी, ADR रिपोर्टिंग, छूटी खुराक की चेतावनी, IVR साइड-इफ़ेक्ट चेक-इन, और देखभालकर्ता व्यू। नीचे फ़ोन के टैब दबाकर देखें।',
       legend:['सत्यापित','ध्यान दें','जोखिम चिह्नित','भविष्य / MVP में नहीं'],
-      tabs:['होम','दवाइयाँ','रिपोर्ट','देखभाल','भविष्य'],
-      screenTitles:{ home:['होम','नमस्ते, राजेश जी'], medicines:['दवाइयाँ','4 सक्रिय'], 'med-detail':['',''], reports:['रिपोर्ट','लैब · ADR · कॉल'], lab:['लैब रिपोर्ट','किडनी फंक्शन पैनल'], adr:['ADR रिपोर्ट','प्रतिकूल प्रतिक्रिया लॉग'], ivr:['IVR चेक-इन','स्वचालित साइड-इफ़ेक्ट कॉल'], caregiver:['देखभालकर्ता व्यू','राजेश कुमार'], future:['आने वाला','पायलट के बाद योजनाबद्ध'], scan:['प्रिस्क्रिप्शन स्कैन करें','कैमरा या फ़ोटो अपलोड करें'],
+      tabs:['होम','दवाइयाँ','हेल्थ','केयर','प्रोफ़ाइल'],
+      pcScanLabel:'प्रिस्क्रिप्शन स्कैन/अपलोड करें', pcMyRx:'मेरे प्रिस्क्रिप्शन',
+      qaHealth:'हेल्थ', qaCare:'केयर', qaDoctor:'डॉक्टर',
+      rx:{ medsTitle:'इस प्रिस्क्रिप्शन की दवाइयाँ', viewScheduleBtn:'📅 मेरी समय-सारणी देखें', safetyCheckBtn:'🛡️ सुरक्षा जाँच चलाएँ' },
+      safety:{ title:'PharmaSaathi सुरक्षा जाँच', checkMeds:'{n} दवाइयाँ पहचानी गईं', checkDose:'खुराक निर्देश मिले',
+        whyLabel:'यह चेतावनी क्यों दिख रही है?', whyText:'PharmaSaathi आपकी पुष्टि की गई दवाइयों की तुलना ज्ञात दवा-जोड़ों, एलर्जी टकराव और डुप्लिकेट सामग्री की सूची से करता है। चेतावनी का मतलब है कि इस संयोजन पर विशेषज्ञ की नज़र ज़रूरी है — इसका मतलब यह नहीं कि आपने कुछ गलत किया है।',
+        noInteractions:'आपकी मौजूदा दवाइयों के बीच कोई इंटरैक्शन नहीं मिला।',
+        viewScheduleBtn:'📅 मेरी समय-सारणी देखें', contactPharmacistBtn:'🩺 फार्मासिस्ट से संपर्क करें' },
+      screenTitles:{ home:['होम','नमस्ते, राजेश जी'], medicines:['दवाइयाँ','4 सक्रिय'], 'med-detail':['',''], reports:['हेल्थ','रिपोर्ट · हिस्ट्री · अपॉइंटमेंट्स'], lab:['लैब रिपोर्ट','किडनी फंक्शन पैनल'], adr:['ADR रिपोर्ट','प्रतिकूल प्रतिक्रिया लॉग'], ivr:['IVR चेक-इन','स्वचालित साइड-इफ़ेक्ट कॉल'], caregiver:['केयर','देखभाल व पारिवारिक सहयोग'], future:['प्रोफ़ाइल','रिवॉर्ड्स, सहायता व सेटिंग्स'], scan:['प्रिस्क्रिप्शन स्कैन करें','कैमरा या फ़ोटो अपलोड करें'],
+        'rx-detail':['प्रिस्क्रिप्शन',''], 'safety-check':['सुरक्षा जाँच','दवा सुरक्षा समीक्षा'],
         diagnostics:['डायग्नोस्टिक रिपोर्ट','सभी रिपोर्ट'], 'diag-detail':['',''], doctor:['अपॉइंटमेंट बुक करें','डॉक्टर चुनें'], 'doctor-book':['स्लॉट चुनें',''], history:['मेडिकल हिस्ट्री','पूरी समयरेखा'], rewards:['रिवॉर्ड्स','कॉइन्स व स्ट्रीक'], settings:['सेटिंग्स',''], help:['सहायता','FAQ और संपर्क'], privacy:['प्राइवेसी पॉलिसी','आपका डेटा कैसे संभाला जाता है'] },
       notifTitle:'छूटी हुई खुराक की चेतावनी', notifDesc:'Metformin 500mg · दोपहर 2:00 बजे की खुराक अभी दर्ज नहीं है',
       markTaken:'ली हुई दर्ज करें', notify:'देखभालकर्ता को सूचित करें',
@@ -880,7 +923,8 @@
         missedL:'छूटी खुराक:', missedV:'Metformin 500mg, आज दोपहर 2:00 बजे — अभी तक ली हुई दर्ज नहीं।',
         adrL:'ADR चिह्नित:', adrV:'Amoxicillin के लिए हल्का रैश दर्ज — फार्मासिस्ट समीक्षा कर रहे हैं।',
         call:'📱&nbsp; राजेश जी को कॉल करें', callAlert:'केवल प्रोटोटाइप — असली ऐप में यह राजेश जी को वास्तविक कॉल करेगा।',
-        viewMeds:'💊&nbsp; पूरी दवा सूची देखें', viewAdr:'📋&nbsp; ADR रिपोर्ट देखें' },
+        viewMeds:'💊&nbsp; पूरी दवा सूची देखें', viewAdr:'📋&nbsp; ADR रिपोर्ट देखें',
+        ivrName:'IVR साइड-इफ़ेक्ट चेक-इन', ivrSub:'कम साक्षरता वाले उपयोगकर्ताओं हेतु स्वचालित कॉल' },
       future:{ intro:'पायलट सत्यापन के बाद योजनाबद्ध — यह वर्तमान MVP का हिस्सा नहीं है।',
         items:[ ['🪪','आयुष्मान कार्ड एकीकरण','मरीज़ की हेल्थ ID जोड़ें ताकि मार्गदर्शन उनकी योजना कवरेज को ध्यान में रखे।'],
                 ['🔗','ABDM इंटरऑपरेबिलिटी','आयुष्मान भारत डिजिटल मिशन हेल्थ ID के ज़रिए क्लीनिकों और फार्मेसियों में रिकॉर्ड सिंक करें।'],
@@ -927,12 +971,13 @@
   var openMedId = null;
 
   var screens = ['home','medicines','med-detail','reports','lab','adr','ivr','caregiver','future','scan',
-    'diagnostics','diag-detail','doctor','doctor-book','history','rewards','settings','help','privacy'];
-  var tabOf = { home:'home', medicines:'medicines', 'med-detail':'medicines', reports:'reports', lab:'reports', adr:'reports', ivr:'reports', caregiver:'caregiver', future:'future', scan:'home',
-    diagnostics:'reports', 'diag-detail':'reports', doctor:'reports', 'doctor-book':'reports', history:'reports', rewards:'home' };
-  var backTarget = { 'med-detail':'medicines', lab:'reports', adr:'reports', ivr:'reports', scan:'home',
-    diagnostics:'reports', 'diag-detail':'diagnostics', doctor:'reports', 'doctor-book':'doctor', history:'reports', rewards:'home',
-    settings:'home', help:'settings', privacy:'settings' };
+    'diagnostics','diag-detail','doctor','doctor-book','history','rewards','help','privacy','rx-detail','safety-check'];
+  var tabOf = { home:'home', medicines:'medicines', 'med-detail':'medicines', reports:'reports', lab:'reports', adr:'reports', ivr:'caregiver', caregiver:'caregiver', future:'future', scan:'home',
+    diagnostics:'reports', 'diag-detail':'reports', doctor:'reports', 'doctor-book':'reports', history:'reports', rewards:'future',
+    'rx-detail':'medicines', 'safety-check':'medicines' };
+  var backTarget = { 'med-detail':'medicines', lab:'reports', adr:'reports', ivr:'caregiver', scan:'home',
+    diagnostics:'reports', 'diag-detail':'diagnostics', doctor:'reports', 'doctor-book':'doctor', history:'reports', rewards:'future',
+    help:'future', privacy:'future', 'rx-detail':'medicines', 'safety-check':'medicines' };
 
   function badgeClass(s){ return s === 'good' ? 'good' : (s === 'risk' ? 'risk' : 'warn'); }
   function badgeLabel(t,s){ return s === 'good' ? t.badgeGood : (s === 'risk' ? t.badgeRisk : t.badgeWarn); }
@@ -1188,12 +1233,6 @@
     }
   }
 
-  function renderRewardsHomeWidget(){
-    var t = T[LANG].rw;
-    document.getElementById('rw_home_label').textContent = t.homeLabel;
-    document.getElementById('rw_home_sub').textContent = t.homeSubFmt.replace('{coins}', getCoins()).replace('{streak}', getStreak());
-  }
-
   function renderRewards(){
     var t = T[LANG].rw;
     var coins = getCoins();
@@ -1353,6 +1392,100 @@
       '<hr><p class="muted">'+t.updated+'</p></div>';
   }
 
+  /* ================= PRESCRIPTION CENTER ================= */
+  function rxDoctorName(rx){
+    if (rx.doctorId){
+      var d = DOCTORS.filter(function(x){ return x.id === rx.doctorId; })[0];
+      return d ? d[LANG].name : rx.doctorId;
+    }
+    return rx.selfLabel[LANG];
+  }
+
+  function renderRxList(){
+    var el = document.getElementById('rxList');
+    if (!el) return;
+    el.innerHTML = PRESCRIPTIONS.map(function(rx){
+      var count = rx.medIds.length;
+      var countLabel = LANG === 'en' ? count + (count === 1 ? ' medicine' : ' medicines') : count + ' दवाइयाँ';
+      return '<button class="medcard" type="button" onclick="openRx(\''+rx.id+'\')">' +
+        '<span class="pill-ic">📄</span><span class="mid"><span class="mname">'+rxDoctorName(rx)+'</span><span class="mdose">'+rx.date+' · '+countLabel+'</span></span><span class="chev">›</span>' +
+      '</button>';
+    }).join('');
+  }
+
+  var openRxId = null;
+  function openRx(id){ openRxId = id; renderRxDetail(); go('rx-detail'); }
+  window.openRx = openRx;
+
+  function renderRxDetail(){
+    if (!openRxId) return;
+    var rx = PRESCRIPTIONS.filter(function(r){ return r.id === openRxId; })[0];
+    if (!rx) return;
+    var t = T[LANG].rx;
+    var medsHtml = rx.medIds.map(function(id){
+      var m = MEDS.filter(function(x){ return x.id === id; })[0];
+      var name = m ? m[LANG].name : id;
+      return '<div class="extract-field"><span>💊</span><span>'+name+'</span></div>';
+    }).join('');
+    document.getElementById('rxDetailBody').innerHTML =
+      '<div class="card"><span class="card-title">'+rxDoctorName(rx)+'</span><p class="muted" style="margin-top:3px">'+rx.date+'</p></div>' +
+      '<div class="report-doc"><h3>'+t.medsTitle+'</h3>'+medsHtml+'</div>' +
+      '<button class="btn primary" type="button" onclick="go(\'home\')">'+t.viewScheduleBtn+'</button>' +
+      '<button class="btn outline" type="button" onclick=\'runSafetyCheck('+JSON.stringify(rx.medIds)+')\'>'+t.safetyCheckBtn+'</button>';
+  }
+
+  /* auto-schedule: turn a dose-frequency line into sensible default clock times */
+  function scheduleTimesFor(doseLine){
+    var s = doseLine.toLowerCase();
+    if (s.indexOf('once') !== -1) return ['08:00'];
+    if (s.indexOf('twice') !== -1) return ['08:00','20:00'];
+    if (s.indexOf('3×') !== -1 || s.indexOf('three') !== -1 || s.indexOf('every 8') !== -1) return ['08:00','14:00','20:00'];
+    if (s.indexOf('every 6') !== -1) return ['08:00','13:00','18:00','23:00'];
+    return ['08:00'];
+  }
+  function addToSchedule(medId, doseLine){
+    scheduleTimesFor(doseLine).forEach(function(time){
+      SCHEDULE.push({ id:'d'+medId+'-'+time.replace(':',''), medId:medId, time:time });
+    });
+  }
+
+  var safetyCheckMedIds = [];
+  function runSafetyCheck(ids){
+    safetyCheckMedIds = ids;
+    renderSafetyCheck();
+    go('safety-check');
+  }
+  window.runSafetyCheck = runSafetyCheck;
+
+  function renderSafetyCheck(){
+    var t = T[LANG].safety;
+    var meds = safetyCheckMedIds.map(function(id){ return MEDS.filter(function(m){ return m.id === id; })[0]; }).filter(Boolean);
+    var namesHtml = meds.map(function(m){ return m[LANG].name; }).join(', ');
+    var allInteractions = [];
+    var seen = {};
+    safetyCheckMedIds.forEach(function(id){
+      getInteractions(id).forEach(function(x){
+        var key = x.pair.slice().sort().join('|');
+        if (!seen[key]){ seen[key] = true; allInteractions.push(x); }
+      });
+    });
+    var checksHtml =
+      '<div class="callout good"><span>✓</span><span>'+t.checkMeds.replace('{n}', meds.length)+'</span></div>' +
+      '<div class="callout good"><span>✓</span><span>'+t.checkDose+'</span></div>';
+    var warnHtml = allInteractions.length
+      ? allInteractions.map(function(x){
+          var icon = x.severity === 'risk' ? '⛔' : '⚠️';
+          return '<div class="callout '+x.severity+'"><span>'+icon+'</span><div style="flex:1"><div>'+x[LANG]+'</div>' +
+            '<details style="margin-top:6px"><summary>'+t.whyLabel+'</summary><p style="margin-top:6px">'+t.whyText+'</p></details></div></div>';
+        }).join('')
+      : '<div class="callout good"><span>✓</span><span>'+t.noInteractions+'</span></div>';
+    document.getElementById('safetyCheckBody').innerHTML =
+      '<div class="card"><span class="card-title">'+t.title+'</span><p class="muted" style="margin-top:4px">'+namesHtml+'</p></div>' +
+      checksHtml + warnHtml +
+      '<button class="btn primary" type="button" onclick="go(\'home\')">'+t.viewScheduleBtn+'</button>' +
+      '<a class="btn outline" href="tel:'+CONTACTS.supportPhone+'">'+t.contactPharmacistBtn+'</a>';
+  }
+
   function openMed(id){ openMedId = id; renderMedDetail(); go('med-detail'); }
   window.openMed = openMed;
 
@@ -1362,8 +1495,6 @@
     document.getElementById('r_labSub').textContent = t.repLabSub;
     document.getElementById('r_adrName').textContent = t.repAdrName;
     document.getElementById('r_adrSub').textContent = t.repAdrSub;
-    document.getElementById('r_ivrName').textContent = t.repIvrName;
-    document.getElementById('r_ivrSub').textContent = t.repIvrSub;
     document.getElementById('r_docName').textContent = t.repDocName;
     document.getElementById('r_docSub').textContent = t.repDocSub;
     document.getElementById('r_histName').textContent = t.repHistName;
@@ -1430,9 +1561,13 @@
       '<div class="callout warn"><span>📋</span><span><strong>'+C.adrL+'</strong> '+C.adrV+'</span></div>' +
       '<a class="btn primary" href="tel:'+CONTACTS.patientPhone+'" id="cgCallBtn">'+C.call+'</a>' +
       '<button class="btn ghost" type="button" id="cgMedsBtn">'+C.viewMeds+'</button>' +
-      '<button class="btn ghost" type="button" id="cgAdrBtn">'+C.viewAdr+'</button>';
+      '<button class="btn ghost" type="button" id="cgAdrBtn">'+C.viewAdr+'</button>' +
+      '<button class="medcard" type="button" id="cgIvrBtn">' +
+        '<span class="pill-ic">📞</span><span class="mid"><span class="mname">'+C.ivrName+'</span><span class="mdose">'+C.ivrSub+'</span></span><span class="chev">›</span>' +
+      '</button>';
     document.getElementById('cgMedsBtn').addEventListener('click', function(){ go('medicines'); });
     document.getElementById('cgAdrBtn').addEventListener('click', function(){ go('adr'); });
+    document.getElementById('cgIvrBtn').addEventListener('click', function(){ go('ivr'); });
   }
 
   function renderFuture(){
@@ -1442,6 +1577,9 @@
       html += '<div class="future-card"><span class="ic">'+it[0]+'</span><div><h3>'+it[1]+'</h3><p>'+it[2]+'</p></div></div>';
     });
     document.getElementById('futureBody').innerHTML = html;
+    document.getElementById('pr_roadmapLabel').textContent = LANG === 'en' ? 'Coming soon' : 'आने वाला';
+    document.getElementById('pr_rewardsName').textContent = T[LANG].rw.homeLabel;
+    document.getElementById('pr_rewardsSub').textContent = T[LANG].rw.homeSubFmt.replace('{coins}', getCoins()).replace('{streak}', getStreak());
   }
 
   /* ================= SCAN PRESCRIPTION ================= */
@@ -1515,11 +1653,22 @@
       if (scanSelected[r.id] && !MEDS.some(function(m){ return m.id === r.id; })){
         MEDS.push(r);
         added.push(r.id);
+        addToSchedule(r.id, r.en.doseLine);
       }
     });
-    if (added.length){ renderMedList(); renderHome(); }
-    if (added.length === 1) openMed(added[0]);
-    else go('medicines');
+    if (added.length){
+      var today = new Date();
+      var dateLabel = today.getDate() + ' ' + today.toLocaleString('en-US',{month:'short'}) + ' ' + today.getFullYear();
+      PRESCRIPTIONS.unshift({ id:'rx-scan-'+Date.now(), doctorId:null,
+        selfLabel:{ en:'Scanned prescription', hi:'स्कैन किया गया प्रिस्क्रिप्शन' },
+        date: dateLabel, medIds: added });
+      renderMedList();
+      renderRxList();
+      renderHome();
+      runSafetyCheck(added);
+    } else {
+      go('medicines');
+    }
   }
   window.addScannedMeds = addScannedMeds;
 
@@ -1591,7 +1740,15 @@
     }
     renderSchedule();
     updateReminderPermCard();
-    renderRewardsHomeWidget();
+    var attentionActive = MEDS.some(function(m){ return m.status !== 'good'; });
+    var contactBtn = document.getElementById('h_safetyContactBtn');
+    if (attentionActive){
+      contactBtn.hidden = false;
+      contactBtn.href = 'tel:' + CONTACTS.supportPhone;
+      contactBtn.textContent = T[LANG].safety.contactPharmacistBtn;
+    } else {
+      contactBtn.hidden = true;
+    }
   }
 
   function updateHeader(){
@@ -1635,6 +1792,14 @@
     renderSettingsHub();
     renderHelp();
     renderPrivacy();
+    renderRxList();
+    if (openRxId) renderRxDetail();
+    if (safetyCheckMedIds.length) renderSafetyCheck();
+    document.getElementById('pc_scanLabel').textContent = T[LANG].pcScanLabel;
+    document.getElementById('pc_myRx').textContent = T[LANG].pcMyRx;
+    document.getElementById('qa_health').textContent = T[LANG].qaHealth;
+    document.getElementById('qa_care').textContent = T[LANG].qaCare;
+    document.getElementById('qa_doctor').textContent = T[LANG].qaDoctor;
     updateHeader();
     document.querySelectorAll('[data-lang]').forEach(function(b){
       b.setAttribute('aria-pressed', b.dataset.lang === LANG ? 'true' : 'false');
@@ -1659,11 +1824,13 @@
      re-render them fresh every time the user navigates in, not just at load/language-switch */
   var screenRenderers = {
     home: renderHome,
+    medicines: function(){ renderMedList(); renderRxList(); },
     caregiver: renderCaregiver,
     rewards: renderRewards,
     doctor: renderDoctor,
     diagnostics: renderDiagnosticsList,
-    history: renderHistory
+    history: renderHistory,
+    future: renderFuture
   };
   function go(name){
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
