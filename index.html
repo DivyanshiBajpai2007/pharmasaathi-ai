@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#EF9F1C">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
@@ -325,17 +326,53 @@
   .faq summary{ font-weight:700; font-size:.88rem; cursor:pointer; }
   .faq p{ margin-top:8px; font-size:.84rem; color:var(--text-muted); line-height:1.5; }
 
+  /* ---------- forms ---------- */
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text-muted); }
+  .field input, .field select{
+    font:inherit; font-size:.92rem; color:var(--text); background:var(--surface);
+    border:1.4px solid var(--border); border-radius:12px; padding:11px 12px; min-height:46px; width:100%;
+  }
+  .field input:focus, .field select:focus{ outline:2.5px solid var(--accent); outline-offset:1px; border-color:var(--accent); }
+  .time-row{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+  .seg{ display:flex; gap:6px; }
+  .seg button{ flex:1; border:1.4px solid var(--border); background:var(--surface); color:var(--text); border-radius:11px; min-height:42px; font-weight:800; cursor:pointer; }
+  .seg button[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn.danger{ background:var(--risk-soft); color:var(--risk); }
+  .link-btn{ background:none; border:none; color:var(--text-muted); font-weight:700; font-size:.82rem; text-decoration:underline; cursor:pointer; padding:8px; }
+
+  /* ---------- sign-in / loading overlay ---------- */
+  .auth-overlay{ position:absolute; inset:0; z-index:70; background:var(--bg); overflow-y:auto; padding:26px 22px 30px; display:flex; flex-direction:column; }
+  .auth-card{ display:flex; flex-direction:column; gap:14px; margin:auto 0; }
+  .auth-card h1{ font-size:1.9rem; text-align:center; }
+  .auth-card .tag{ text-align:center; color:var(--text-muted); font-size:.88rem; font-weight:600; }
+  .auth-msg{ border-radius:12px; padding:10px 12px; font-size:.82rem; line-height:1.45; }
+  .auth-msg.err{ background:var(--risk-soft); color:var(--risk); }
+  .auth-msg.ok{ background:var(--good-soft); color:var(--good); }
+
+  .toast{ position:absolute; left:16px; right:16px; bottom:84px; z-index:60; background:var(--text); color:var(--bg); padding:11px 14px; border-radius:12px; font-size:.82rem; font-weight:600; line-height:1.4; box-shadow:var(--shadow); }
+
   .footnote{ max-width:600px; margin:34px auto 0; text-align:center; font-size:.8rem; color:var(--text-muted); line-height:1.6; }
+
+  /* ---------- on a real phone the app IS the screen — no fake device frame ---------- */
+  @media (max-width:520px){
+    body{ padding:0; }
+    .intro, .footnote, .statusbar{ display:none; }
+    .stage{ display:block; }
+    .phone{ width:100%; height:100vh; height:100dvh; border:none; outline:none; border-radius:0; box-shadow:none; }
+    .appheader{ padding-top:calc(12px + env(safe-area-inset-top,0px)); }
+    .auth-overlay{ padding-top:calc(26px + env(safe-area-inset-top,0px)); }
+  }
 </style>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
 <div class="intro">
-  <span class="eyebrow" id="i_eyebrow">Interactive Prototype · v2</span>
+  <span class="eyebrow" id="i_eyebrow">Beta</span>
   <h1>PharmaSaathi AI</h1>
   <span class="tagline" id="i_tagline">&ldquo;If you can&rsquo;t read it, PharmaSaathi speaks.&rdquo;</span>
-  <p class="desc" id="i_desc">A working mock-up of the medicine-safety app.</p>
+  <p class="desc" id="i_desc">Your medicine companion — scan prescriptions, get reminders and check for interactions.</p>
   <div class="langtoggle" role="group" aria-label="Language">
     <button type="button" data-lang="en" aria-pressed="true">EN</button>
     <button type="button" data-lang="hi" aria-pressed="false">हिंदी</button>
@@ -410,7 +447,8 @@
             <span class="badge warn" id="h_safetyBadge">1 needs attention</span>
           </div>
           <p class="muted" style="margin-top:6px" id="h_safetyDesc"></p>
-          <a class="btn outline sm" id="h_safetyContactBtn" href="#" style="margin-top:10px;width:100%" hidden></a>
+          <button class="btn ghost sm" id="h_safetyDetailBtn" type="button" style="margin-top:10px;width:100%" hidden onclick="runSafetyCheck(activeMedIds())"></button>
+          <a class="btn outline sm" id="h_safetyContactBtn" href="#" style="margin-top:8px;width:100%" hidden></a>
         </div>
 
         <div class="row" style="gap:10px">
@@ -429,6 +467,7 @@
       <!-- MEDICINES / PRESCRIPTION CENTER -->
       <section class="screen" id="screen-medicines" hidden>
         <button class="btn primary" type="button" onclick="startScan()">📷&nbsp; <span id="pc_scanLabel">Scan / upload prescription</span></button>
+        <button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; <span id="pc_addLabel">Add a medicine manually</span></button>
         <p class="section-label" id="pc_myRx">My prescriptions</p>
         <div id="rxList" style="display:flex;flex-direction:column;gap:10px"></div>
         <p class="section-label" id="m_count" style="margin-top:6px">4 active medicines</p>
@@ -437,6 +476,11 @@
           <summary id="stoppedMedSummary" style="cursor:pointer;font-weight:700;font-size:.82rem;color:var(--text-muted)">Stopped medicines</summary>
           <div id="stoppedMedList" style="display:flex;flex-direction:column;gap:10px;margin-top:8px"></div>
         </details>
+      </section>
+
+      <!-- ADD MEDICINE MANUALLY -->
+      <section class="screen" id="screen-add-med" hidden>
+        <div id="addMedBody" style="display:flex;flex-direction:column;gap:14px"></div>
       </section>
 
       <!-- PRESCRIPTION DETAIL -->
@@ -518,6 +562,7 @@
 
       <!-- PROFILE -->
       <section class="screen" id="screen-future" hidden>
+        <div id="accountBody" style="display:flex;flex-direction:column;gap:14px"></div>
         <button class="medcard" type="button" onclick="go('rewards')">
           <span class="pill-ic">🌟</span>
           <span class="mid"><span class="mname" id="pr_rewardsName">Adherence rewards</span><span class="mdose" id="pr_rewardsSub">0 coins · 0-day streak</span></span>
@@ -589,6 +634,12 @@
 
     <div class="alarm-overlay" id="alarmOverlay" hidden>
       <div class="alarm-card" id="alarmCard"></div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <div class="auth-overlay" id="authOverlay">
+      <div class="auth-card" id="authCard"><div class="spinner" style="align-self:center"></div></div>
     </div>
   </div>
 </div>
@@ -808,7 +859,7 @@
         noneOther:'You have no other active medicines to cross-check against.', fromPrefix:'From:',
         continueBtn:'🛡️ Continue to safety check' },
       screenTitles:{ home:['Home','Namaste, Rajesh ji'], medicines:['Medicines','4 active'], 'med-detail':['',''], reports:['Health','Reports · History · Appointments'], lab:['Lab report','Kidney function panel'], adr:['ADR report','Adverse reaction log'], ivr:['IVR check-in','Automated side-effect call'], caregiver:['Care','Caregiver & family support'], future:['Profile','Rewards, help & settings'], scan:['Scan prescription','Point camera or upload a photo'],
-        'rx-detail':['Prescription',''], 'safety-check':['Safety check','Medicine safety review'], 'merge-check':['Confirm medicines',''],
+        'rx-detail':['Prescription',''], 'safety-check':['Safety check','Medicine safety review'], 'merge-check':['Confirm medicines',''], 'add-med':['Add a medicine','Type it in — no scan needed'],
         diagnostics:['Diagnostic reports','All reports'], 'diag-detail':['',''], doctor:['Book appointment','Choose a doctor'], 'doctor-book':['Choose a slot',''], history:['Medical history','Full timeline'], rewards:['Rewards','Coins & streaks'], settings:['Settings',''], help:['Help & support','FAQs and contact'], privacy:['Privacy policy','How your data is handled'] },
       notifTitle:'Missed dose alert', notifDesc:'Metformin 500mg · 2:00 PM dose not marked taken',
       markTaken:'Mark as taken', notify:'Notify caregiver',
@@ -910,7 +961,7 @@
         noneOther:'तुलना के लिए आपकी कोई अन्य सक्रिय दवा नहीं है।', fromPrefix:'स्रोत:',
         continueBtn:'🛡️ सुरक्षा जाँच जारी रखें' },
       screenTitles:{ home:['होम','नमस्ते, राजेश जी'], medicines:['दवाइयाँ','4 सक्रिय'], 'med-detail':['',''], reports:['हेल्थ','रिपोर्ट · हिस्ट्री · अपॉइंटमेंट्स'], lab:['लैब रिपोर्ट','किडनी फंक्शन पैनल'], adr:['ADR रिपोर्ट','प्रतिकूल प्रतिक्रिया लॉग'], ivr:['IVR चेक-इन','स्वचालित साइड-इफ़ेक्ट कॉल'], caregiver:['केयर','देखभाल व पारिवारिक सहयोग'], future:['प्रोफ़ाइल','रिवॉर्ड्स, सहायता व सेटिंग्स'], scan:['प्रिस्क्रिप्शन स्कैन करें','कैमरा या फ़ोटो अपलोड करें'],
-        'rx-detail':['प्रिस्क्रिप्शन',''], 'safety-check':['सुरक्षा जाँच','दवा सुरक्षा समीक्षा'], 'merge-check':['दवाइयों की पुष्टि करें',''],
+        'rx-detail':['प्रिस्क्रिप्शन',''], 'safety-check':['सुरक्षा जाँच','दवा सुरक्षा समीक्षा'], 'merge-check':['दवाइयों की पुष्टि करें',''], 'add-med':['दवा जोड़ें','हाथ से लिखें — स्कैन ज़रूरी नहीं'],
         diagnostics:['डायग्नोस्टिक रिपोर्ट','सभी रिपोर्ट'], 'diag-detail':['',''], doctor:['अपॉइंटमेंट बुक करें','डॉक्टर चुनें'], 'doctor-book':['स्लॉट चुनें',''], history:['मेडिकल हिस्ट्री','पूरी समयरेखा'], rewards:['रिवॉर्ड्स','कॉइन्स व स्ट्रीक'], settings:['सेटिंग्स',''], help:['सहायता','FAQ और संपर्क'], privacy:['प्राइवेसी पॉलिसी','आपका डेटा कैसे संभाला जाता है'] },
       notifTitle:'छूटी हुई खुराक की चेतावनी', notifDesc:'Metformin 500mg · दोपहर 2:00 बजे की खुराक अभी दर्ज नहीं है',
       markTaken:'ली हुई दर्ज करें', notify:'देखभालकर्ता को सूचित करें',
@@ -1001,23 +1052,23 @@
   var openMedId = null;
 
   var screens = ['home','medicines','med-detail','reports','lab','adr','ivr','caregiver','future','scan',
-    'diagnostics','diag-detail','doctor','doctor-book','history','rewards','help','privacy','rx-detail','safety-check','merge-check'];
+    'diagnostics','diag-detail','doctor','doctor-book','history','rewards','help','privacy','rx-detail','safety-check','merge-check','add-med'];
   var tabOf = { home:'home', medicines:'medicines', 'med-detail':'medicines', reports:'reports', lab:'reports', adr:'reports', ivr:'caregiver', caregiver:'caregiver', future:'future', scan:'home',
     diagnostics:'reports', 'diag-detail':'reports', doctor:'reports', 'doctor-book':'reports', history:'reports', rewards:'future',
-    'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines' };
+    'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines', 'add-med':'medicines' };
   var backTarget = { 'med-detail':'medicines', lab:'reports', adr:'reports', ivr:'caregiver', scan:'home',
     diagnostics:'reports', 'diag-detail':'diagnostics', doctor:'reports', 'doctor-book':'doctor', history:'reports', rewards:'future',
-    help:'future', privacy:'future', 'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines' };
+    help:'future', privacy:'future', 'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines', 'add-med':'medicines' };
 
   function badgeClass(s){ return s === 'good' ? 'good' : (s === 'risk' ? 'risk' : 'warn'); }
-  function badgeLabel(t,s){ return s === 'good' ? t.badgeGood : (s === 'risk' ? t.badgeRisk : t.badgeWarn); }
+  function badgeLabel(t,s){ return s === 'good' ? t.badgeGood : (s === 'risk' ? t.badgeRisk : (s === 'unknown' ? X().badgeUnknown : t.badgeWarn)); }
 
   /* ================= RENDER ================= */
   function renderIntro(){
     var t = T[LANG];
-    document.getElementById('i_eyebrow').textContent = t.eyebrow;
+    document.getElementById('i_eyebrow').textContent = isAccount() ? X().eyebrowLive : t.eyebrow;
     document.getElementById('i_tagline').innerHTML = t.tagline;
-    document.getElementById('i_desc').innerHTML = t.desc;
+    document.getElementById('i_desc').innerHTML = isAccount() ? X().descLive : t.desc;
     var colors = ['var(--good)','var(--warn)','var(--risk)','var(--text-muted)'];
     document.getElementById('i_legend').innerHTML = t.legend.map(function(l,i){
       return '<span><i style="background:'+colors[i]+(i===3?';opacity:.5':'')+'"></i>'+l+'</span>';
@@ -1034,13 +1085,17 @@
       : active.length + ' सक्रिय दवाइयाँ';
     var el = document.getElementById('medList');
     el.innerHTML = '';
+    if (!active.length){
+      el.innerHTML = '<p class="muted">'+X().empty.meds+'</p>';
+    }
     active.forEach(function(m){
       var d = m[LANG];
+      var sf = medSafety(m);
       var btn = document.createElement('button');
       btn.className = 'medcard'; btn.type = 'button';
       btn.innerHTML = '<span class="pill-ic">'+m.icon+'</span>' +
         '<span class="mid"><span class="mname">'+d.name+'</span><span class="mdose">'+d.doseLine+'</span></span>' +
-        '<span class="badge '+badgeClass(m.status)+'" style="margin-right:4px">'+badgeLabel(t,m.status)+'</span>' +
+        '<span class="badge '+badgeClass(sf)+'" style="margin-right:4px">'+badgeLabel(t,sf)+'</span>' +
         '<span class="chev">›</span>';
       btn.addEventListener('click', function(){ openMed(m.id); });
       el.appendChild(btn);
@@ -1065,8 +1120,10 @@
     if (!openMedId) return;
     var t = T[LANG];
     var m = MEDS.filter(function(x){ return x.id === openMedId; })[0];
+    if (!m) return;
     var d = m[LANG];
     var el = document.getElementById('medDetail');
+    if (m.custom){ renderCustomMedDetail(m); return; }
     var contraList = d.contraindications.map(function(c){ return '<li>'+c+'</li>'; }).join('');
     var generalNote = '';
     if (d.interactionText){
@@ -1090,8 +1147,9 @@
       '<button class="btn '+(isStopped ? 'primary' : 'outline')+' sm" type="button" onclick="setMedStatus(\''+m.id+'\', \''+(isStopped ? 'active' : 'stopped')+'\')">'+(isStopped ? t.medReactivateBtn : t.medStopBtn)+'</button>' +
       '</div>';
     el.innerHTML =
-      '<div class="card"><div class="row"><span class="card-title" style="font-size:1.05rem">'+d.name+'</span><span class="badge '+badgeClass(m.status)+'">'+badgeLabel(t,m.status)+'</span></div>'+
+      '<div class="card"><div class="row"><span class="card-title" style="font-size:1.05rem">'+d.name+'</span><span class="badge '+badgeClass(medSafety(m))+'">'+badgeLabel(t,medSafety(m))+'</span></div>'+
       '<p class="muted" style="margin-top:3px">'+d.use+'</p>' + sourceLine + statusHtml + '</div>' +
+      timesCardHtml(m) +
       '<div class="detail-block card"><span class="h">'+t.dHeadDose+'</span>' +
       '<table class="dosetable"><tr><td>'+t.dAdult+'</td><td>'+d.adultDose+'</td></tr>' +
       '<tr><td>'+t.dChild+'</td><td>'+d.childDose+'</td></tr>' +
@@ -1100,6 +1158,25 @@
       '<div class="detail-block card"><span class="h">'+t.dHeadAntidote+'</span><p>'+d.antidote+'</p></div>' +
       '<div class="detail-block card"><span class="h">'+t.dHeadContra+'</span><ul>'+contraList+'</ul></div>' +
       crossHtml + generalNote;
+  }
+
+  /* a medicine that isn't in the safety catalog (added manually) — we can track it and
+     remind about it, but we must NOT imply it has been safety-checked */
+  function renderCustomMedDetail(m){
+    var t = T[LANG], x = X();
+    var isStopped = medRxStatus(m) === 'stopped';
+    var rx = prescriptionOf(m.id);
+    var doseTxt = m[LANG].doseLine;
+    var times = SCHEDULE.filter(function(s){ return s.medId === m.id; }).map(function(s){ return s.time; }).sort().join(' · ');
+    document.getElementById('medDetail').innerHTML =
+      '<div class="card"><div class="row"><span class="card-title" style="font-size:1.05rem">'+m[LANG].name+'</span><span class="badge warn">'+x.badgeUnknown+'</span></div>' +
+      '<p class="muted" style="margin-top:3px">'+doseTxt+'</p>' +
+      '<p class="muted" style="margin-top:3px">'+t.fromLabel+' '+doctorLabelFor(m.id)+(rx ? ' · '+rx.date : '')+'</p>' +
+      (times ? '<p class="muted" style="margin-top:3px">⏰ '+times+'</p>' : '') +
+      '<div class="row" style="margin-top:8px"><span class="badge '+(isStopped ? 'risk' : 'good')+'">'+(isStopped ? t.medStoppedBadge : t.medActiveBadge)+'</span>' +
+      '<button class="btn '+(isStopped ? 'primary' : 'outline')+' sm" type="button" onclick="setMedStatus(\''+m.id+'\', \''+(isStopped ? 'active' : 'stopped')+'\')">'+(isStopped ? t.medReactivateBtn : t.medStopBtn)+'</button></div></div>' +
+      timesCardHtml(m) +
+      '<div class="callout warn"><span>⚠️</span><span>'+x.customNote+'</span></div>';
   }
   // interaction severity for medicines that still carry a general (non-drug-specific) note
   var INTERACTION_LEVEL = { metformin:'warn', levothyroxine:'warn', paracetamol:'warn' };
@@ -1138,25 +1215,72 @@
     return rxDoctorName(rx);
   }
   function medRxStatus(m){ return m.rxStatus || 'active'; }
-  function needsAttention(m){ return m.status !== 'good' && medRxStatus(m) !== 'stopped'; }
-  /* build the "why this needs attention" line fresh each time from the live interaction
-     check, instead of a fixed per-medicine string — so it can't go stale (e.g. after the
-     other interacting medicine gets marked stopped) */
-  function attentionMessageFor(m){
+  function activeMedIds(){ return MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; }).map(function(m){ return m.id; }); }
+  window.activeMedIds = activeMedIds;
+  /* safety level is DERIVED from the live interaction check — never a stored label — so it
+     can't drift out of date. 'unknown' = not in the safety catalog, so nothing was checked. */
+  function medSafety(m){
+    if (m.custom) return 'unknown';
     var live = getInteractions(m.id);
-    if (live.length) return live.map(function(x){ return x[LANG]; }).join(' ');
-    if (m[LANG].interactionText) return m[LANG].interactionText;
-    return LANG === 'en'
-      ? 'No active interaction right now, but ' + m[LANG].name + ' is flagged for review — see Medicines for details.'
-      : 'फ़िलहाल कोई सक्रिय इंटरैक्शन नहीं, लेकिन ' + m[LANG].name + ' समीक्षा हेतु चिह्नित है — दवाइयाँ देखें।';
+    if (!live.length) return 'good';
+    return live.some(function(x){ return x.severity === 'risk'; }) ? 'risk' : 'warn';
+  }
+  function needsAttention(m){
+    var s = medSafety(m);
+    return (s === 'warn' || s === 'risk') && medRxStatus(m) !== 'stopped';
+  }
+  /* the distinct medicine PAIRS that currently need a professional look, always derived
+     from the live interaction check (so it can't go stale when a medicine is stopped) */
+  function attentionPairs(){
+    var seen = {}, out = [];
+    MEDS.filter(needsAttention).forEach(function(m){
+      getInteractions(m.id).forEach(function(x){
+        var key = x.pair.slice().sort().join('|');
+        if (seen[key]) return;
+        seen[key] = true;
+        var a = medById(x.pair[0]), b = medById(x.pair[1]);
+        out.push({ ids:x.pair, severity:x.severity,
+          label:(a ? a[LANG].name.split(' ')[0] : x.pair[0]) + ' + ' + (b ? b[LANG].name.split(' ')[0] : x.pair[1]) });
+      });
+    });
+    return out;
+  }
+  function attentionSummary(pairs){
+    if (!pairs.length) return '';
+    return (LANG === 'en' ? 'Ask your pharmacist about: ' : 'फार्मासिस्ट से इनके बारे में पूछें: ') +
+      pairs.map(function(p){ return p.label; }).join('; ') + (LANG === 'en' ? '.' : '।');
   }
   function todayDateLabel(){
     var d = new Date();
     return d.getDate() + ' ' + d.toLocaleString('en-US',{month:'short'}) + ' ' + d.getFullYear();
   }
+  function afterStatusChange(){
+    renderMedList();
+    renderMedDetail();
+    renderHome();
+    renderHistory();
+    renderRxList();
+  }
   function setMedStatus(id, status){
     var m = MEDS.filter(function(x){ return x.id === id; })[0];
     if (!m) return;
+    if (isAccount()){
+      var stopping = status === 'stopped';
+      var stamp = stopping ? new Date().toISOString() : null;
+      SB.from('prescription_items').update({
+        status: stopping ? 'stopped' : 'active',
+        stopped_at: stamp,
+        stopped_reason: stopping ? 'marked stopped by patient' : null
+      }).eq('id', m.itemId).then(function(r){
+        if (r.error){ dbFail(r.error); return; }
+        m.rxStatus = status;
+        m.stoppedAt = stamp;
+        rebuildSchedule();
+        rebuildHistory();
+        afterStatusChange();
+      });
+      return;
+    }
     m.rxStatus = status;
     if (status === 'stopped'){
       SCHEDULE = SCHEDULE.filter(function(d){ return d.medId !== id; });
@@ -1164,10 +1288,7 @@
         en:'Medicine stopped: '+m.en.name+' — doctor instruction.',
         hi:'दवा बंद: '+m.hi.name+' — डॉक्टर के निर्देश पर।' });
     }
-    renderMedList();
-    renderMedDetail();
-    renderHome();
-    renderHistory();
+    afterStatusChange();
   }
   window.setMedStatus = setMedStatus;
 
@@ -1176,23 +1297,59 @@
     var d = new Date();
     return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
   }
+  /* In account mode "taken" lives in the dose_logs table (cached in memory for today);
+     in demo mode it's just this browser's localStorage. */
   function isTaken(doseId){
+    if (isAccount()){
+      if (takenDate !== todayISO()){ takenToday = {}; takenDate = todayISO(); refreshTakenToday(); }
+      return !!takenToday[doseId];
+    }
     try { return localStorage.getItem('ps_taken_'+todayKey()+'_'+doseId) === '1'; } catch(e){ return false; }
+  }
+  function refreshTakenToday(){
+    SB.from('dose_logs').select('schedule_id,status').eq('patient_id', USER.id).eq('dose_date', todayISO()).then(function(r){
+      if (r.error) return;
+      takenToday = {};
+      (r.data || []).forEach(function(l){ if (l.status === 'taken') takenToday[l.schedule_id] = true; });
+      renderHome();
+    });
   }
   function markTaken(doseId){
     var already = isTaken(doseId);
-    try { localStorage.setItem('ps_taken_'+todayKey()+'_'+doseId, '1'); } catch(e){}
-    if (!already) awardDoseCoins();
+    if (isAccount()){
+      takenToday[doseId] = true;
+      SB.from('dose_logs').upsert({ schedule_id:doseId, patient_id:USER.id, dose_date:todayISO(), status:'taken', taken_at:new Date().toISOString() },
+        { onConflict:'schedule_id,dose_date' }).then(function(r){ if (r.error) dbFail(r.error); });
+    } else {
+      try { localStorage.setItem('ps_taken_'+todayKey()+'_'+doseId, '1'); } catch(e){}
+    }
+    if (!already && !coinsAlreadyAwarded(doseId)){
+      markCoinsAwarded(doseId);
+      awardDoseCoins();
+    }
   }
   function unmarkTaken(doseId){
+    if (isAccount()){
+      delete takenToday[doseId];
+      SB.from('dose_logs').delete().eq('schedule_id', doseId).eq('dose_date', todayISO()).then(function(r){ if (r.error) dbFail(r.error); });
+      return;
+    }
     try { localStorage.removeItem('ps_taken_'+todayKey()+'_'+doseId); } catch(e){}
   }
   function minutesNow(){ var n = new Date(); return n.getHours()*60 + n.getMinutes(); }
   function minutesOf(hhmm){ var p = hhmm.split(':'); return parseInt(p[0],10)*60 + parseInt(p[1],10); }
+  /* 'na' = the dose time had already passed today when this schedule was created, so it
+     starts tomorrow — it must not show up as "missed" or count against today's adherence */
   function doseState(dose){
     if (isTaken(dose.id)) return 'taken';
-    return minutesNow() > minutesOf(dose.time) ? 'missed' : 'pending';
+    var mins = minutesOf(dose.time);
+    if (dose.createdAt){
+      var c = new Date(dose.createdAt);
+      if (c.toDateString() === new Date().toDateString() && (c.getHours()*60 + c.getMinutes()) > mins) return 'na';
+    }
+    return minutesNow() > mins ? 'missed' : 'pending';
   }
+  function dosesToday(){ return SCHEDULE.filter(function(d){ return doseState(d) !== 'na'; }); }
   function firstMissedDose(){
     return SCHEDULE.filter(function(d){ return doseState(d) === 'missed'; })[0] || null;
   }
@@ -1219,17 +1376,25 @@
         var med = MEDS.filter(function(m){ return m.id === dose.medId; })[0];
         var name = med ? med[LANG].name : dose.medId;
         var st = doseState(dose);
-        var cls = st === 'pending' ? 'pending' : (st === 'missed' ? 'missed' : '');
+        var cls = (st === 'pending' || st === 'na') ? 'pending' : (st === 'missed' ? 'missed' : '');
         html += '<div class="schedule-row '+cls+'" data-dose-id="'+dose.id+'" style="align-items:flex-start">' +
           '<span class="time num" style="padding-top:2px">'+dose.time+'</span><span class="dot" style="margin-top:6px"></span>' +
-          '<span class="name">'+name+'<br><span class="muted" style="font-size:.68rem;font-weight:500">'+t.fromLabel+' '+doctorLabelFor(dose.medId)+'</span></span></div>';
+          '<span class="name">'+name+'<br><span class="muted" style="font-size:.68rem;font-weight:500">'+t.fromLabel+' '+doctorLabelFor(dose.medId)+(st === 'na' ? ' · '+X().startsTomorrow : '')+'</span></span></div>';
       });
     });
+    var badgeEl = document.getElementById('h_scheduleBadge');
+    var counted = dosesToday();
+    if (!SCHEDULE.length){
+      html = '<p class="muted">'+X().empty.schedule+'</p>';
+      badgeEl.hidden = true;
+    } else {
+      badgeEl.hidden = false;
+    }
     el.innerHTML = html;
-    var takenCount = SCHEDULE.filter(function(d){ return doseState(d) === 'taken'; }).length;
-    document.getElementById('h_scheduleBadge').textContent = LANG === 'en'
-      ? takenCount+' of '+SCHEDULE.length+' taken'
-      : SCHEDULE.length+' में से '+takenCount+' ली गईं';
+    var takenCount = counted.filter(function(d){ return doseState(d) === 'taken'; }).length;
+    badgeEl.textContent = LANG === 'en'
+      ? takenCount+' of '+counted.length+' taken'
+      : counted.length+' में से '+takenCount+' ली गईं';
 
     var missed = firstMissedDose();
     var notif = document.getElementById('missedDoseNotif');
@@ -1241,10 +1406,11 @@
         ? mname+' · '+missed.time+' dose not marked taken'
         : mname+' · '+missed.time+' की खुराक अभी दर्ज नहीं है';
       document.getElementById('markTakenBtn').onclick = function(){ markTaken(missed.id); renderHome(); };
+      var who = patientLabel();
       var smsBody = LANG === 'en'
-        ? 'Reminder from PharmaSaathi: Rajesh ji has not marked '+mname+' ('+missed.time+') as taken today.'
-        : 'PharmaSaathi से सूचना: राजेश जी ने आज '+mname+' ('+missed.time+') की खुराक अभी दर्ज नहीं की है।';
-      document.getElementById('h_notifNotify').href = 'sms:'+CONTACTS.caregiverPhone+'?body='+encodeURIComponent(smsBody);
+        ? 'Reminder from PharmaSaathi: '+who+' has not marked '+mname+' ('+missed.time+') as taken today.'
+        : 'PharmaSaathi से सूचना: '+who+' ने आज '+mname+' ('+missed.time+') की खुराक अभी दर्ज नहीं की है।';
+      document.getElementById('h_notifNotify').href = 'sms:'+caregiverPhone()+'?body='+encodeURIComponent(smsBody);
     } else {
       notif.hidden = true;
     }
@@ -1332,24 +1498,63 @@
   setInterval(checkAlarms, 20000);
 
   /* ================= REWARDS & COINS ================= */
-  function getCoins(){ try { return parseInt(localStorage.getItem('ps_coins')||'0',10); } catch(e){ return 0; } }
-  function addCoins(n){ try { localStorage.setItem('ps_coins', String(getCoins()+n)); } catch(e){} }
-  function getStreak(){ try { return parseInt(localStorage.getItem('ps_streak')||'0',10); } catch(e){ return 0; } }
-  function setStreak(n){ try { localStorage.setItem('ps_streak', String(n)); } catch(e){} }
-  function getLastFullDay(){ try { return localStorage.getItem('ps_last_full_day') || ''; } catch(e){ return ''; } }
-  function setLastFullDay(k){ try { localStorage.setItem('ps_last_full_day', k); } catch(e){} }
+  function getCoins(){
+    if (isAccount()) return REWARDS.coins;
+    try { return parseInt(localStorage.getItem('ps_coins')||'0',10); } catch(e){ return 0; }
+  }
+  function addCoins(n){
+    if (isAccount()){ REWARDS.coins += n; return; }
+    try { localStorage.setItem('ps_coins', String(getCoins()+n)); } catch(e){}
+  }
+  function getStreak(){
+    if (isAccount()) return REWARDS.streak;
+    try { return parseInt(localStorage.getItem('ps_streak')||'0',10); } catch(e){ return 0; }
+  }
+  function setStreak(n){
+    if (isAccount()){ REWARDS.streak = n; return; }
+    try { localStorage.setItem('ps_streak', String(n)); } catch(e){}
+  }
+  function getLastFullDay(){
+    if (isAccount()) return REWARDS.last_full_day || '';
+    try { return localStorage.getItem('ps_last_full_day') || ''; } catch(e){ return ''; }
+  }
+  function setLastFullDay(k){
+    if (isAccount()){ REWARDS.last_full_day = k; return; }
+    try { localStorage.setItem('ps_last_full_day', k); } catch(e){}
+  }
+  function saveRewards(){
+    if (!isAccount()) return;
+    SB.from('rewards').upsert({ patient_id:USER.id, coins:REWARDS.coins, streak:REWARDS.streak, last_full_day:REWARDS.last_full_day || null })
+      .then(function(r){ if (r.error) dbFail(r.error); });
+  }
+  /* key for "a whole day" in whichever format this mode stores it in */
+  function dayKeyFor(d){
+    return isAccount()
+      ? d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')
+      : d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+  }
+  /* each dose only earns coins once per day, so ticking/unticking can't be farmed */
+  function coinsAlreadyAwarded(doseId){
+    try { return localStorage.getItem('ps_awarded_'+todayKey()+'_'+doseId) === '1'; } catch(e){ return false; }
+  }
+  function markCoinsAwarded(doseId){
+    try { localStorage.setItem('ps_awarded_'+todayKey()+'_'+doseId, '1'); } catch(e){}
+  }
 
   function awardDoseCoins(){
     addCoins(10);
-    var allTaken = SCHEDULE.every(function(d){ return doseState(d) === 'taken'; });
+    var today = dosesToday();
+    var allTaken = today.length > 0 && today.every(function(d){ return doseState(d) === 'taken'; });
     if (allTaken){
-      var tk = todayKey();
+      var now = new Date(), yest = new Date(now.getTime() - 86400000);
+      var tk = dayKeyFor(now);
       if (getLastFullDay() !== tk){
-        setStreak(getStreak()+1);
+        setStreak(getLastFullDay() === dayKeyFor(yest) ? getStreak()+1 : 1);
         addCoins(50);
         setLastFullDay(tk);
       }
     }
+    saveRewards();
   }
 
   function renderRewards(){
@@ -1377,6 +1582,10 @@
     var t = T[LANG];
     var el = document.getElementById('diagList');
     if (!el) return;
+    if (isAccount()){
+      el.innerHTML = '<div class="callout warn"><span>🧪</span><span>'+X().empty.reports+'</span></div>';
+      return;
+    }
     el.innerHTML =
       '<button class="medcard" type="button" onclick="go(\'lab\')">' +
         '<span class="pill-ic">🧪</span><span class="mid"><span class="mname">'+t.lab.name+'</span><span class="mdose">'+t.lab.meta+'</span></span><span class="chev">›</span>' +
@@ -1431,6 +1640,7 @@
   window.confirmBooking = confirmBooking;
 
   function renderDoctor(){
+    if (isAccount()){ renderAppointmentsAccount(); return; }
     var t = T[LANG];
     var appts = getAppointments();
     var apptsHtml = '';
@@ -1474,6 +1684,7 @@
   function renderHistory(){
     var el = document.getElementById('historyBody');
     if (!el) return;
+    if (!HISTORY.length){ el.innerHTML = '<p class="muted">'+X().empty.history+'</p>'; return; }
     el.innerHTML = '<div class="timeline">' + HISTORY.map(function(h){
       return '<div class="tl-item"><span class="tl-dot"></span><div><div class="tl-date">'+h.date+'</div><div class="tl-text">'+h[LANG]+'</div></div></div>';
     }).join('') + '</div>';
@@ -1492,7 +1703,7 @@
     var t = T[LANG];
     var faqHtml = FAQ.map(function(f){
       var d = f[LANG];
-      return '<details><summary>'+d.q+'</summary><p>'+d.a+'</p></details>';
+      return '<details><summary>'+d.q+'</summary><p>'+((isAccount() && d.accA) ? d.accA : d.a)+'</p></details>';
     }).join('');
     document.getElementById('helpBody').innerHTML =
       '<div class="faq" style="display:flex;flex-direction:column;gap:10px">'+faqHtml+'</div>' +
@@ -1504,7 +1715,7 @@
   }
 
   function renderPrivacy(){
-    var t = T[LANG].priv;
+    var t = isAccount() ? X().privAccount : T[LANG].priv;
     document.getElementById('privacyBody').innerHTML =
       '<div class="report-doc">' +
       t.sections.map(function(s){ return '<h3 style="margin-top:12px">'+s[0]+'</h3><p>'+s[1]+'</p>'; }).join('') +
@@ -1513,6 +1724,7 @@
 
   /* ================= PRESCRIPTION CENTER ================= */
   function rxDoctorName(rx){
+    if (rx.doctorName) return rx.doctorName;
     if (rx.doctorId){
       var d = DOCTORS.filter(function(x){ return x.id === rx.doctorId; })[0];
       return d ? d[LANG].name : rx.doctorId;
@@ -1523,6 +1735,7 @@
   function renderRxList(){
     var el = document.getElementById('rxList');
     if (!el) return;
+    if (!PRESCRIPTIONS.length){ el.innerHTML = '<p class="muted">'+X().empty.rx+'</p>'; return; }
     el.innerHTML = PRESCRIPTIONS.map(function(rx){
       var count = rx.medIds.length;
       var countLabel = LANG === 'en' ? count + (count === 1 ? ' medicine' : ' medicines') : count + ' दवाइयाँ';
@@ -1588,10 +1801,16 @@
         if (!seen[key]){ seen[key] = true; allInteractions.push(x); }
       });
     });
-    var checksHtml =
-      '<div class="callout good"><span>✓</span><span>'+t.checkMeds.replace('{n}', meds.length)+'</span></div>' +
-      '<div class="callout good"><span>✓</span><span>'+t.checkDose+'</span></div>';
-    var warnHtml = allInteractions.length
+    var checked = meds.filter(function(m){ return !m.custom; });
+    var unchecked = meds.filter(function(m){ return m.custom; });
+    var x2 = X();
+    var checksHtml = checked.length
+      ? '<div class="callout good"><span>✓</span><span>'+x2.checkedCount.replace('{n}', checked.length)+'</span></div>'
+      : '';
+    checksHtml += unchecked.map(function(m){
+      return '<div class="callout warn"><span>⚠️</span><span>'+x2.customUnchecked.replace('{name}', m[LANG].name)+'</span></div>';
+    }).join('');
+    var warnHtml = !checked.length ? '' : allInteractions.length
       ? allInteractions.map(function(x){
           var icon = x.severity === 'risk' ? '⛔' : '⚠️';
           return '<div class="callout '+x.severity+'"><span>'+icon+'</span><div style="flex:1"><div>'+x[LANG]+'</div>' +
@@ -1618,6 +1837,15 @@
     document.getElementById('r_docSub').textContent = t.repDocSub;
     document.getElementById('r_histName').textContent = t.repHistName;
     document.getElementById('r_histSub').textContent = t.repHistSub;
+    if (isAccount()){
+      var h = X().hub;
+      document.getElementById('r_labSub').textContent = h.labSub;
+      document.getElementById('r_adrName').textContent = h.adrName;
+      document.getElementById('r_adrSub').textContent = h.adrSub.replace('{n}', ADRS.length);
+      document.getElementById('r_docName').textContent = h.docName;
+      document.getElementById('r_docSub').textContent = h.docSub;
+      document.getElementById('r_histSub').textContent = h.histSub;
+    }
   }
 
   function renderLab(){
@@ -1634,6 +1862,7 @@
   }
 
   function renderAdr(){
+    if (isAccount()){ renderAdrAccount(); return; }
     var A = T[LANG].adr;
     document.getElementById('adrBody').innerHTML =
       '<div class="report-doc"><span class="badge risk" style="margin-bottom:8px">ADR · '+A.status+'</span><h3>'+A.title+'</h3>' +
@@ -1658,6 +1887,7 @@
   }
 
   function renderCaregiver(){
+    if (isAccount()){ renderCaregiverAccount(); return; }
     var C = T[LANG].cg;
     var missed = firstMissedDose();
     var missedText;
@@ -1699,6 +1929,7 @@
     document.getElementById('pr_roadmapLabel').textContent = LANG === 'en' ? 'Coming soon' : 'आने वाला';
     document.getElementById('pr_rewardsName').textContent = T[LANG].rw.homeLabel;
     document.getElementById('pr_rewardsSub').textContent = T[LANG].rw.homeSubFmt.replace('{coins}', getCoins()).replace('{streak}', getStreak());
+    renderAccountCard();
   }
 
   /* ================= SCAN PRESCRIPTION ================= */
@@ -1749,14 +1980,22 @@
     cetirizine: ['cetirizine','cetzine','alerid','zyrtec']
   };
   function fullCatalog(){
+    if (isAccount()) return CATALOG;      // account mode: the shared catalog table
     var seen = {}, list = [];
     MEDS.concat(SCAN_RESULTS).forEach(function(m){
-      if (!seen[m.id]){ seen[m.id] = true; list.push(m); }
+      if (!m.custom && !seen[m.id]){ seen[m.id] = true; list.push(m); }
     });
     return list;
   }
+  function catalogMed(id){ return fullCatalog().filter(function(m){ return m.id === id; })[0]; }
+  /* whole-word style match so short aliases like "mox" or "dolo" don't fire inside
+     unrelated words (digits may follow: "Dolo650") */
+  function aliasInText(text, alias){
+    var esc = alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp('(^|[^a-z])' + esc + (alias.length <= 4 ? '($|[^a-z])' : ''), 'i').test(text);
+  }
   /* real OCR text is noisy — score each candidate so obvious matches (generic
-     name or an exact brand alias) rank above weaker substring hits */
+     name or an exact brand alias) rank above weaker hits */
   function matchMedicinesFromText(rawText){
     var text = (rawText || '').toLowerCase();
     var matches = [];
@@ -1764,7 +2003,7 @@
       var aliases = MED_ALIASES[m.id] || [m.id];
       var best = null;
       aliases.forEach(function(a){
-        if (text.indexOf(a) !== -1 && (!best || a.length > best.length)) best = a;
+        if (aliasInText(text, a) && (!best || a.length > best.length)) best = a;
       });
       if (best){
         matches.push({ med:m, matchedOn:best, confidence: best === m.id || best === m.en.name.split(' ')[0].toLowerCase() ? 'high' : 'medium' });
@@ -1805,9 +2044,27 @@
       scanState = 'analyzing';
       scanProgressPct = 0;
       renderScan();
-      runOcr(file);
+      downscaleImage(file).then(runOcr);
     };
     reader.readAsDataURL(file);
+  }
+
+  /* phone cameras produce huge photos; shrinking to ~1800px keeps OCR fast and stops
+     low-memory phones from choking, without hurting readability of printed text */
+  function downscaleImage(file){
+    return new Promise(function(resolve){
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function(){
+        var w = img.naturalWidth, h = img.naturalHeight, s = Math.min(1, 1800 / Math.max(w, h));
+        if (s >= 1){ URL.revokeObjectURL(url); resolve(file); return; }
+        var c = document.createElement('canvas');
+        c.width = Math.round(w * s); c.height = Math.round(h * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        c.toBlob(function(b){ URL.revokeObjectURL(url); resolve(b || file); }, 'image/jpeg', 0.92);
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
   }
 
   /* this is real OCR (Tesseract.js, runs in-browser, no account/API key
@@ -1841,27 +2098,24 @@
     });
   }
 
-  function addScannedMeds(){
-    var added = [];
+  var scanBusy = false;
+  async function addScannedMeds(){
+    if (scanBusy) return;
+    var items = [];
     scanMatches.forEach(function(x){
       var r = x.med;
       if (scanSelected[r.id] && !MEDS.some(function(m){ return m.id === r.id; })){
-        MEDS.push(r);
-        added.push(r.id);
-        addToSchedule(r.id, r.en.doseLine);
+        items.push({ medId:r.id, times:scheduleTimesFor(r.en.doseLine) });
       }
     });
-    if (added.length){
-      PRESCRIPTIONS.unshift({ id:'rx-scan-'+Date.now(), doctorId:null,
-        selfLabel:{ en:'Scanned prescription', hi:'स्कैन किया गया प्रिस्क्रिप्शन' },
-        date: todayDateLabel(), medIds: added });
-      renderMedList();
-      renderRxList();
-      renderHome();
-      openMergeCheck(added);
-    } else {
-      go('medicines');
-    }
+    if (!items.length){ go('medicines'); return; }
+    scanBusy = true;
+    try {
+      var ids = await persistPrescription({ doctorName:'', source:'scanned', items:items });
+      renderMedList(); renderRxList(); renderHome();
+      openMergeCheck(ids);
+    } catch(e){ dbFail(e); }
+    finally { scanBusy = false; }
   }
   window.addScannedMeds = addScannedMeds;
 
@@ -1937,9 +2191,10 @@
         '<div class="scan-preview">' + (scanImageUrl ? '<img src="'+scanImageUrl+'" alt="">' : '') + '</div>' +
         '<div class="callout warn"><span>🔍</span><span>'+s.noMatch+'</span></div>' +
         (scanRawText.trim()
-          ? '<details><summary>'+s.rawTextLabel+'</summary><p style="margin-top:6px;white-space:pre-wrap;font-size:.78rem">'+scanRawText.replace(/</g,'&lt;')+'</p></details>'
+          ? '<details><summary>'+s.rawTextLabel+'</summary><p style="margin-top:6px;white-space:pre-wrap;font-size:.78rem">'+scanRawText.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</p></details>'
           : '') +
-        '<button class="btn primary" type="button" onclick="startScan()">'+s.retakeBtn+'</button>';
+        '<button class="btn primary" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
+        '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+X().manual.addInstead+'</button>';
     } else if (scanState === 'done'){
       var itemsHtml = scanMatches.map(function(x){
         var r = x.med, d = r[LANG];
@@ -1989,23 +2244,36 @@
       ? 'Get an alarm and notification when it\'s time for a dose, even while using other apps.'
       : 'खुराक का समय होने पर अलार्म और सूचना पाएँ, भले ही आप कोई और ऐप इस्तेमाल कर रहे हों।';
     document.getElementById('rp_enableBtn').textContent = LANG === 'en' ? 'Enable reminders' : 'रिमाइंडर चालू करें';
-    var attention = MEDS.filter(needsAttention);
+    var activeMeds = MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; });
+    var pairs = attentionPairs();
+    var unchecked = activeMeds.filter(function(m){ return m.custom; });
     var badgeEl = document.getElementById('h_safetyBadge');
     var descEl = document.getElementById('h_safetyDesc');
-    if (attention.length){
+    if (!activeMeds.length){
       badgeEl.className = 'badge warn';
+      badgeEl.textContent = '—';
+      descEl.textContent = X().empty.safety;
+    } else if (pairs.length){
+      badgeEl.className = pairs.some(function(p){ return p.severity === 'risk'; }) ? 'badge risk' : 'badge warn';
       badgeEl.textContent = LANG === 'en'
-        ? attention.length + (attention.length === 1 ? ' needs attention' : ' need attention')
-        : attention.length + ' पर ध्यान दें';
-      descEl.textContent = attention.map(attentionMessageFor).join(' ');
+        ? pairs.length + (pairs.length === 1 ? ' combination to check' : ' combinations to check')
+        : pairs.length + ' संयोजन जाँचें';
+      descEl.textContent = attentionSummary(pairs);
     } else {
-      badgeEl.className = 'badge good';
-      badgeEl.textContent = t.badgeGood;
-      descEl.textContent = LANG === 'en' ? 'All current medicines look safe together.' : 'सभी मौजूदा दवाइयाँ साथ में सुरक्षित हैं।';
+      badgeEl.className = unchecked.length === activeMeds.length ? 'badge warn' : 'badge good';
+      badgeEl.textContent = unchecked.length === activeMeds.length ? X().badgeUnknown : t.badgeGood;
+      descEl.textContent = unchecked.length === activeMeds.length ? '' : (LANG === 'en' ? 'No interactions found among your current medicines.' : 'आपकी मौजूदा दवाइयों के बीच कोई इंटरैक्शन नहीं मिला।');
+    }
+    if (unchecked.length){
+      descEl.textContent = (descEl.textContent ? descEl.textContent + ' ' : '') + X().uncheckedHome.replace('{n}', unchecked.length);
     }
     renderSchedule();
     updateReminderPermCard();
-    var attentionActive = MEDS.some(needsAttention);
+    document.getElementById('testAlarmBtn').hidden = !SCHEDULE.length;
+    var detailBtn = document.getElementById('h_safetyDetailBtn');
+    detailBtn.hidden = !activeMeds.length;
+    detailBtn.textContent = LANG === 'en' ? '🛡️ See full safety check' : '🛡️ पूरी सुरक्षा जाँच देखें';
+    var attentionActive = pairs.length > 0 || unchecked.length > 0;
     var contactBtn = document.getElementById('h_safetyContactBtn');
     if (attentionActive){
       contactBtn.hidden = false;
@@ -2021,8 +2289,15 @@
     var pair = t.screenTitles[currentScreen];
     document.getElementById('headerTitle').textContent = pair[0];
     var sub = pair[1];
+    var activeCount = MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; }).length;
     if (currentScreen === 'medicines'){
-      sub = LANG === 'en' ? MEDS.length + ' active' : MEDS.length + ' सक्रिय';
+      sub = LANG === 'en' ? activeCount + ' active' : activeCount + ' सक्रिय';
+    }
+    if (currentScreen === 'home'){
+      sub = (LANG === 'en' ? 'Namaste, ' : 'नमस्ते, ') + patientLabel();
+    }
+    if (isAccount() && (currentScreen === 'caregiver' || currentScreen === 'adr' || currentScreen === 'ivr')){
+      sub = X().subAccount[currentScreen] || sub;
     }
     document.getElementById('headerSub').textContent = sub;
     var header = document.getElementById('appheader');
@@ -2037,7 +2312,7 @@
 
   function renderEverything(){
     renderIntro();
-    document.getElementById('footnote').textContent = T[LANG].footnote;
+    document.getElementById('footnote').textContent = isAccount() ? X().footnoteLive : T[LANG].footnote;
     renderHome();
     renderMedList();
     if (openMedId) renderMedDetail();
@@ -2062,6 +2337,8 @@
     if (safetyCheckMedIds.length) renderSafetyCheck();
     if (pendingSafetyIds.length) renderMergeCheck();
     document.getElementById('pc_scanLabel').textContent = T[LANG].pcScanLabel;
+    document.getElementById('pc_addLabel').textContent = X().manual.addLabel;
+    if (isAuthOpen()) renderAuth();
     document.getElementById('pc_myRx').textContent = T[LANG].pcMyRx;
     document.getElementById('qa_health').textContent = T[LANG].qaHealth;
     document.getElementById('qa_care').textContent = T[LANG].qaCare;
@@ -2078,6 +2355,10 @@
     stopSpeakAnim();
     LANG = l;
     try { localStorage.setItem('ps_lang', l); } catch(e){}
+    if (isAccount() && PROFILE){
+      PROFILE.lang = l;
+      SB.from('profiles').update({ lang:l }).eq('id', USER.id).then(function(r){ if (r.error) console.error(r.error); });
+    }
     renderEverything();
   }
   window.setLang = setLang;
@@ -2092,6 +2373,7 @@
     home: renderHome,
     medicines: function(){ renderMedList(); renderRxList(); },
     caregiver: renderCaregiver,
+    adr: renderAdr,
     rewards: renderRewards,
     doctor: renderDoctor,
     diagnostics: renderDiagnosticsList,
@@ -2189,12 +2471,29 @@
 
   function buildSpeechText(){
     var t = T[LANG];
-    var greeting = LANG === 'en' ? 'Namaste Rajesh ji.' : 'नमस्ते राजेश जी।';
-    var attention = MEDS.filter(needsAttention);
-    var safetyLine = attention.length
-      ? attention.map(attentionMessageFor).join(' ')
-      : (LANG === 'en' ? 'All your current medicines look safe together.' : 'आपकी सभी मौजूदा दवाइयाँ साथ में सुरक्षित हैं।');
-    return greeting + ' ' + t.scheduleTitle + '. ' + t.scheduleBadge + '. ' + t.safetyTitle + '. ' + safetyLine;
+    var greeting = (LANG === 'en' ? 'Namaste ' : 'नमस्ते ') + patientLabel() + (LANG === 'en' ? '.' : '।');
+    if (!MEDS.some(function(m){ return medRxStatus(m) !== 'stopped'; })){
+      return greeting + ' ' + X().empty.speech;
+    }
+    var counted = dosesToday();
+    var taken = counted.filter(function(d){ return doseState(d) === 'taken'; }).length;
+    var summary = LANG === 'en'
+      ? 'You have taken ' + taken + ' of ' + counted.length + ' doses today.'
+      : 'आपने आज ' + counted.length + ' में से ' + taken + ' खुराक ली हैं।';
+    var next = SCHEDULE.filter(function(d){ return doseState(d) === 'pending'; })
+      .sort(function(a,b){ return minutesOf(a.time) - minutesOf(b.time); })[0];
+    var nextLine = '';
+    if (next){
+      var nm = MEDS.filter(function(m){ return m.id === next.medId; })[0];
+      nextLine = LANG === 'en'
+        ? ' Your next medicine is ' + (nm ? nm[LANG].name : '') + ' at ' + next.time + '.'
+        : ' आपकी अगली दवा ' + (nm ? nm[LANG].name : '') + ' है, ' + next.time + ' बजे।';
+    }
+    var spPairs = attentionPairs();
+    var safetyLine = spPairs.length
+      ? attentionSummary(spPairs)
+      : (LANG === 'en' ? 'No interactions found among your medicines.' : 'आपकी दवाइयों के बीच कोई इंटरैक्शन नहीं मिला।');
+    return greeting + ' ' + summary + nextLine + ' ' + safetyLine;
   }
   document.getElementById('listenBtn').addEventListener('click', function(){
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2252,8 +2551,866 @@
     });
   });
 
-  renderEverything();
-  go('home');
+  /* =====================================================================
+     BACKEND (Supabase) + ACCOUNT MODE
+     ---------------------------------------------------------------------
+     Two modes share one UI:
+       demo    – built-in sample patient, nothing leaves this browser
+       account – signed-in user; everything is read from / saved to Supabase
+     Row Level Security in the database (backend/schema.sql) is what actually
+     keeps each user's data private — the publishable key below is public by design.
+     ===================================================================== */
+  var SUPABASE_URL = 'https://snhnxfxlhcyculwqquzm.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_GWYMUX6DKloKmifYyWpqQA_r1dcBHuA';
+  var SB = null, MODE = 'demo', USER = null, PROFILE = null;
+  var CATALOG = [];
+  var ALL_SCHEDULE = [];
+  var takenToday = {}, takenDate = '';
+  var REWARDS = { coins:0, streak:0, last_full_day:'' };
+  var APPTS = [], ADRS = [];
+
+  function isAccount(){ return MODE === 'account'; }
+  function X(){ return T2[LANG]; }
+
+  /* ---------- small helpers ---------- */
+  function clean(s){ return String(s == null ? '' : s).replace(/[<>]/g,'').replace(/\s+/g,' ').trim().slice(0,120); }
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  var toastTimer = null;
+  function toast(msg){
+    var el = document.getElementById('toast');
+    el.textContent = msg; el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.hidden = true; }, 3400);
+  }
+  function dbFail(err){
+    console.error(err);
+    toast((LANG === 'en' ? 'Could not save: ' : 'सहेजा नहीं जा सका: ') + ((err && err.message) ? err.message : String(err)));
+  }
+  function patientLabel(){
+    if (isAccount() && PROFILE && PROFILE.full_name) return clean(PROFILE.full_name).split(' ')[0];
+    return LANG === 'en' ? 'Rajesh ji' : 'राजेश जी';
+  }
+  function caregiverPhone(){ return isAccount() ? ((PROFILE && PROFILE.caregiver_phone) || '') : CONTACTS.caregiverPhone; }
+  function todayISO(){
+    var d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  /* accepts a plain date ('2026-09-24') or a full timestamp; timestamps are shown in the
+     user's LOCAL day, not UTC, so nothing appears a day off around midnight */
+  function fmtDate(v){
+    if (!v) return '—';
+    var s = String(v), mons = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    if (s.length > 10){
+      var d = new Date(s);
+      return d.getDate() + ' ' + mons[d.getMonth()] + ' ' + d.getFullYear();
+    }
+    var p = s.split('-');
+    return parseInt(p[2],10) + ' ' + mons[parseInt(p[1],10)-1] + ' ' + p[0];
+  }
+  function medById(id){
+    return MEDS.filter(function(m){ return m.id === id; })[0] || CATALOG.filter(function(m){ return m.id === id; })[0];
+  }
+  function localId(){ return 'local-' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  /* ---------- all user-facing strings for the new features ---------- */
+  var T2 = {
+    en:{
+      eyebrowLive:'Beta',
+      descLive:'Your medicine companion — scan prescriptions, get reminders and check for interactions, in English and Hindi.',
+      footnoteLive:"PharmaSaathi helps you organise and understand your medicines. It is not medical advice and does not replace your doctor or pharmacist.",
+      badgeUnknown:'Not checked',
+      customNote:"This medicine isn't in PharmaSaathi's safety database, so it can't be checked for interactions or dosing. Reminders still work — please ask your pharmacist about it.",
+      customUnchecked:"{name} isn't in PharmaSaathi's safety database, so it couldn't be checked for interactions — ask your pharmacist.",
+      checkedCount:'{n} medicine(s) found in the safety database and checked',
+      uncheckedHome:"{n} medicine(s) aren't in the safety database and were not checked.",
+      startsTomorrow:'starts tomorrow',
+      empty:{
+        meds:'No medicines yet. Scan a prescription or add a medicine to get started.',
+        schedule:'Nothing scheduled yet. Scan a prescription or add a medicine to set up reminders.',
+        rx:'No prescriptions saved yet.',
+        history:'Your history will appear here as you add prescriptions and side-effect reports.',
+        safety:'Add your medicines to see safety checks.',
+        reports:'Saving lab reports is coming soon. For now, keep the paper copies with you.',
+        speech:'You have no medicines added yet. Scan a prescription or add a medicine to get started.'
+      },
+      hub:{ labSub:'Coming soon', adrName:'Side effects', adrSub:'{n} reported', docName:'Appointments', docSub:'Keep track of your doctor visits', histSub:'Prescriptions, changes & side effects' },
+      subAccount:{ caregiver:'Your caregiver contact', adr:'Report a side effect' },
+      times:{ title:'Reminder times', add:'Add', none:'No reminder times set.' },
+      manual:{
+        addLabel:'Add a medicine manually', addInstead:'Add a medicine manually instead', title:'Add a medicine',
+        name:'Medicine name', namePh:'e.g. Dolo 650, Metformin', dose:'Strength / instructions (optional)', dosePh:'e.g. 1 tablet after food',
+        doctor:'Prescribed by (optional)', doctorPh:'Doctor or clinic', freq:'Times per day', times:'Reminder time',
+        note:"If the name matches a medicine in PharmaSaathi's safety database it will be checked for interactions. Otherwise it is still tracked and you still get reminders, but it can't be safety-checked.",
+        save:'Save medicine', needName:'Enter the medicine name.', needTimes:'Enter valid reminder times.', already:'That medicine is already in your list.', added:'Medicine added.'
+      },
+      appt:{
+        intro:'Keep track of your doctor visits.', add:'Add an appointment', doctor:'Doctor / clinic', place:'Place (optional)', when:'Date & time',
+        save:'Save appointment', upcoming:'Upcoming', past:'Past', none:'No appointments yet.', remove:'Remove',
+        needDoctor:'Enter the doctor or clinic name.', needWhen:'Choose a date and time.', saved:'Appointment saved.'
+      },
+      adrAcc:{
+        intro:'Note any unwanted reaction to a medicine. It is saved in your account so you can show it to your doctor or pharmacist — it is not automatically sent to anyone.',
+        urgent:'If you have trouble breathing, swelling of the face or throat, or any severe reaction, get emergency medical help immediately.',
+        title:'Report a side effect', med:'Medicine', pick:'Choose…', other:'Other / not listed', otherName:'Medicine name',
+        reaction:'What happened?', reactionPh:'e.g. rash on arms, nausea', sev:'How severe?', mild:'Mild', moderate:'Moderate', severe:'Severe',
+        onset:'When did it start? (optional)', onsetPh:'e.g. 2 days after starting', save:'Save report', history:'Your reports', none:'No side effects reported.',
+        needMed:'Choose the medicine.', needReaction:'Describe what happened.', saved:'Report saved.'
+      },
+      care:{
+        title:'Caregiver contact', body:'Save the number of a family member or friend. If you miss a dose you can message them in one tap, and you can call them from here.',
+        name:'Name', phone:'Phone (with country code, e.g. +91…)', save:'Save', saved:'Saved.', call:'Call {name}', sms:'Send a message', none:'No caregiver saved yet.',
+        smsBody:'Hi, checking in about my medicines — PharmaSaathi.',
+        soon:'A shared caregiver dashboard — where a family member sees your schedule from their own phone — is planned but not available yet.'
+      },
+      acct:{
+        title:'Your account', signedIn:'Signed in as', signOut:'Sign out',
+        demoTitle:"You're viewing sample data", demoBody:'Nothing here is saved. Create a free account to keep your own medicines, schedule and reminders on all your devices.',
+        demoCta:'Create account / Sign in', del:'Delete my health data',
+        delConfirm:'Delete ALL your prescriptions, medicines, schedule history, side-effect reports and appointments? This cannot be undone.',
+        deleted:'Your health data was deleted.'
+      },
+      auth:{
+        tag:'Understand · Remember · Stay safe',
+        signin:'Sign in', signup:'Create account', name:'Your name', email:'Email', password:'Password (6+ characters)', newPw:'New password',
+        toSignup:'New here? Create an account', toSignin:'Already have an account? Sign in', forgot:'Forgot password?',
+        demo:'Try with sample data (nothing is saved)', savePw:'Save new password', recoverTitle:'Choose a new password', busy:'Please wait…',
+        confirmSent:'Account created. We sent a confirmation link to {email} — open it, then sign in.',
+        resetSent:'If {email} has an account, a password-reset link is on its way.', pwUpdated:'Password updated.',
+        invalid:'Wrong email or password.', notConfirmed:'Please confirm your email first — check your inbox (and spam).',
+        exists:'This email is already registered. Try signing in.', weak:'Password must be at least 6 characters.', badEmail:'Enter a valid email address.',
+        needName:'Enter your name.', needEmail:'Enter your email first.', rate:'Too many attempts, or too many emails sent. Please wait a few minutes and try again.',
+        generic:'Something went wrong: ', noBackend:"Can't reach the sign-in service. Check your internet connection, or try the sample data.",
+        loading:'Loading your health data…', loadFail:"We couldn't load your data.", dbMissing:'The database has not been set up yet (tables are missing).',
+        retry:'Try again', signout:'Sign out',
+        disclaimer:'PharmaSaathi helps you organise and understand your medicines. It is not medical advice — always follow your doctor and pharmacist.'
+      },
+      privAccount:{ sections:[
+        ['What we store','Your name and email; the medicines and prescriptions you add; your reminder times and taken / not-taken history; side-effect reports and appointments you enter; your caregiver\'s name and phone number; and your reward points. It is kept in a secured cloud database, and each account can only read its own data.'],
+        ['Prescription photos','When you scan a prescription, the photo is read on your own device by an OCR engine running in your browser. The photo itself is not uploaded or stored — only the medicines you choose to add are saved.'],
+        ['Who can see it','Only you. We do not sell your data or share it with advertisers. The people who run the service can technically access the database for maintenance and support, and use it for nothing else.'],
+        ['Services we rely on','Supabase (secure database and sign-in), GitHub Pages (hosting this app), Google Fonts, and your device\'s built-in voice engine.'],
+        ['Deleting your data','You can erase all your health data at any time from Profile → Delete my health data. To remove your login as well, email support@pharmasaathi.example.'],
+        ['Not medical advice','PharmaSaathi helps you organise and understand your medicines. Its safety checks cover only a limited set of medicines and can miss things. Always follow your doctor\'s and pharmacist\'s advice.'],
+        ['Contact','Questions about your data: support@pharmasaathi.example']
+      ], updated:'Last updated: September 2026' }
+    },
+    hi:{
+      eyebrowLive:'बीटा',
+      descLive:'आपका दवा साथी — प्रिस्क्रिप्शन स्कैन करें, रिमाइंडर पाएँ और इंटरैक्शन जाँचें, हिंदी और अंग्रेज़ी में।',
+      footnoteLive:'PharmaSaathi आपको अपनी दवाइयों को व्यवस्थित करने और समझने में मदद करता है। यह चिकित्सीय सलाह नहीं है और आपके डॉक्टर या फार्मासिस्ट का विकल्प नहीं है।',
+      badgeUnknown:'जाँच नहीं हुई',
+      customNote:'यह दवा PharmaSaathi के सुरक्षा डेटाबेस में नहीं है, इसलिए इसके इंटरैक्शन या खुराक की जाँच नहीं हो सकती। रिमाइंडर फिर भी काम करेंगे — कृपया अपने फार्मासिस्ट से पूछें।',
+      customUnchecked:'{name} PharmaSaathi के सुरक्षा डेटाबेस में नहीं है, इसलिए इसके इंटरैक्शन की जाँच नहीं हो सकी — अपने फार्मासिस्ट से पूछें।',
+      checkedCount:'{n} दवा(एँ) सुरक्षा डेटाबेस में मिलीं और जाँची गईं',
+      uncheckedHome:'{n} दवा(एँ) सुरक्षा डेटाबेस में नहीं हैं और उनकी जाँच नहीं हुई।',
+      startsTomorrow:'कल से शुरू',
+      empty:{
+        meds:'अभी कोई दवा नहीं। शुरू करने के लिए प्रिस्क्रिप्शन स्कैन करें या दवा जोड़ें।',
+        schedule:'अभी कुछ निर्धारित नहीं। रिमाइंडर के लिए प्रिस्क्रिप्शन स्कैन करें या दवा जोड़ें।',
+        rx:'अभी कोई प्रिस्क्रिप्शन सहेजा नहीं गया।',
+        history:'प्रिस्क्रिप्शन और साइड-इफ़ेक्ट रिपोर्ट जोड़ने पर आपका इतिहास यहाँ दिखेगा।',
+        safety:'सुरक्षा जाँच देखने के लिए अपनी दवाइयाँ जोड़ें।',
+        reports:'लैब रिपोर्ट सहेजने की सुविधा जल्द आ रही है। अभी कागज़ी प्रतियाँ अपने पास रखें।',
+        speech:'आपने अभी कोई दवा नहीं जोड़ी है। शुरू करने के लिए प्रिस्क्रिप्शन स्कैन करें या दवा जोड़ें।'
+      },
+      hub:{ labSub:'जल्द आ रहा है', adrName:'साइड इफ़ेक्ट', adrSub:'{n} दर्ज', docName:'अपॉइंटमेंट्स', docSub:'अपने डॉक्टर के दौरे दर्ज रखें', histSub:'प्रिस्क्रिप्शन, बदलाव व साइड इफ़ेक्ट' },
+      subAccount:{ caregiver:'आपका देखभालकर्ता संपर्क', adr:'साइड इफ़ेक्ट दर्ज करें' },
+      times:{ title:'रिमाइंडर समय', add:'जोड़ें', none:'कोई रिमाइंडर समय नहीं है।' },
+      manual:{
+        addLabel:'दवा हाथ से जोड़ें', addInstead:'इसके बजाय दवा हाथ से जोड़ें', title:'दवा जोड़ें',
+        name:'दवा का नाम', namePh:'जैसे Dolo 650, Metformin', dose:'मात्रा / निर्देश (वैकल्पिक)', dosePh:'जैसे भोजन के बाद 1 टैबलेट',
+        doctor:'किसने लिखी (वैकल्पिक)', doctorPh:'डॉक्टर या क्लिनिक', freq:'दिन में कितनी बार', times:'रिमाइंडर समय',
+        note:'अगर नाम PharmaSaathi के सुरक्षा डेटाबेस की किसी दवा से मिलता है तो उसकी इंटरैक्शन जाँच होगी। नहीं तो भी दवा ट्रैक होगी और रिमाइंडर मिलेंगे, पर उसकी सुरक्षा जाँच नहीं हो सकेगी।',
+        save:'दवा सहेजें', needName:'दवा का नाम लिखें।', needTimes:'सही रिमाइंडर समय डालें।', already:'यह दवा पहले से आपकी सूची में है।', added:'दवा जोड़ दी गई।'
+      },
+      appt:{
+        intro:'अपने डॉक्टर के दौरे दर्ज रखें।', add:'अपॉइंटमेंट जोड़ें', doctor:'डॉक्टर / क्लिनिक', place:'स्थान (वैकल्पिक)', when:'तारीख़ व समय',
+        save:'अपॉइंटमेंट सहेजें', upcoming:'आगामी', past:'पिछली', none:'अभी कोई अपॉइंटमेंट नहीं।', remove:'हटाएँ',
+        needDoctor:'डॉक्टर या क्लिनिक का नाम लिखें।', needWhen:'तारीख़ और समय चुनें।', saved:'अपॉइंटमेंट सहेज ली गई।'
+      },
+      adrAcc:{
+        intro:'किसी दवा की अनचाही प्रतिक्रिया दर्ज करें। यह आपके खाते में सहेजी जाती है ताकि आप डॉक्टर या फार्मासिस्ट को दिखा सकें — यह अपने आप किसी को नहीं भेजी जाती।',
+        urgent:'साँस लेने में तकलीफ़, चेहरे या गले में सूजन, या कोई गंभीर प्रतिक्रिया हो तो तुरंत आपातकालीन चिकित्सा सहायता लें।',
+        title:'साइड इफ़ेक्ट दर्ज करें', med:'दवा', pick:'चुनें…', other:'अन्य / सूची में नहीं', otherName:'दवा का नाम',
+        reaction:'क्या हुआ?', reactionPh:'जैसे बाँहों पर रैश, मतली', sev:'कितना गंभीर?', mild:'हल्का', moderate:'मध्यम', severe:'गंभीर',
+        onset:'कब शुरू हुआ? (वैकल्पिक)', onsetPh:'जैसे दवा शुरू करने के 2 दिन बाद', save:'रिपोर्ट सहेजें', history:'आपकी रिपोर्टें', none:'कोई साइड इफ़ेक्ट दर्ज नहीं।',
+        needMed:'दवा चुनें।', needReaction:'बताएँ क्या हुआ।', saved:'रिपोर्ट सहेज ली गई।'
+      },
+      care:{
+        title:'देखभालकर्ता संपर्क', body:'परिवार के किसी सदस्य या मित्र का नंबर सहेजें। खुराक छूटने पर आप एक टैप में उन्हें संदेश भेज सकते हैं, और यहाँ से कॉल भी कर सकते हैं।',
+        name:'नाम', phone:'फ़ोन (देश कोड सहित, जैसे +91…)', save:'सहेजें', saved:'सहेज लिया।', call:'{name} को कॉल करें', sms:'संदेश भेजें', none:'अभी कोई देखभालकर्ता सहेजा नहीं गया।',
+        smsBody:'नमस्ते, अपनी दवाइयों के बारे में बता रहा/रही हूँ — PharmaSaathi।',
+        soon:'साझा देखभालकर्ता डैशबोर्ड — जिसमें परिवार का सदस्य अपने फ़ोन पर आपकी समय-सारणी देख सके — योजना में है, अभी उपलब्ध नहीं।'
+      },
+      acct:{
+        title:'आपका खाता', signedIn:'साइन इन:', signOut:'साइन आउट',
+        demoTitle:'आप नमूना डेटा देख रहे हैं', demoBody:'यहाँ कुछ भी सहेजा नहीं जाता। अपनी दवाइयाँ, समय-सारणी और रिमाइंडर सभी डिवाइस पर रखने के लिए मुफ़्त खाता बनाएँ।',
+        demoCta:'खाता बनाएँ / साइन इन करें', del:'मेरा स्वास्थ्य डेटा हटाएँ',
+        delConfirm:'आपके सभी प्रिस्क्रिप्शन, दवाइयाँ, समय-सारणी इतिहास, साइड-इफ़ेक्ट रिपोर्ट और अपॉइंटमेंट हटा दें? यह वापस नहीं हो सकता।',
+        deleted:'आपका स्वास्थ्य डेटा हटा दिया गया।'
+      },
+      auth:{
+        tag:'समझें · याद रखें · सुरक्षित रहें',
+        signin:'साइन इन', signup:'खाता बनाएँ', name:'आपका नाम', email:'ईमेल', password:'पासवर्ड (6+ अक्षर)', newPw:'नया पासवर्ड',
+        toSignup:'नए हैं? खाता बनाएँ', toSignin:'पहले से खाता है? साइन इन करें', forgot:'पासवर्ड भूल गए?',
+        demo:'नमूना डेटा के साथ आज़माएँ (कुछ सहेजा नहीं जाता)', savePw:'नया पासवर्ड सहेजें', recoverTitle:'नया पासवर्ड चुनें', busy:'कृपया प्रतीक्षा करें…',
+        confirmSent:'खाता बन गया। हमने {email} पर पुष्टि लिंक भेजा है — उसे खोलें, फिर साइन इन करें।',
+        resetSent:'अगर {email} का खाता है, तो पासवर्ड रीसेट लिंक भेजा जा रहा है।', pwUpdated:'पासवर्ड अपडेट हो गया।',
+        invalid:'ईमेल या पासवर्ड गलत है।', notConfirmed:'पहले अपना ईमेल पुष्ट करें — इनबॉक्स (और स्पैम) देखें।',
+        exists:'यह ईमेल पहले से पंजीकृत है। साइन इन करके देखें।', weak:'पासवर्ड कम से कम 6 अक्षर का होना चाहिए।', badEmail:'सही ईमेल पता डालें।',
+        needName:'अपना नाम लिखें।', needEmail:'पहले अपना ईमेल लिखें।', rate:'बहुत ज़्यादा प्रयास या ईमेल भेजे जा चुके हैं। कुछ मिनट रुककर दोबारा कोशिश करें।',
+        generic:'कुछ गड़बड़ हुई: ', noBackend:'साइन-इन सेवा तक पहुँच नहीं हो पा रही। इंटरनेट जाँचें, या नमूना डेटा आज़माएँ।',
+        loading:'आपका स्वास्थ्य डेटा लोड हो रहा है…', loadFail:'हम आपका डेटा लोड नहीं कर सके।', dbMissing:'डेटाबेस अभी सेट नहीं हुआ है (टेबल नहीं मिलीं)।',
+        retry:'फिर कोशिश करें', signout:'साइन आउट',
+        disclaimer:'PharmaSaathi आपको अपनी दवाइयाँ व्यवस्थित करने और समझने में मदद करता है। यह चिकित्सीय सलाह नहीं है — हमेशा अपने डॉक्टर और फार्मासिस्ट की सलाह मानें।'
+      },
+      privAccount:{ sections:[
+        ['हम क्या सहेजते हैं','आपका नाम और ईमेल; आपके जोड़े गए दवाइयाँ और प्रिस्क्रिप्शन; रिमाइंडर समय और ली/नहीं ली का इतिहास; आपके दर्ज साइड-इफ़ेक्ट और अपॉइंटमेंट; देखभालकर्ता का नाम व फ़ोन नंबर; और आपके रिवॉर्ड पॉइंट। यह एक सुरक्षित क्लाउड डेटाबेस में रहता है और हर खाता केवल अपना डेटा पढ़ सकता है।'],
+        ['प्रिस्क्रिप्शन की फ़ोटो','प्रिस्क्रिप्शन स्कैन करने पर फ़ोटो आपके अपने डिवाइस पर, आपके ब्राउज़र में चल रहे OCR इंजन द्वारा पढ़ी जाती है। फ़ोटो अपलोड या सहेजी नहीं जाती — केवल वही दवाइयाँ सहेजी जाती हैं जो आप जोड़ते हैं।'],
+        ['कौन देख सकता है','केवल आप। हम आपका डेटा बेचते नहीं और विज्ञापनदाताओं से साझा नहीं करते। सेवा चलाने वाले लोग रखरखाव व सहायता के लिए तकनीकी रूप से डेटाबेस तक पहुँच सकते हैं, और किसी अन्य काम में इसका उपयोग नहीं करते।'],
+        ['जिन सेवाओं पर हम निर्भर हैं','Supabase (सुरक्षित डेटाबेस और साइन-इन), GitHub Pages (इस ऐप की होस्टिंग), Google Fonts, और आपके डिवाइस का अंतर्निहित वॉइस इंजन।'],
+        ['अपना डेटा हटाना','आप कभी भी प्रोफ़ाइल → मेरा स्वास्थ्य डेटा हटाएँ से सारा स्वास्थ्य डेटा मिटा सकते हैं। लॉगिन भी हटवाने के लिए support@pharmasaathi.example पर ईमेल करें।'],
+        ['यह चिकित्सीय सलाह नहीं है','PharmaSaathi आपको अपनी दवाइयाँ व्यवस्थित करने और समझने में मदद करता है। इसकी सुरक्षा जाँच केवल सीमित दवाइयों को कवर करती है और कुछ चूक सकती है। हमेशा अपने डॉक्टर और फार्मासिस्ट की सलाह मानें।'],
+        ['संपर्क','अपने डेटा से जुड़े प्रश्न: support@pharmasaathi.example']
+      ], updated:'अंतिम अपडेट: सितंबर 2026' }
+    }
+  };
+
+  /* ---------- database rows  ->  the in-memory shapes the UI already uses ---------- */
+  function catalogRowToMed(r){
+    return { id:r.id, icon:r.icon || '💊', aliases:r.aliases || [],
+      en:{ name:r.name_en, use:r.use_en, doseLine:r.dose_line_en, adultDose:r.adult_dose_en || '', childDose:r.child_dose_en || '', liquid:r.liquid_en || '',
+           moa:r.moa_en || '', antidote:r.antidote_en || '', contraindications:r.contraindications_en || [], interactionText:r.interaction_text_en || undefined },
+      hi:{ name:r.name_hi, use:r.use_hi, doseLine:r.dose_line_hi, adultDose:r.adult_dose_hi || '', childDose:r.child_dose_hi || '', liquid:r.liquid_hi || '',
+           moa:r.moa_hi || '', antidote:r.antidote_hi || '', contraindications:r.contraindications_hi || [], interactionText:r.interaction_text_hi || undefined } };
+  }
+  function customMed(item){
+    var name = clean(item.custom_name), dose = clean(item.custom_dose);
+    return { id:'c-'+item.id, custom:true, icon:'💊',
+      en:{ name:name, use:'', doseLine:dose || 'As prescribed', adultDose:'', childDose:'', liquid:'', moa:'', antidote:'', contraindications:[] },
+      hi:{ name:name, use:'', doseLine:dose || 'निर्देशानुसार', adultDose:'', childDose:'', liquid:'', moa:'', antidote:'', contraindications:[] } };
+  }
+  function rxLabel(source){
+    return source === 'scanned'
+      ? { en:'Scanned prescription', hi:'स्कैन किया गया प्रिस्क्रिप्शन' }
+      : { en:'Self-reported', hi:'स्व-रिपोर्टित' };
+  }
+  function rebuildSchedule(){
+    SCHEDULE = ALL_SCHEDULE.filter(function(s){
+      if (!s.active) return false;
+      var m = MEDS.filter(function(x){ return x.id === s.medId; })[0];
+      return m && medRxStatus(m) !== 'stopped';
+    });
+  }
+  function rebuildHistory(){
+    var ev = [];
+    PRESCRIPTIONS.forEach(function(rx){
+      var en = [], hi = [];
+      rx.medIds.forEach(function(id){ var m = medById(id); if (m){ en.push(m.en.name); hi.push(m.hi.name); } });
+      var who = rx.doctorName ? ' — ' + rx.doctorName : '';
+      ev.push({ ts:rx.ts || rx.rawDate || '', date:rx.date,
+        en:'Prescription added' + who + ': ' + en.join(', ') + '.',
+        hi:'प्रिस्क्रिप्शन जोड़ा गया' + who + ': ' + hi.join(', ') + '।' });
+    });
+    MEDS.forEach(function(m){
+      if (m.stoppedAt && medRxStatus(m) === 'stopped'){
+        ev.push({ ts:m.stoppedAt, date:fmtDate(m.stoppedAt), en:'Medicine stopped: ' + m.en.name + '.', hi:'दवा बंद: ' + m.hi.name + '।' });
+      }
+    });
+    ADRS.forEach(function(a){
+      var m = a.medicine_id ? medById(a.medicine_id) : null;
+      var nEn = m ? m.en.name : (a.medicine_name || ''), nHi = m ? m.hi.name : (a.medicine_name || '');
+      ev.push({ ts:a.created_at || '', date:fmtDate(a.created_at),
+        en:'Side effect reported (' + a.severity + '): ' + a.reaction + (nEn ? ' — ' + nEn : '') + '.',
+        hi:'साइड इफ़ेक्ट दर्ज (' + a.severity + '): ' + a.reaction + (nHi ? ' — ' + nHi : '') + '।' });
+    });
+    ev.sort(function(a,b){ return a.ts < b.ts ? 1 : (a.ts > b.ts ? -1 : 0); });
+    HISTORY = ev;
+  }
+
+  /* pure: takes plain rows, rebuilds every in-memory list (no network) */
+  function buildStateFromRows(rows){
+    PROFILE = rows.profile || PROFILE;
+    CATALOG = (rows.catalog || []).map(catalogRowToMed);
+    MED_ALIASES = {};
+    CATALOG.forEach(function(m){
+      MED_ALIASES[m.id] = (m.aliases && m.aliases.length) ? m.aliases.map(function(a){ return String(a).toLowerCase(); }) : [m.id];
+    });
+    INTERACTIONS = (rows.interactions || []).map(function(x){
+      return { pair:[x.drug_a, x.drug_b], severity:x.severity, en:x.explanation_en, hi:x.explanation_hi };
+    });
+    var itemToMed = {}, seen = {};
+    MEDS = [];
+    (rows.items || []).forEach(function(it){
+      var base;
+      if (it.medicine_id){
+        var cm = CATALOG.filter(function(c){ return c.id === it.medicine_id; })[0];
+        if (!cm) return;
+        base = Object.assign({}, cm);
+      } else {
+        base = customMed(it);
+      }
+      base.itemId = it.id;
+      base.rxStatus = (it.status === 'active' || it.status === 'paused') ? 'active' : 'stopped';
+      base.stoppedAt = it.stopped_at || null;
+      itemToMed[it.id] = base.id;
+      if (seen[base.id]) return;
+      seen[base.id] = true;
+      MEDS.push(base);
+    });
+    PRESCRIPTIONS = (rows.prescriptions || []).map(function(r){
+      var ids = (rows.items || []).filter(function(it){ return it.prescription_id === r.id; })
+        .map(function(it){ return itemToMed[it.id]; }).filter(Boolean);
+      return { id:r.id, doctorId:null, doctorName:clean(r.doctor_name), selfLabel:rxLabel(r.source),
+               date:fmtDate(r.prescribed_date), rawDate:r.prescribed_date, ts:r.created_at || r.prescribed_date, medIds:ids };
+    });
+    ALL_SCHEDULE = (rows.schedule || []).map(function(s){
+      return { id:s.id, itemId:s.prescription_item_id, medId:itemToMed[s.prescription_item_id],
+               time:String(s.time_of_day).slice(0,5), active:s.active !== false, createdAt:s.created_at };
+    }).filter(function(s){ return s.medId; });
+    rebuildSchedule();
+    takenToday = {}; takenDate = todayISO();
+    (rows.logs || []).forEach(function(l){ if (l.status === 'taken') takenToday[l.schedule_id] = true; });
+    REWARDS = rows.rewards
+      ? { coins:rows.rewards.coins || 0, streak:rows.rewards.streak || 0, last_full_day:rows.rewards.last_full_day || '' }
+      : { coins:0, streak:0, last_full_day:'' };
+    APPTS = rows.appointments || [];
+    ADRS = rows.adrs || [];
+    DIAGNOSTICS = [];
+    rebuildHistory();
+    if (PROFILE && (PROFILE.lang === 'en' || PROFILE.lang === 'hi')) LANG = PROFILE.lang;
+  }
+
+  function unwrap(p){ return p.then(function(r){ if (r.error) throw r.error; return r.data; }); }
+  async function loadAccountData(){
+    var uid = USER.id;
+    var res = await Promise.all([
+      unwrap(SB.from('profiles').select('*').eq('id', uid).maybeSingle()),
+      unwrap(SB.from('medicine_catalog').select('*')),
+      unwrap(SB.from('drug_interactions').select('*')),
+      unwrap(SB.from('prescriptions').select('*').eq('patient_id', uid).order('prescribed_date', { ascending:false }).order('created_at', { ascending:false })),
+      unwrap(SB.from('prescription_items').select('*').eq('patient_id', uid).order('created_at', { ascending:true })),
+      unwrap(SB.from('dose_schedule').select('*').eq('patient_id', uid)),
+      unwrap(SB.from('dose_logs').select('*').eq('patient_id', uid).eq('dose_date', todayISO())),
+      unwrap(SB.from('rewards').select('*').eq('patient_id', uid).maybeSingle()),
+      unwrap(SB.from('appointments').select('*').eq('patient_id', uid).order('slot_at', { ascending:true })),
+      unwrap(SB.from('adr_reports').select('*').eq('patient_id', uid).order('created_at', { ascending:false }))
+    ]);
+    var profile = res[0];
+    if (!profile){
+      var fallbackName = (USER.user_metadata && USER.user_metadata.full_name) || String(USER.email || 'User').split('@')[0];
+      var ins = await SB.from('profiles').insert({ id:uid, full_name:clean(fallbackName), lang:LANG }).select().maybeSingle();
+      profile = (ins && ins.data) || { id:uid, full_name:clean(fallbackName), lang:LANG };
+    }
+    buildStateFromRows({ profile:profile, catalog:res[1], interactions:res[2], prescriptions:res[3], items:res[4],
+      schedule:res[5], logs:res[6], rewards:res[7], appointments:res[8], adrs:res[9] });
+  }
+
+  /* ---------- saving a prescription (scan or manual) — same path in both modes ---------- */
+  async function persistPrescription(opts){
+    var uid = isAccount() ? USER.id : null, rxId = null, created = [], newSched = [];
+    try {
+      if (isAccount()){
+        var rx = await SB.from('prescriptions').insert({ patient_id:uid, doctor_name:opts.doctorName || null, source:opts.source || 'manual', prescribed_date:todayISO() }).select().single();
+        if (rx.error) throw rx.error;
+        rxId = rx.data.id;
+      } else {
+        rxId = localId();
+      }
+      for (var i = 0; i < opts.items.length; i++){
+        var it = opts.items[i], itemId, schedRows = [];
+        if (isAccount()){
+          var ir = await SB.from('prescription_items').insert({
+            prescription_id:rxId, patient_id:uid, medicine_id:it.medId || null,
+            custom_name: it.medId ? null : it.customName, custom_dose: it.medId ? null : (it.customDose || null)
+          }).select().single();
+          if (ir.error) throw ir.error;
+          itemId = ir.data.id;
+          var rows = (it.times || []).map(function(t){ return { patient_id:uid, prescription_item_id:itemId, time_of_day:t }; });
+          if (rows.length){
+            var sr = await SB.from('dose_schedule').insert(rows).select();
+            if (sr.error) throw sr.error;
+            schedRows = sr.data;
+          }
+        } else {
+          itemId = localId();
+          schedRows = (it.times || []).map(function(t){ return { id:localId(), time_of_day:t, created_at:new Date().toISOString() }; });
+        }
+        var med = it.medId ? Object.assign({}, catalogMed(it.medId)) : customMed({ id:itemId, custom_name:it.customName, custom_dose:it.customDose });
+        med.itemId = itemId; med.rxStatus = 'active'; med.stoppedAt = null;
+        created.push(med);
+        schedRows.forEach(function(s){
+          newSched.push({ id:s.id, itemId:itemId, medId:med.id, time:String(s.time_of_day).slice(0,5), active:true, createdAt:s.created_at });
+        });
+      }
+    } catch(e){
+      if (isAccount() && rxId){ await SB.from('prescriptions').delete().eq('id', rxId); }   // roll back a half-saved prescription
+      throw e;
+    }
+    created.forEach(function(m){ MEDS.push(m); });
+    PRESCRIPTIONS.unshift({ id:rxId, doctorId:null, doctorName:clean(opts.doctorName), selfLabel:rxLabel(opts.source),
+      date:fmtDate(todayISO()), rawDate:todayISO(), ts:new Date().toISOString(), medIds:created.map(function(m){ return m.id; }) });
+    if (isAccount()){
+      ALL_SCHEDULE = ALL_SCHEDULE.concat(newSched);
+      rebuildSchedule();
+      rebuildHistory();
+    } else {
+      newSched.forEach(function(s){ SCHEDULE.push({ id:s.id, medId:s.medId, time:s.time, createdAt:s.createdAt }); });
+      HISTORY.unshift({ date:todayDateLabel(),
+        en:'Prescription added: ' + created.map(function(m){ return m.en.name; }).join(', ') + '.',
+        hi:'प्रिस्क्रिप्शन जोड़ा गया: ' + created.map(function(m){ return m.hi.name; }).join(', ') + '।' });
+    }
+    return created.map(function(m){ return m.id; });
+  }
+
+  /* ---------- reminder times per medicine ---------- */
+  function timesCardHtml(m){
+    var x = X().times;
+    var rows = SCHEDULE.filter(function(s){ return s.medId === m.id; }).sort(function(a,b){ return minutesOf(a.time) - minutesOf(b.time); });
+    var chips = rows.length
+      ? rows.map(function(s){
+          return '<span class="badge good" style="gap:8px;font-size:.8rem">'+s.time+' <button type="button" class="link-btn" style="padding:0;text-decoration:none;color:inherit" aria-label="Remove '+s.time+'" onclick="removeDoseTime(\''+s.id+'\')">✕</button></span>';
+        }).join('')
+      : '<span class="muted">'+x.none+'</span>';
+    var adder = medRxStatus(m) === 'stopped' ? '' :
+      '<div class="row" style="margin-top:12px;gap:8px"><div class="field" style="flex:1"><input id="newDoseTime" type="time" value="08:00" aria-label="'+x.title+'"></div>' +
+      '<button class="btn primary sm" type="button" onclick="addDoseTime(\''+m.id+'\')">'+x.add+'</button></div>';
+    return '<div class="card"><span class="card-title">⏰ '+x.title+'</span><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+chips+'</div>'+adder+'</div>';
+  }
+  async function addDoseTime(medId){
+    var m = medById(medId), inp = document.getElementById('newDoseTime'), t = inp && inp.value;
+    if (!m || !t || !/^\d{2}:\d{2}$/.test(t)) return;
+    if (SCHEDULE.some(function(s){ return s.medId === medId && s.time === t; })) return;
+    try {
+      if (isAccount()){
+        var r = await SB.from('dose_schedule').insert({ patient_id:USER.id, prescription_item_id:m.itemId, time_of_day:t }).select().single();
+        if (r.error) throw r.error;
+        ALL_SCHEDULE.push({ id:r.data.id, itemId:m.itemId, medId:m.id, time:t, active:true, createdAt:r.data.created_at });
+        rebuildSchedule();
+      } else {
+        SCHEDULE.push({ id:localId(), medId:m.id, time:t, createdAt:new Date().toISOString() });
+      }
+      renderMedDetail(); renderHome();
+    } catch(e){ dbFail(e); }
+  }
+  async function removeDoseTime(id){
+    try {
+      if (isAccount()){
+        var r = await SB.from('dose_schedule').delete().eq('id', id);
+        if (r.error) throw r.error;
+        ALL_SCHEDULE = ALL_SCHEDULE.filter(function(s){ return s.id !== id; });
+        rebuildSchedule();
+      } else {
+        SCHEDULE = SCHEDULE.filter(function(s){ return s.id !== id; });
+      }
+      renderMedDetail(); renderHome();
+    } catch(e){ dbFail(e); }
+  }
+  window.addDoseTime = addDoseTime; window.removeDoseTime = removeDoseTime;
+
+  /* ---------- add a medicine manually ---------- */
+  var manualForm = null, manualBusy = false;
+  var MANUAL_DEFAULTS = { 1:['08:00'], 2:['08:00','20:00'], 3:['08:00','14:00','20:00'], 4:['08:00','13:00','18:00','22:00'] };
+  function openAddMed(){
+    manualForm = { name:'', dose:'', doctor:'', n:1, times:MANUAL_DEFAULTS[1].slice() };
+    renderAddMed(); go('add-med');
+  }
+  function manualSet(k, v){ manualForm[k] = v; }
+  function manualCount(n){ manualForm.n = n; manualForm.times = MANUAL_DEFAULTS[n].slice(); renderAddMed(); }
+  function manualTime(i, v){ manualForm.times[i] = v; }
+  function renderAddMed(){
+    var el = document.getElementById('addMedBody');
+    if (!el || !manualForm) return;
+    var m = X().manual;
+    var seg = [1,2,3,4].map(function(n){
+      return '<button type="button" aria-pressed="'+(manualForm.n === n)+'" onclick="manualCount('+n+')">'+n+'×</button>';
+    }).join('');
+    var timeInputs = manualForm.times.map(function(t, i){
+      return '<input type="time" value="'+esc(t)+'" onchange="manualTime('+i+',this.value)" aria-label="'+esc(m.times)+' '+(i+1)+'">';
+    }).join('');
+    el.innerHTML =
+      '<div class="field"><label for="mf_name">'+m.name+'</label><input id="mf_name" type="text" maxlength="80" autocomplete="off" placeholder="'+esc(m.namePh)+'" value="'+esc(manualForm.name)+'" oninput="manualSet(\'name\',this.value)"></div>' +
+      '<div class="field"><label for="mf_dose">'+m.dose+'</label><input id="mf_dose" type="text" maxlength="80" autocomplete="off" placeholder="'+esc(m.dosePh)+'" value="'+esc(manualForm.dose)+'" oninput="manualSet(\'dose\',this.value)"></div>' +
+      '<div class="field"><label for="mf_doc">'+m.doctor+'</label><input id="mf_doc" type="text" maxlength="80" autocomplete="off" placeholder="'+esc(m.doctorPh)+'" value="'+esc(manualForm.doctor)+'" oninput="manualSet(\'doctor\',this.value)"></div>' +
+      '<div class="field"><label>'+m.freq+'</label><div class="seg">'+seg+'</div></div>' +
+      '<div class="field"><label>'+m.times+'</label><div class="time-row">'+timeInputs+'</div></div>' +
+      '<p class="muted">'+m.note+'</p>' +
+      '<button class="btn primary" type="button" onclick="submitManual()">'+m.save+'</button>';
+  }
+  async function submitManual(){
+    if (manualBusy) return;
+    var m = X().manual, name = clean(manualForm.name);
+    if (!name){ toast(m.needName); return; }
+    if (manualForm.times.some(function(t){ return !/^\d{2}:\d{2}$/.test(t); })){ toast(m.needTimes); return; }
+    var hit = matchMedicinesFromText(name)[0];
+    var medId = hit ? hit.med.id : null;
+    if (medId && MEDS.some(function(x){ return x.id === medId; })){ toast(m.already); return; }
+    manualBusy = true;
+    try {
+      var ids = await persistPrescription({ doctorName:clean(manualForm.doctor), source:'manual',
+        items:[{ medId:medId, customName:name, customDose:clean(manualForm.dose), times:manualForm.times.slice() }] });
+      renderMedList(); renderRxList(); renderHome();
+      toast(m.added);
+      openMergeCheck(ids);
+    } catch(e){ dbFail(e); }
+    finally { manualBusy = false; }
+  }
+  window.openAddMed = openAddMed; window.manualSet = manualSet; window.manualCount = manualCount;
+  window.manualTime = manualTime; window.submitManual = submitManual;
+
+  /* ---------- appointments (account mode) ---------- */
+  var apptForm = { doctor:'', place:'', when:'' };
+  function apptSet(k, v){ apptForm[k] = v; }
+  function fmtWhen(iso){ return new Date(iso).toLocaleString(LANG === 'hi' ? 'hi-IN' : 'en-IN', { dateStyle:'medium', timeStyle:'short' }); }
+  function renderAppointmentsAccount(){
+    var el = document.getElementById('doctorBody');
+    if (!el) return;
+    var a = X().appt, now = Date.now();
+    var sorted = APPTS.slice().sort(function(p,q){ return new Date(p.slot_at) - new Date(q.slot_at); });
+    var upcoming = sorted.filter(function(p){ return new Date(p.slot_at).getTime() >= now - 3600000; });
+    var past = sorted.filter(function(p){ return new Date(p.slot_at).getTime() < now - 3600000; }).reverse();
+    function row(p, dim){
+      return '<div class="row" style="margin-top:10px'+(dim ? ';opacity:.65' : '')+'"><span><strong>'+esc(p.doctor_name)+'</strong><br><span class="muted">'+fmtWhen(p.slot_at)+(p.place ? ' · '+esc(p.place) : '')+'</span></span>' +
+        '<button class="btn outline sm" type="button" onclick="deleteAppt(\''+p.id+'\')">'+a.remove+'</button></div>';
+    }
+    el.innerHTML =
+      '<p class="muted">'+a.intro+'</p>' +
+      '<div class="card"><span class="card-title">'+a.upcoming+'</span>' + (upcoming.length ? upcoming.map(function(p){ return row(p, false); }).join('') : '<p class="muted" style="margin-top:6px">'+a.none+'</p>') + '</div>' +
+      '<div class="card"><span class="card-title">'+a.add+'</span><div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">' +
+        '<div class="field"><label for="ap_doc">'+a.doctor+'</label><input id="ap_doc" type="text" maxlength="80" value="'+esc(apptForm.doctor)+'" oninput="apptSet(\'doctor\',this.value)"></div>' +
+        '<div class="field"><label for="ap_place">'+a.place+'</label><input id="ap_place" type="text" maxlength="80" value="'+esc(apptForm.place)+'" oninput="apptSet(\'place\',this.value)"></div>' +
+        '<div class="field"><label for="ap_when">'+a.when+'</label><input id="ap_when" type="datetime-local" value="'+esc(apptForm.when)+'" onchange="apptSet(\'when\',this.value)"></div>' +
+        '<button class="btn primary" type="button" onclick="saveAppt()">'+a.save+'</button></div></div>' +
+      (past.length ? '<div class="card flat"><span class="card-title">'+a.past+'</span>' + past.map(function(p){ return row(p, true); }).join('') + '</div>' : '');
+  }
+  async function saveAppt(){
+    var a = X().appt, doc = clean(apptForm.doctor);
+    if (!doc){ toast(a.needDoctor); return; }
+    if (!apptForm.when){ toast(a.needWhen); return; }
+    try {
+      var r = await SB.from('appointments').insert({ patient_id:USER.id, doctor_name:doc, place:clean(apptForm.place) || null, slot_at:new Date(apptForm.when).toISOString() }).select().single();
+      if (r.error) throw r.error;
+      APPTS.push(r.data);
+      apptForm = { doctor:'', place:'', when:'' };
+      renderAppointmentsAccount();
+      toast(a.saved);
+    } catch(e){ dbFail(e); }
+  }
+  async function deleteAppt(id){
+    try {
+      var r = await SB.from('appointments').delete().eq('id', id);
+      if (r.error) throw r.error;
+      APPTS = APPTS.filter(function(p){ return p.id !== id; });
+      renderAppointmentsAccount();
+    } catch(e){ dbFail(e); }
+  }
+  window.apptSet = apptSet; window.saveAppt = saveAppt; window.deleteAppt = deleteAppt;
+
+  /* ---------- side-effect (ADR) reports (account mode) ---------- */
+  var adrForm = { med:'', medName:'', reaction:'', severity:'mild', onset:'' };
+  function adrSet(k, v){ adrForm[k] = v; if (k === 'med' || k === 'severity') renderAdrAccount(); }
+  function renderAdrAccount(){
+    var el = document.getElementById('adrBody');
+    if (!el) return;
+    var a = X().adrAcc;
+    var opts = '<option value="">'+a.pick+'</option>' + MEDS.map(function(m){
+      return '<option value="'+esc(m.id)+'"'+(adrForm.med === m.id ? ' selected' : '')+'>'+esc(m[LANG].name)+'</option>';
+    }).join('') + '<option value="__other"'+(adrForm.med === '__other' ? ' selected' : '')+'>'+a.other+'</option>';
+    var sev = ['mild','moderate','severe'].map(function(s){
+      return '<button type="button" aria-pressed="'+(adrForm.severity === s)+'" onclick="adrSet(\'severity\',\''+s+'\')">'+a[s]+'</button>';
+    }).join('');
+    var list = ADRS.length
+      ? ADRS.map(function(r){
+          var m = r.medicine_id ? medById(r.medicine_id) : null;
+          var nm = m ? m[LANG].name : (r.medicine_name || '');
+          return '<div class="report-doc" style="padding:12px"><div class="row"><strong>'+esc(nm)+'</strong><span class="badge '+(r.severity === 'severe' ? 'risk' : 'warn')+'">'+a[r.severity]+'</span></div>' +
+            '<p style="margin-top:4px">'+esc(r.reaction)+'</p><p class="muted" style="margin-top:2px">'+fmtDate(r.created_at)+(r.onset_note ? ' · '+esc(r.onset_note) : '')+'</p></div>';
+        }).join('')
+      : '<p class="muted">'+a.none+'</p>';
+    el.innerHTML =
+      '<p class="muted">'+a.intro+'</p>' +
+      '<div class="callout risk"><span>🚨</span><span>'+a.urgent+'</span></div>' +
+      '<div class="card"><span class="card-title">'+a.title+'</span><div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">' +
+        '<div class="field"><label for="ad_med">'+a.med+'</label><select id="ad_med" onchange="adrSet(\'med\',this.value)">'+opts+'</select></div>' +
+        (adrForm.med === '__other' ? '<div class="field"><label for="ad_other">'+a.otherName+'</label><input id="ad_other" type="text" maxlength="80" value="'+esc(adrForm.medName)+'" oninput="adrSet(\'medName\',this.value)"></div>' : '') +
+        '<div class="field"><label for="ad_re">'+a.reaction+'</label><input id="ad_re" type="text" maxlength="200" placeholder="'+esc(a.reactionPh)+'" value="'+esc(adrForm.reaction)+'" oninput="adrSet(\'reaction\',this.value)"></div>' +
+        '<div class="field"><label>'+a.sev+'</label><div class="seg">'+sev+'</div></div>' +
+        '<div class="field"><label for="ad_on">'+a.onset+'</label><input id="ad_on" type="text" maxlength="120" placeholder="'+esc(a.onsetPh)+'" value="'+esc(adrForm.onset)+'" oninput="adrSet(\'onset\',this.value)"></div>' +
+        '<button class="btn primary" type="button" onclick="submitAdr()">'+a.save+'</button></div></div>' +
+      '<span class="section-label">'+a.history+'</span>' + list;
+  }
+  async function submitAdr(){
+    var a = X().adrAcc, reaction = clean(adrForm.reaction), medKey = adrForm.med;
+    if (!medKey){ toast(a.needMed); return; }
+    var m = medKey === '__other' ? null : medById(medKey);
+    var name = m ? m.en.name : clean(adrForm.medName);
+    if (!name){ toast(a.needMed); return; }
+    if (!reaction){ toast(a.needReaction); return; }
+    try {
+      var r = await SB.from('adr_reports').insert({ patient_id:USER.id, medicine_id:(m && !m.custom) ? m.id : null, medicine_name:name,
+        reaction:reaction, severity:adrForm.severity, onset_note:clean(adrForm.onset) || null }).select().single();
+      if (r.error) throw r.error;
+      ADRS.unshift(r.data);
+      adrForm = { med:'', medName:'', reaction:'', severity:'mild', onset:'' };
+      rebuildHistory();
+      renderAdrAccount();
+      toast(a.saved);
+    } catch(e){ dbFail(e); }
+  }
+  window.adrSet = adrSet; window.submitAdr = submitAdr;
+
+  /* ---------- caregiver contact (account mode) ---------- */
+  var cgForm = null;
+  function cgSet(k, v){ cgForm[k] = v; }
+  function renderCaregiverAccount(){
+    var el = document.getElementById('cgBody');
+    if (!el) return;
+    var c = X().care;
+    if (!cgForm) cgForm = { name:(PROFILE && PROFILE.caregiver_name) || '', phone:(PROFILE && PROFILE.caregiver_phone) || '' };
+    var savedName = (PROFILE && PROFILE.caregiver_name) || '', savedPhone = (PROFILE && PROFILE.caregiver_phone) || '';
+    var actions = savedPhone
+      ? '<div style="display:flex;flex-direction:column;gap:8px"><a class="btn primary" href="tel:'+esc(savedPhone)+'">📱&nbsp; '+c.call.replace('{name}', esc(savedName || savedPhone))+'</a>' +
+        '<a class="btn ghost" href="sms:'+esc(savedPhone)+'?body='+encodeURIComponent(c.smsBody)+'">💬&nbsp; '+c.sms+'</a></div>'
+      : '<p class="muted">'+c.none+'</p>';
+    el.innerHTML =
+      '<div class="card"><span class="card-title">'+c.title+'</span><p class="muted" style="margin-top:6px">'+c.body+'</p></div>' + actions +
+      '<div class="card"><div style="display:flex;flex-direction:column;gap:10px">' +
+        '<div class="field"><label for="cg_name">'+c.name+'</label><input id="cg_name" type="text" maxlength="60" value="'+esc(cgForm.name)+'" oninput="cgSet(\'name\',this.value)"></div>' +
+        '<div class="field"><label for="cg_phone">'+c.phone+'</label><input id="cg_phone" type="tel" maxlength="20" inputmode="tel" value="'+esc(cgForm.phone)+'" oninput="cgSet(\'phone\',this.value)"></div>' +
+        '<button class="btn outline" type="button" onclick="saveCaregiver()">'+c.save+'</button></div></div>' +
+      '<div class="callout warn"><span>ℹ️</span><span>'+c.soon+'</span></div>';
+  }
+  async function saveCaregiver(){
+    var phone = String(cgForm.phone || '').replace(/[^\d+]/g,'').slice(0,20), name = clean(cgForm.name);
+    try {
+      var r = await SB.from('profiles').update({ caregiver_name:name || null, caregiver_phone:phone || null }).eq('id', USER.id);
+      if (r.error) throw r.error;
+      PROFILE.caregiver_name = name; PROFILE.caregiver_phone = phone;
+      cgForm = { name:name, phone:phone };
+      renderCaregiverAccount(); renderHome();
+      toast(X().care.saved);
+    } catch(e){ dbFail(e); }
+  }
+  window.cgSet = cgSet; window.saveCaregiver = saveCaregiver;
+
+  /* ---------- profile: account card, sign-out, delete data ---------- */
+  function renderAccountCard(){
+    var el = document.getElementById('accountBody');
+    if (!el) return;
+    var a = X().acct;
+    if (isAccount()){
+      el.innerHTML = '<div class="card"><span class="card-title">'+a.title+'</span>' +
+        '<p style="margin-top:8px;font-weight:700">'+esc(PROFILE && PROFILE.full_name)+'</p>' +
+        '<p class="muted">'+a.signedIn+' '+esc(USER && USER.email)+'</p>' +
+        '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">' +
+        '<button class="btn outline" type="button" onclick="signOut()">'+a.signOut+'</button>' +
+        '<button class="btn danger" type="button" onclick="deleteMyData()">'+a.del+'</button></div></div>';
+    } else {
+      el.innerHTML = '<div class="callout warn"><span>ℹ️</span><span><strong>'+a.demoTitle+'</strong><br>'+a.demoBody+'</span></div>' +
+        '<button class="btn primary" type="button" onclick="leaveDemo()">'+a.demoCta+'</button>';
+    }
+  }
+  async function deleteMyData(){
+    if (!window.confirm(X().acct.delConfirm)) return;
+    try {
+      var tables = ['prescriptions','adr_reports','appointments','diagnostic_reports'];
+      for (var i = 0; i < tables.length; i++){
+        var r = await SB.from(tables[i]).delete().eq('patient_id', USER.id);
+        if (r.error) throw r.error;
+      }
+      var rw = await SB.from('rewards').upsert({ patient_id:USER.id, coins:0, streak:0, last_full_day:null });
+      if (rw.error) throw rw.error;
+      toast(X().acct.deleted);
+      setTimeout(function(){ location.reload(); }, 900);
+    } catch(e){ dbFail(e); }
+  }
+  function signOut(){
+    var done = function(){ try { localStorage.removeItem('ps_demo'); } catch(e){} location.reload(); };
+    if (SB) SB.auth.signOut().then(done, done); else done();
+  }
+  function leaveDemo(){ try { localStorage.removeItem('ps_demo'); } catch(e){} location.reload(); }
+  window.deleteMyData = deleteMyData; window.signOut = signOut; window.leaveDemo = leaveDemo;
+
+  /* ---------- sign-in / sign-up screen ---------- */
+  var authMode = 'signin', authMsg = null, authBusy = false, recoveryPending = false, entering = false;
+  var authForm = { name:'', email:'' };
+  function isAuthOpen(){ return !document.getElementById('authOverlay').hidden; }
+  function showAuth(){ document.getElementById('authOverlay').hidden = false; renderAuth(); }
+  function hideAuth(){ document.getElementById('authOverlay').hidden = true; }
+  function setAuthMsg(type, text){ authMsg = type ? { type:type, text:text } : null; }
+  function authLangToggle(){
+    return '<div class="langtoggle" style="align-self:center" role="group" aria-label="Language">' +
+      '<button type="button" onclick="setLang(\'en\')" aria-pressed="'+(LANG === 'en')+'">EN</button>' +
+      '<button type="button" onclick="setLang(\'hi\')" aria-pressed="'+(LANG === 'hi')+'">हिंदी</button></div>';
+  }
+  function renderAuth(){
+    var el = document.getElementById('authCard');
+    var a = X().auth;
+    var isUp = authMode === 'signup', isRec = authMode === 'recovery';
+    var msg = authMsg ? '<div class="auth-msg '+(authMsg.type === 'ok' ? 'ok' : 'err')+'" role="alert">'+esc(authMsg.text)+'</div>' : '';
+    var fields = '';
+    if (isRec){
+      fields = '<div class="field"><label for="au_pw">'+a.newPw+'</label><input id="au_pw" type="password" autocomplete="new-password" minlength="6"></div>';
+    } else {
+      if (isUp) fields += '<div class="field"><label for="au_name">'+a.name+'</label><input id="au_name" type="text" maxlength="60" autocomplete="name" value="'+esc(authForm.name)+'"></div>';
+      fields += '<div class="field"><label for="au_email">'+a.email+'</label><input id="au_email" type="email" inputmode="email" autocomplete="email" value="'+esc(authForm.email)+'"></div>' +
+        '<div class="field"><label for="au_pw">'+a.password+'</label><input id="au_pw" type="password" autocomplete="'+(isUp ? 'new-password' : 'current-password')+'" minlength="6"></div>';
+    }
+    var submitLabel = authBusy ? a.busy : (isRec ? a.savePw : (isUp ? a.signup : a.signin));
+    el.innerHTML =
+      authLangToggle() +
+      '<h1>PharmaSaathi</h1><p class="tag">'+a.tag+'</p>' + msg +
+      '<form novalidate onsubmit="authSubmit();return false;" style="display:flex;flex-direction:column;gap:12px">' + fields +
+        '<button class="btn primary" type="submit"'+(authBusy ? ' disabled' : '')+'>'+submitLabel+'</button></form>' +
+      (isRec ? '' :
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:2px">' +
+        '<button class="link-btn" type="button" onclick="authToggle()">'+(isUp ? a.toSignin : a.toSignup)+'</button>' +
+        (isUp ? '' : '<button class="link-btn" type="button" onclick="authForgot()">'+a.forgot+'</button>') + '</div>' +
+        '<button class="btn ghost" type="button" onclick="enterDemo()">'+a.demo+'</button>') +
+      '<p class="muted" style="text-align:center;font-size:.74rem">'+a.disclaimer+'</p>';
+  }
+  function authToggle(){
+    readAuthFields();
+    authMode = authMode === 'signup' ? 'signin' : 'signup';
+    setAuthMsg(null); renderAuth();
+  }
+  function readAuthFields(){
+    var n = document.getElementById('au_name'), e = document.getElementById('au_email');
+    if (n) authForm.name = n.value; if (e) authForm.email = e.value.trim();
+  }
+  function mapAuthError(e){
+    var a = X().auth, m = String((e && e.message) || e || '').toLowerCase();
+    if (m.indexOf('invalid login') !== -1) return a.invalid;
+    if (m.indexOf('not confirmed') !== -1) return a.notConfirmed;
+    if (m.indexOf('already') !== -1 && m.indexOf('regist') !== -1) return a.exists;
+    if (m.indexOf('rate limit') !== -1 || m.indexOf('too many') !== -1 || m.indexOf('security purposes') !== -1) return a.rate;
+    if (m.indexOf('password') !== -1 && (m.indexOf('least') !== -1 || m.indexOf('weak') !== -1 || m.indexOf('short') !== -1)) return a.weak;
+    return a.generic + ((e && e.message) || e);
+  }
+  async function authSubmit(){
+    var a = X().auth;
+    if (authBusy) return;
+    if (!SB){ setAuthMsg('err', a.noBackend); renderAuth(); return; }
+    readAuthFields();
+    var pw = (document.getElementById('au_pw') || {}).value || '';
+    if (authMode === 'recovery'){
+      if (pw.length < 6){ setAuthMsg('err', a.weak); renderAuth(); return; }
+      authBusy = true; renderAuth();
+      try {
+        var u = await SB.auth.updateUser({ password:pw });
+        if (u.error) throw u.error;
+        recoveryPending = false; authMode = 'signin'; setAuthMsg('ok', a.pwUpdated);
+        authBusy = false;
+        await enterAccount(u.data.user);
+        return;
+      } catch(err){ setAuthMsg('err', mapAuthError(err)); }
+      authBusy = false; renderAuth(); return;
+    }
+    var email = authForm.email, name = clean(authForm.name);
+    if (!/^\S+@\S+\.\S+$/.test(email)){ setAuthMsg('err', a.badEmail); renderAuth(); return; }
+    if (authMode === 'signup' && !name){ setAuthMsg('err', a.needName); renderAuth(); return; }
+    if (pw.length < 6){ setAuthMsg('err', a.weak); renderAuth(); return; }
+    authBusy = true; setAuthMsg(null); renderAuth();
+    try {
+      if (authMode === 'signup'){
+        var r = await SB.auth.signUp({ email:email, password:pw,
+          options:{ data:{ full_name:name, lang:LANG }, emailRedirectTo:location.origin + location.pathname } });
+        if (r.error) throw r.error;
+        if (r.data.session){ authBusy = false; await enterAccount(r.data.session.user); return; }
+        if (r.data.user && r.data.user.identities && r.data.user.identities.length === 0) throw { message:'User already registered' };
+        authMode = 'signin'; setAuthMsg('ok', a.confirmSent.replace('{email}', email));
+      } else {
+        var s = await SB.auth.signInWithPassword({ email:email, password:pw });
+        if (s.error) throw s.error;
+        authBusy = false; await enterAccount(s.data.user); return;
+      }
+    } catch(err){ setAuthMsg('err', mapAuthError(err)); }
+    authBusy = false;
+    if (isAuthOpen()) renderAuth();
+  }
+  async function authForgot(){
+    var a = X().auth;
+    readAuthFields();
+    if (!SB){ setAuthMsg('err', a.noBackend); renderAuth(); return; }
+    if (!/^\S+@\S+\.\S+$/.test(authForm.email)){ setAuthMsg('err', a.needEmail); renderAuth(); return; }
+    try {
+      var r = await SB.auth.resetPasswordForEmail(authForm.email, { redirectTo:location.origin + location.pathname });
+      if (r.error) throw r.error;
+      setAuthMsg('ok', a.resetSent.replace('{email}', authForm.email));
+    } catch(err){ setAuthMsg('err', mapAuthError(err)); }
+    renderAuth();
+  }
+  window.authSubmit = authSubmit; window.authToggle = authToggle; window.authForgot = authForgot;
+
+  function showAuthLoading(){
+    document.getElementById('authOverlay').hidden = false;
+    document.getElementById('authCard').innerHTML =
+      '<div class="spinner" style="align-self:center"></div><p class="tag">'+X().auth.loading+'</p>';
+  }
+  function showAuthFatal(err){
+    var a = X().auth, code = err && err.code, detail = (err && err.message) || String(err);
+    document.getElementById('authCard').innerHTML =
+      '<h1>PharmaSaathi</h1><div class="auth-msg err">'+a.loadFail+' '+(code === 'PGRST205' ? a.dbMissing : '')+'<br><span style="font-size:.72rem;opacity:.8">'+esc(detail)+'</span></div>' +
+      '<button class="btn primary" type="button" onclick="retryLoad()">'+a.retry+'</button>' +
+      '<button class="btn ghost" type="button" onclick="signOut()">'+a.signout+'</button>';
+  }
+  function retryLoad(){ entering = false; enterAccount(USER); }
+  window.retryLoad = retryLoad;
+
+  async function enterAccount(user){
+    if (entering) return;
+    entering = true;
+    USER = user;
+    showAuthLoading();
+    try { await loadAccountData(); }
+    catch(e){ entering = false; showAuthFatal(e); return; }
+    MODE = 'account';
+    try { localStorage.removeItem('ps_demo'); } catch(e){}
+    hideAuth();
+    renderEverything();
+    go('home');
+    entering = false;
+  }
+  function enterDemo(){
+    MODE = 'demo';
+    try { localStorage.setItem('ps_demo', '1'); } catch(e){}
+    hideAuth();
+    renderEverything();
+    go('home');
+  }
+  window.enterDemo = enterDemo;
+
+  function initSupabase(){
+    try {
+      if (window.supabase && window.supabase.createClient){
+        SB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true } });
+      }
+    } catch(e){ SB = null; }
+  }
+  function boot(){
+    initSupabase();
+    var demoFlag = false;
+    try { demoFlag = localStorage.getItem('ps_demo') === '1'; } catch(e){}
+    if (!SB){
+      if (demoFlag){ enterDemo(); return; }
+      setAuthMsg('err', X().auth.noBackend); showAuth(); return;
+    }
+    SB.auth.onAuthStateChange(function(event){
+      if (event === 'PASSWORD_RECOVERY'){
+        recoveryPending = true; authMode = 'recovery';
+        setTimeout(showAuth, 0);
+      }
+    });
+    SB.auth.getSession().then(function(r){
+      var s = r && r.data && r.data.session;
+      if (recoveryPending){ showAuth(); return; }
+      if (s && s.user) enterAccount(s.user);
+      else if (demoFlag) enterDemo();
+      else showAuth();
+    }).catch(function(){ showAuth(); });
+  }
+
+  boot();
 })();
 </script>
 
