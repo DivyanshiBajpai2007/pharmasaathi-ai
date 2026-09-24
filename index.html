@@ -828,8 +828,8 @@
   var FAQ = [
     { en:{ q:'How accurate is the prescription scan?', a:'The scan reads printed text well and neat handwriting reasonably, but it can misread blurry or messy photos — so you always see what it read and can correct the names before adding. Medicines that are not in our safety database are added as "not safety-checked".' },
       hi:{ q:'प्रिस्क्रिप्शन स्कैन कितनी सटीक है?', a:'स्कैन छपे हुए अक्षरों को अच्छी तरह और साफ़ लिखावट को ठीक-ठाक पढ़ लेता है, पर धुंधली या उलझी हुई फ़ोटो में गलती हो सकती है — इसलिए जोड़ने से पहले आप पढ़े गए नाम देखकर सुधार सकते हैं। जो दवाइयाँ हमारे सुरक्षा डेटाबेस में नहीं हैं, वे "सुरक्षा जाँच नहीं हुई" के रूप में जुड़ती हैं।' } },
-    { en:{ q:'Is my data safe?', a:'Prescription photos are read on your own device and are never uploaded. If you create an account, your medicines, schedule and reminders are stored securely in your account so they follow you across devices; without an account nothing is saved. See our Privacy Policy for details.' },
-      hi:{ q:'क्या मेरा डेटा सुरक्षित है?', a:'प्रिस्क्रिप्शन की फ़ोटो आपके अपने डिवाइस पर पढ़ी जाती है और कभी अपलोड नहीं होती। खाता बनाने पर आपकी दवाइयाँ, समय-सारणी और रिमाइंडर आपके खाते में सुरक्षित रहते हैं ताकि हर डिवाइस पर मिलें; खाते के बिना कुछ भी सहेजा नहीं जाता। विवरण हेतु प्राइवेसी पॉलिसी देखें।' } },
+    { en:{ q:'Is my data safe?', a:'Photos are read on your own device by default. If you are signed in and choose AI reading for a handwritten prescription, that one photo is sent securely to an AI service. If you create an account, your medicines, schedule and reminders are stored securely in your account so they follow you across devices; without an account nothing is saved. See our Privacy Policy for details.' },
+      hi:{ q:'क्या मेरा डेटा सुरक्षित है?', a:'फ़ोटो सामान्यतः आपके अपने डिवाइस पर पढ़ी जाती है। साइन इन होने पर हस्तलिखित पर्चे के लिए AI से पढ़ना चुनें तो केवल वही फ़ोटो सुरक्षित रूप से एक AI सेवा को भेजी जाती है। खाता बनाने पर आपकी दवाइयाँ, समय-सारणी और रिमाइंडर आपके खाते में सुरक्षित रहते हैं ताकि हर डिवाइस पर मिलें; खाते के बिना कुछ भी सहेजा नहीं जाता। विवरण हेतु प्राइवेसी पॉलिसी देखें।' } },
     { en:{ q:'What happens if I miss a dose?', a:'You get an on-screen alert, an alarm with sound if reminders are enabled, and you can notify your caregiver by SMS with one tap.' },
       hi:{ q:'खुराक छूटने पर क्या होता है?', a:'आपको स्क्रीन पर चेतावनी मिलती है, रिमाइंडर चालू होने पर ध्वनि सहित अलार्म बजता है, और आप एक टैप में SMS द्वारा देखभालकर्ता को सूचित कर सकते हैं।' } },
     { en:{ q:'Can my caregiver see my information?', a:'Yes — the Caregiver tab is designed for a family member to check your schedule, missed doses and ADR reports, and call you directly.' },
@@ -907,7 +907,7 @@
                 ['🔮','Predictive medicine availability','Forecast which nearby pharmacies are likely to have a medicine in stock before the patient travels.'] ] },
       scan:{
         dropTitle:'Take a photo or upload your prescription',
-        dropHint:'JPG or PNG · read entirely in your browser, never uploaded anywhere',
+        dropHint:'JPG or PNG · read on your device unless you choose AI reading',
         chooseBtn:'📷&nbsp; Choose photo',
         analyzing:'Reading your prescription…',
         extractedTitle:'Medicines recognized',
@@ -934,7 +934,7 @@
       help:{ contactTitle:'Contact us', email:'support@pharmasaathi.example', emailLabel:'Email support', callLabel:'Call helpline' },
       priv:{ sections:[
         ['What we store','If you create an account: your email, the medicines and prescriptions you add, your dose schedule and taken/missed history, appointments, side-effect reports, coins and streak, and an optional caregiver contact. This is kept in a secured database and is visible only to you. If you just browse the sample data, nothing is saved.'],
-        ['Prescription photos','Photos you scan are read on your own device and are never uploaded. Only the medicine names you confirm are saved.'],
+        ['Prescription photos','By default, photos you scan are read on your own device and are not uploaded. If you are signed in and choose "Read with AI", that one photo is sent securely to an AI service (Anthropic) to read the handwriting; PharmaSaathi does not store it. Only the medicine names you confirm are saved.'],
         ['Third-party services','The app uses Supabase for sign-in and storage, loads fonts from Google Fonts and its text-reading engine from a public CDN, and may use your browser’s built-in voice engine for speech. Your data is not sold or used for advertising.'],
         ['Deleting your data','You can delete all your stored data from the Profile tab at any time. "Clear app data on this device" also removes everything saved in this browser.'],
         ['Not medical advice','The safety checks cover only a limited set of medicines and are informational. They do not replace your doctor or pharmacist — always confirm with them before changing any medicine.'],
@@ -1010,7 +1010,7 @@
                 ['🔮','दवा उपलब्धता का पूर्वानुमान','मरीज़ के जाने से पहले अनुमान — आस-पास किस फार्मेसी में दवा मिलने की संभावना अधिक है।'] ] },
       scan:{
         dropTitle:'अपने प्रिस्क्रिप्शन की फ़ोटो लें या अपलोड करें',
-        dropHint:'JPG या PNG · पूरी तरह आपके ब्राउज़र में पढ़ी जाती है, कहीं अपलोड नहीं होती',
+        dropHint:'JPG या PNG · जब तक आप AI से पढ़ना न चुनें, आपके डिवाइस पर ही पढ़ी जाती है',
         chooseBtn:'📷&nbsp; फ़ोटो चुनें',
         analyzing:'आपका प्रिस्क्रिप्शन पढ़ा जा रहा है…',
         extractedTitle:'पहचानी गई दवाइयाँ',
@@ -1037,7 +1037,7 @@
       help:{ contactTitle:'हमसे संपर्क करें', email:'support@pharmasaathi.example', emailLabel:'ईमेल सहायता', callLabel:'हेल्पलाइन कॉल करें' },
       priv:{ sections:[
         ['हम क्या संग्रहीत करते हैं','खाता बनाने पर: आपका ईमेल, आपकी जोड़ी गई दवाइयाँ और प्रिस्क्रिप्शन, खुराक समय-सारणी व ली/छूटी खुराक का इतिहास, अपॉइंटमेंट, साइड-इफ़ेक्ट रिपोर्ट, कॉइन्स व स्ट्रीक, और वैकल्पिक देखभालकर्ता संपर्क। यह सुरक्षित डेटाबेस में रहता है और केवल आपको दिखता है। यदि आप सिर्फ़ नमूना डेटा देखते हैं, तो कुछ भी सहेजा नहीं जाता।'],
-        ['प्रिस्क्रिप्शन फ़ोटो','आपके स्कैन किए फ़ोटो आपके अपने डिवाइस पर पढ़े जाते हैं और कभी अपलोड नहीं होते। केवल वे दवाइयों के नाम सहेजे जाते हैं जिन्हें आप पुष्टि करते हैं।'],
+        ['प्रिस्क्रिप्शन फ़ोटो','सामान्यतः आपके स्कैन किए फ़ोटो आपके अपने डिवाइस पर पढ़े जाते हैं और अपलोड नहीं होते। यदि आप साइन इन हैं और "AI से पढ़ें" चुनते हैं, तो केवल वही फ़ोटो हस्तलिखित पढ़ने हेतु सुरक्षित रूप से एक AI सेवा (Anthropic) को भेजी जाती है; PharmaSaathi उसे सहेजता नहीं है। केवल वे दवाइयों के नाम सहेजे जाते हैं जिन्हें आप पुष्टि करते हैं।'],
         ['थर्ड-पार्टी सेवाएँ','ऐप साइन-इन और स्टोरेज हेतु Supabase का उपयोग करता है, Google Fonts से फ़ॉन्ट और सार्वजनिक CDN से टेक्स्ट-रीडिंग इंजन लोड करता है, और आवाज़ हेतु आपके ब्राउज़र का वॉइस इंजन उपयोग कर सकता है। आपका डेटा बेचा या विज्ञापन हेतु उपयोग नहीं किया जाता।'],
         ['अपना डेटा हटाना','आप प्रोफ़ाइल टैब से कभी भी अपना सारा संग्रहीत डेटा हटा सकते हैं। "इस डिवाइस का ऐप डेटा साफ़ करें" इस ब्राउज़र में सहेजा सब कुछ भी हटा देता है।'],
         ['यह चिकित्सीय सलाह नहीं है','सुरक्षा जाँच केवल सीमित दवाइयों को कवर करती है और केवल जानकारी हेतु है। यह आपके डॉक्टर या फार्मासिस्ट का विकल्प नहीं है — कोई भी दवा बदलने से पहले उनसे पुष्टि करें।'],
@@ -2196,7 +2196,7 @@
     var m = String(text).match(/(\d+(?:\.\d+)?)\s?(mg|mcg|µg|ug|g|ml|iu)/i);
     return m ? (parseFloat(m[1]) + m[2].toLowerCase().replace('µg','mcg').replace('ug','mcg')) : '';
   }
-  var CONF_RANK = { catalog:5, 'catalog-fuzzy':4, dict:3, 'dict-fuzzy':2.5, form:2, weak:1 };
+  var CONF_RANK = { catalog:5, 'catalog-fuzzy':4, ai:3.5, dict:3, 'dict-fuzzy':2.5, form:2, weak:1 };
   /* handwriting garbles several letters at once ("Cunetidune" for Cimetidine). Only used for lines
      that already look like a prescription line (strength/quantity + timing), and always shown as
      "looks like X — check", never as a confirmed match. */
@@ -2324,17 +2324,70 @@
   }
   window.scanToggle = scanToggle; window.scanEdit = scanEdit;
 
+  /* AI reading (handwriting) is available to signed-in users, after they agree to send the photo */
+  var aiDown = false, pendingScanFile = null, scanUsedAi = false;
+  function aiConsent(){ try { return localStorage.getItem('ps_ai_consent'); } catch(e){ return null; } }
+  function aiAvailable(){ return !!(SB && isAccount() && !aiDown); }
   function handleScanFile(file){
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function(e){
       scanImageUrl = e.target.result;
-      scanState = 'analyzing';
       scanProgressPct = 0; scanStep = 0; scanStepTotal = 0;
-      renderScan();
+      if (aiAvailable() && aiConsent() !== 'yes'){
+        pendingScanFile = file; scanState = 'consent'; renderScan(); return;
+      }
+      scanState = 'analyzing'; renderScan();
       runOcr(file);
     };
     reader.readAsDataURL(file);
+  }
+  function scanConsent(useAi){
+    var file = pendingScanFile; pendingScanFile = null;
+    if (!file) return;
+    if (useAi){ try { localStorage.setItem('ps_ai_consent', 'yes'); } catch(e){} }
+    else { aiDown = true; }       // "on this device only" for this session
+    scanState = 'analyzing'; renderScan();
+    runOcr(file);
+  }
+  window.scanConsent = scanConsent;
+
+  /* downscale to keep the upload small (about 300-700 KB) but readable */
+  async function imageToBase64(file){
+    var im = await loadImageFile(file);
+    var w = im.naturalWidth, h = im.naturalHeight, k = Math.min(1, 1800 / Math.max(w, h));
+    var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+    var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', 0.85).split(',')[1];
+  }
+  var WHEN_TIMES = { morning:'08:00', afternoon:'14:00', evening:'18:00', night:'21:00', bedtime:'22:00' };
+  var PER_DAY_TIMES = { 1:['08:00'], 2:['08:00','20:00'], 3:['08:00','14:00','21:00'], 4:['08:00','13:00','18:00','22:00'], 5:['06:00','10:00','14:00','18:00','22:00'], 6:['06:00','10:00','14:00','18:00','21:00','23:00'] };
+  /* turn the AI's structured answer into the same editable rows the on-device reader produces */
+  function aiToItems(res){
+    return (res.medicines || []).map(function(m){
+      var name = clean(m.name), hit = matchMedicinesFromText(name)[0];
+      var times = null;
+      if (m.when && m.when.length) times = m.when.map(function(w){ return WHEN_TIMES[w]; }).filter(Boolean).sort();
+      else if (m.times_per_day === 0) times = [];
+      else if (m.times_per_day > 0) times = PER_DAY_TIMES[m.times_per_day] || null;
+      var conf = hit ? (hit.confidence === 'high' ? 'catalog' : 'catalog-fuzzy') : 'ai';
+      var low = m.confidence === 'low';
+      return { raw:clean(m.written || m.name), name:name, medId:hit ? hit.med.id : null, dose:clean(m.strength), qty:clean(m.quantity_per_dose),
+               duration:clean(m.duration), times:times, conf:conf, aiLow:low, include:!low };
+    });
+  }
+  async function runAiRead(file){
+    try {
+      var b64 = await imageToBase64(file);
+      var r = await SB.functions.invoke('read-prescription', { body:{ image:b64, mediaType:'image/jpeg' } });
+      if (r.error || !r.data || !Array.isArray(r.data.medicines)) throw (r.error || new Error('no data'));
+      return r.data;
+    } catch(e){
+      console.warn('AI reading unavailable, using on-device reading', e);
+      aiDown = true;
+      toast(X().scanX.aiDown);
+      return null;
+    }
   }
 
   /* ---- image clean-up: phone photos have shadows, glare and low contrast ---- */
@@ -2434,6 +2487,18 @@
      It reads clean printed text well; doctors' handwriting is genuinely hard for any OCR,
      which is why every result is shown as an editable suggestion, with the raw text visible. */
   async function runOcr(file){
+    scanUsedAi = false;
+    if (aiAvailable() && aiConsent() === 'yes'){
+      scanStep = 1; scanStepTotal = 0; scanProgressPct = 0; renderScan();
+      var ai = await runAiRead(file);
+      if (ai){
+        scanUsedAi = true; scanRawText = '';
+        scanItems = aiToItems(ai);
+        scanState = scanItems.length ? 'done' : 'no-match';
+        renderScan();
+        return;
+      }
+    }
     if (typeof Tesseract === 'undefined'){ scanState = 'ocr-failed'; renderScan(); return; }
     try {
       var variants = await makeOcrVariants(file), texts = [];
@@ -2571,11 +2636,17 @@
         '<button class="btn primary" type="button" onclick="document.getElementById(\'scanFileInput\').click()">'+s.chooseBtn+'</button>' +
         '<div class="card flat" style="background:var(--surface-2)"><span class="card-title">'+sx.tipsTitle+'</span><ul class="muted" style="margin:6px 0 0;padding-left:18px;line-height:1.6">' +
           sx.tips.map(function(t){ return '<li>'+t+'</li>'; }).join('') + '</ul></div>' +
+        (isAccount() ? '<div class="callout good"><span>🤖</span><span>'+sx.aiOn+'</span></div>' : '<div class="callout warn"><span>🔒</span><span>'+sx.aiNeedsAccount+'</span></div>') +
         '<button class="link-btn" type="button" onclick="openAddMed()">✍️ '+X().manual.addInstead+'</button>';
+    } else if (scanState === 'consent'){
+      el.innerHTML = preview +
+        '<div class="card"><span class="card-title">'+sx.consentTitle+'</span><p class="muted" style="margin-top:6px;line-height:1.55">'+sx.consentBody+'</p></div>' +
+        '<button class="btn primary" type="button" onclick="scanConsent(true)">🤖&nbsp; '+sx.consentYes+'</button>' +
+        '<button class="btn ghost" type="button" onclick="scanConsent(false)">📱&nbsp; '+sx.consentNo+'</button>';
     } else if (scanState === 'analyzing'){
       el.innerHTML = preview +
         '<div class="scan-preview"><div class="spinner"></div>' +
-        '<span class="muted">'+(scanStepTotal ? sx.pass.replace('{i}', scanStep).replace('{n}', scanStepTotal) : s.analyzing)+(scanProgressPct ? ' '+scanProgressPct+'%' : '')+'</span></div>';
+        '<span class="muted">'+(scanStepTotal ? sx.pass.replace('{i}', scanStep).replace('{n}', scanStepTotal) : (aiAvailable() && aiConsent() === 'yes' ? sx.aiReading : s.analyzing))+(scanProgressPct ? ' '+scanProgressPct+'%' : '')+'</span></div>';
     } else if (scanState === 'ocr-failed'){
       el.innerHTML = preview +
         '<div class="callout risk"><span>⚠️</span><span>'+s.ocrFailed+'</span></div>' +
@@ -2590,7 +2661,7 @@
       var rows = scanItems.map(function(it, i){
         var already = it.medId ? MEDS.some(function(m){ return m.id === it.medId; }) : false;
         var cm = it.medId ? catalogMed(it.medId) : null;
-        var badge = { catalog:['good', sx.bCatalog], 'catalog-fuzzy':['warn', sx.bFuzzy], dict:['warn', sx.bDict], 'dict-fuzzy':['warn', sx.bLoose], form:['warn', sx.bForm], weak:['warn', sx.bWeak] }[it.conf];
+        var badge = { catalog:['good', sx.bCatalog], 'catalog-fuzzy':['warn', sx.bFuzzy], ai:['warn', it.aiLow ? sx.bAiLow : sx.bAi], dict:['warn', sx.bDict], 'dict-fuzzy':['warn', sx.bLoose], form:['warn', sx.bForm], weak:['warn', sx.bWeak] }[it.conf];
         var mm = strengthMismatch(it);
         var timesTxt = it.times ? (it.times.length ? timesWords(it.times) : sx.asNeeded) : sx.timesGuess.replace('{t}', timesWords(cm ? scheduleTimesFor(cm.en.doseLine) : ['08:00']));
         var meta = [it.qty ? sx.take + ' ' + it.qty : '', it.duration ? sx.forDur.replace('{d}', it.duration) : ''].filter(Boolean).join(' · ');
@@ -2607,12 +2678,12 @@
       }).join('');
       el.innerHTML = preview +
         '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanItems.length+'</span></div><hr>' +
-        '<p class="muted">'+sx.editHint+'</p>' +
+        '<p class="muted">'+(scanUsedAi ? sx.editHintAi : sx.editHint)+'</p>' +
         '<button class="btn outline sm" type="button" onclick="speakScan()" style="margin-top:8px">🔊 '+sx.readAloud+'</button></div>' + rows + rawBlock +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+sx.addMissing+'</button>' +
         '<button class="btn ghost" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
-        '<p class="muted" style="text-align:center">'+s.disclaimer+'</p>';
+        '<p class="muted" style="text-align:center">'+(scanUsedAi ? sx.disclaimerAi : s.disclaimer)+'</p>';
     }
   }
 
@@ -3112,7 +3183,15 @@
         nameLabel:'Medicine name', readAs:'Read as:',
         bCatalog:'✓ In safety database', bFuzzy:'≈ Looks like {name} — check', bDict:'Name recognised — not safety-checked',
         bForm:'Please check this name', bWeak:'Not in my medicine list — check the spelling',
-        take:'Take', doseLabel:'Strength (e.g. 500 mg)', readAloud:'Read these aloud', bLoose:'≈ Looks like {name} — check the spelling',
+        take:'Take', doseLabel:'Strength (e.g. 500 mg)', readAloud:'Read these aloud',
+        consentTitle:'Read handwriting with AI?',
+        consentBody:'Handwriting is very hard to read on a phone alone. With your OK, this photo is sent securely to an AI service (Anthropic) that reads it, and is not stored by PharmaSaathi. Please do not photograph anything except the prescription. You can always check and correct the result before anything is saved.',
+        consentYes:'Yes, read it with AI', consentNo:'No, read on this device only',
+        aiReading:'AI is reading your prescription…', aiDown:'AI reading is not available right now — used on-device reading instead.',
+        aiOn:'AI handwriting reading is on for your account.', aiNeedsAccount:'Sign in to switch on AI handwriting reading. Without an account, only printed or very neat writing is read.',
+        bAi:'🤖 Read by AI — check against the paper', bAiLow:'🤖 AI is unsure — please check this name',
+        editHintAi:'The AI read these from your photo. Check each name against the paper, fix anything wrong, and untick anything that is not a medicine.',
+        disclaimerAi:'Read by an AI model — it can still make mistakes. Always double-check against the paper prescription.', bLoose:'≈ Looks like {name} — check the spelling',
         timesGuess:'no timing found on the paper — will use {t} (change it later)', forDur:'for {d}',
         mismatch:'Your paper says {a}, but the database entry is {b} — its dosing information is for {b}.',
         addMissing:'Add a medicine that was missed', nothing:'Tick at least one medicine to add.', asNeeded:'as needed — no fixed reminders'
@@ -3208,7 +3287,15 @@
         nameLabel:'दवा का नाम', readAs:'ऐसा पढ़ा:',
         bCatalog:'✓ सुरक्षा डेटाबेस में', bFuzzy:'≈ {name} जैसा लगता है — जाँचें', bDict:'नाम पहचाना — सुरक्षा जाँच नहीं हुई',
         bForm:'कृपया यह नाम जाँचें', bWeak:'मेरी दवा-सूची में नहीं — वर्तनी जाँचें',
-        take:'खुराक:', doseLabel:'मात्रा (जैसे 500 mg)', readAloud:'ये नाम सुनें', bLoose:'≈ यह {name} जैसा लगता है — वर्तनी जाँचें',
+        take:'खुराक:', doseLabel:'मात्रा (जैसे 500 mg)', readAloud:'ये नाम सुनें',
+        consentTitle:'हाथ की लिखावट AI से पढ़वाएँ?',
+        consentBody:'केवल फ़ोन से हस्तलिखित पर्चा पढ़ना बहुत कठिन है। आपकी अनुमति से यह फ़ोटो सुरक्षित रूप से एक AI सेवा (Anthropic) को भेजी जाती है जो इसे पढ़ती है; PharmaSaathi इसे सहेजता नहीं है। कृपया प्रिस्क्रिप्शन के अलावा कुछ और फ़ोटो में न रखें। कुछ भी सहेजने से पहले आप नतीजा जाँचकर सुधार सकते हैं।',
+        consentYes:'हाँ, AI से पढ़ें', consentNo:'नहीं, केवल इसी डिवाइस पर पढ़ें',
+        aiReading:'AI आपका प्रिस्क्रिप्शन पढ़ रहा है…', aiDown:'AI से पढ़ना अभी उपलब्ध नहीं है — इसी डिवाइस पर पढ़ा गया।',
+        aiOn:'आपके खाते में AI से हस्तलिखित पढ़ना चालू है।', aiNeedsAccount:'AI से हस्तलिखित पढ़ने के लिए साइन इन करें। खाते के बिना केवल छपा या बहुत साफ़ लिखा हुआ पढ़ा जाता है।',
+        bAi:'🤖 AI ने पढ़ा — कागज़ से मिलाएँ', bAiLow:'🤖 AI को पक्का नहीं — कृपया यह नाम जाँचें',
+        editHintAi:'AI ने आपकी फ़ोटो से ये पढ़े हैं। हर नाम कागज़ से मिलाएँ, गलत नाम सुधारें, और जो दवा नहीं है उसे अनचेक करें।',
+        disclaimerAi:'AI मॉडल ने पढ़ा है — फिर भी गलती हो सकती है। हमेशा कागज़ के प्रिस्क्रिप्शन से मिलाएँ।', bLoose:'≈ यह {name} जैसा लगता है — वर्तनी जाँचें',
         timesGuess:'कागज़ पर समय नहीं मिला — {t} रखा जाएगा (बाद में बदलें)', forDur:'{d} के लिए',
         mismatch:'आपके कागज़ पर {a} है, पर डेटाबेस एंट्री {b} की है — उसकी खुराक जानकारी {b} के लिए है।',
         addMissing:'छूटी हुई दवा जोड़ें', nothing:'जोड़ने के लिए कम से कम एक दवा चुनें।', asNeeded:'ज़रूरत पड़ने पर — कोई तय रिमाइंडर नहीं'
