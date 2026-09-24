@@ -2258,6 +2258,12 @@
     pushSyncedAt = Date.now();
     try {
       var reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+      /* a registration made with an older key can never receive messages signed with a new one: start over with the current key */
+      if (sub && sub.options && sub.options.applicationServerKey){
+        var have = new Uint8Array(sub.options.applicationServerKey), want = b64uToBytes(VAPID_PUBLIC_KEY), same = have.length === want.length;
+        for (var k = 0; same && k < want.length; k++) if (have[k] !== want[k]) same = false;
+        if (!same){ try { await SB.from('push_subscriptions').delete().eq('endpoint', sub.endpoint); } catch(e){} await sub.unsubscribe(); sub = null; }
+      }
       if (!sub){
         try { sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64uToBytes(VAPID_PUBLIC_KEY) }); }
         catch(e){ var old = await reg.pushManager.getSubscription(); if (old) await old.unsubscribe(); sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64uToBytes(VAPID_PUBLIC_KEY) }); }
