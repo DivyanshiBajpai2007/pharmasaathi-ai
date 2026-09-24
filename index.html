@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#EF9F1C">
+<meta name="color-scheme" content="only light">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
@@ -10,6 +11,7 @@
 <title>PharmaSaathi AI</title>
 <style>
   :root{
+    color-scheme:light;
     --bg:#FEFCF8;
     --surface:#FFFFFF;
     --surface-2:#F8F2E6;
@@ -32,49 +34,6 @@
     --font-body:'Manrope',-apple-system,Segoe UI,Arial,sans-serif;
     --font-mono:'JetBrains Mono',Consolas,monospace;
   }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#0A0F1E;
-      --surface:#141C30;
-      --surface-2:#1B2438;
-      --surface-3:#212C46;
-      --text:#F5F6FA;
-      --text-muted:#9AA4BF;
-      --accent:#F5A623;
-      --accent-ink:#241800;
-      --accent-soft:#3A2A0B;
-      --good:#3ECF8E;
-      --good-soft:#123526;
-      --warn:#F5A623;
-      --warn-soft:#3A2A0B;
-      --risk:#E8615D;
-      --risk-soft:#3A1613;
-      --border:#2A3550;
-      --shadow:0 18px 44px -20px rgba(0,0,0,.6);
-      --shadow-sm:0 10px 20px -14px rgba(0,0,0,.55);
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#0A0F1E;
-    --surface:#141C30;
-    --surface-2:#1B2438;
-    --surface-3:#212C46;
-    --text:#F5F6FA;
-    --text-muted:#9AA4BF;
-    --accent:#F5A623;
-    --accent-ink:#241800;
-    --accent-soft:#3A2A0B;
-    --good:#3ECF8E;
-    --good-soft:#123526;
-    --warn:#F5A623;
-    --warn-soft:#3A2A0B;
-    --risk:#E8615D;
-    --risk-soft:#3A1613;
-    --border:#2A3550;
-    --shadow:0 18px 44px -20px rgba(0,0,0,.6);
-    --shadow-sm:0 10px 20px -14px rgba(0,0,0,.55);
-  }
-
   * { box-sizing:border-box; }
   body{
     background:var(--bg);
@@ -243,6 +202,28 @@
 
   .listenbtn{ display:flex; align-items:center; gap:12px; background:var(--surface-2); border-radius:16px; padding:12px 14px; }
   .listenbtn .orb{ flex:0 0 auto; width:46px; height:46px; border-radius:50%; background:var(--accent); color:var(--accent-ink); display:flex; align-items:center; justify-content:center; font-size:1.2rem; border:none; cursor:pointer; }
+  .ic-mic, .ic-stop{ width:22px; height:22px; display:block; }
+  .ic-stop{ display:none; }
+  .speaking .ic-mic{ display:none; }
+  .speaking .ic-stop{ display:block; }
+  .lbl-stop{ display:none; }
+  .speaking .lbl-stop{ display:inline; }
+  .speaking .lbl-listen{ display:none; }
+  .listenbtn .orb.speaking{ background:var(--risk); color:#fff; }
+  .btn.sm .ic-mic, .btn.sm .ic-stop{ width:15px; height:15px; display:inline-block; vertical-align:-3px; margin-right:4px; }
+  .btn.sm .ic-stop{ display:none; }
+  .btn.sm.speaking .ic-stop{ display:inline-block; }
+  .sos-btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:10px; background:var(--risk); color:#fff; border:none; border-radius:14px; padding:13px 14px; font:inherit; font-weight:800; font-size:.98rem; letter-spacing:.02em; cursor:pointer; box-shadow:0 10px 20px -12px rgba(196,72,60,.7); }
+  .sos-btn .sos-tag{ background:#fff; color:var(--risk); border-radius:8px; padding:2px 8px; font-weight:900; }
+  .sos-overlay{ position:absolute; inset:0; z-index:70; background:rgba(10,8,4,.62); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .sos-card{ background:var(--surface); border-radius:22px; padding:20px 18px; width:100%; max-width:380px; max-height:92%; overflow-y:auto; display:flex; flex-direction:column; gap:10px; box-shadow:var(--shadow); }
+  .sos-card h3{ color:var(--risk); font-size:1.15rem; margin:0; }
+  .sos-call{ display:flex; align-items:center; gap:12px; text-decoration:none; background:var(--risk); color:#fff; border-radius:14px; padding:14px; font-weight:800; }
+  .sos-call.alt{ background:var(--risk-soft); color:var(--risk); }
+  .sos-call .n{ font-family:var(--font-mono); font-size:1.5rem; }
+  .sos-call small{ display:block; font-weight:600; opacity:.9; font-size:.74rem; }
+  .sos-meds{ background:var(--surface-2); border-radius:12px; padding:10px 12px; font-size:.82rem; }
+  .sos-meds b{ display:block; margin-bottom:4px; }
   .wave{ display:flex; align-items:center; gap:2px; height:22px; flex:1 1 auto; }
   .wave i{ width:3px; background:var(--accent); border-radius:2px; }
 
@@ -425,6 +406,8 @@
 
       <!-- HOME -->
       <section class="screen" id="screen-home">
+        <button class="sos-btn" type="button" id="h_sosBtn" onclick="openSos()"><span class="sos-tag">SOS</span><span id="h_sosLabel">Emergency help</span></button>
+
         <div class="notif" id="missedDoseNotif" hidden>
           <span class="ic">⏰</span>
           <div style="flex:1">
@@ -453,14 +436,14 @@
         </div>
 
         <div class="listenbtn">
-          <button class="orb" id="listenBtn" type="button" aria-label="Listen to today's guidance">🔊</button>
+          <button class="orb" id="listenBtn" data-speak type="button" aria-label="Listen to today's guidance" aria-pressed="false"><svg class="ic-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11.5a7 7 0 0 0 14 0"/><path d="M12 18.5V22"/><path d="M8.5 22h7"/></svg><svg class="ic-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg></button>
           <div class="wave" id="homeWave"></div>
           <span class="muted" style="font-size:.72rem" id="h_listenLabel">Listen</span>
         </div>
 
         <div id="h_scanDraft" hidden></div>
 
-        <button class="btn outline" type="button" onclick="openAsk()" id="h_askBtn">🎙&nbsp; Ask PharmaSaathi</button>
+        <button class="btn outline" type="button" onclick="openAsk()" id="h_askBtn">💬&nbsp; Ask PharmaSaathi</button>
 
         <button class="btn primary" type="button" onclick="startScan()" id="h_scanBtn">📷&nbsp; Scan a new prescription</button>
 
@@ -474,17 +457,6 @@
           <a class="btn outline sm" id="h_safetyContactBtn" href="#" style="margin-top:8px;width:100%" hidden></a>
         </div>
 
-        <div class="row" style="gap:10px">
-          <button class="medcard" type="button" onclick="go('reports')" style="flex-direction:column;text-align:center;gap:6px;padding:14px 8px">
-            <span class="pill-ic" style="margin:0 auto">📄</span><span class="mid" style="text-align:center"><span class="mname" id="qa_health" style="font-size:.78rem">Health</span></span>
-          </button>
-          <button class="medcard" type="button" onclick="go('caregiver')" style="flex-direction:column;text-align:center;gap:6px;padding:14px 8px">
-            <span class="pill-ic" style="margin:0 auto">👪</span><span class="mid" style="text-align:center"><span class="mname" id="qa_care" style="font-size:.78rem">Care</span></span>
-          </button>
-          <button class="medcard" type="button" onclick="go('doctor')" style="flex-direction:column;text-align:center;gap:6px;padding:14px 8px">
-            <span class="pill-ic" style="margin:0 auto">👨‍⚕️</span><span class="mid" style="text-align:center"><span class="mname" id="qa_doctor" style="font-size:.78rem">Doctor</span></span>
-          </button>
-        </div>
       </section>
 
       <!-- MEDICINES / PRESCRIPTION CENTER -->
@@ -658,6 +630,10 @@
 
     <div class="alarm-overlay" id="alarmOverlay" hidden>
       <div class="alarm-card" id="alarmCard"></div>
+    </div>
+
+    <div class="sos-overlay" id="sosOverlay" hidden>
+      <div class="sos-card" id="sosCard" role="dialog" aria-modal="true"></div>
     </div>
 
     <div class="ask-overlay" id="askOverlay" hidden>
@@ -1837,6 +1813,67 @@
   }
   setInterval(checkAlarms, 15000);
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkAlarms(); });
+
+
+  /* =====================================================================
+     SOS — one tap to the dialer. The app never dials or sends anything by itself:
+     every button opens the phone's own dialer / messaging app for the person to confirm.
+     ===================================================================== */
+  var SOS_T = {
+    en:{ btn:'Emergency help', title:'Emergency help', lead:'If someone is in danger, call now. These buttons open your phone dialer — the call only starts when you press call there.',
+      c112:'Call 112', c112s:'National emergency number (ambulance, police, fire)', c108:'Call 108', c108s:'Ambulance',
+      cg:'Call', cgNone:'Add a caregiver phone number to call or message them from here.', cgAdd:'Add caregiver number',
+      loc:'Send my location to caregiver (SMS)', locWait:'Finding your location…', locFail:'Location not available — opening the message without it.',
+      msg:'EMERGENCY — I need help. Please call me or come to me.', msgLoc:' My location: ',
+      meds:'My current medicines (show this to the doctor / ambulance)', noMeds:'No medicines added yet.', close:'Close',
+      note:'PharmaSaathi cannot call for you or know where you are unless you press the buttons. In a real emergency always call 112 first.' },
+    hi:{ btn:'आपातकालीन मदद', title:'आपातकालीन मदद', lead:'अगर कोई ख़तरे में है तो अभी कॉल करें। ये बटन आपके फ़ोन का डायलर खोलते हैं — कॉल तभी लगेगी जब आप वहाँ कॉल दबाएँगे।',
+      c112:'112 पर कॉल करें', c112s:'राष्ट्रीय आपातकालीन नंबर (एम्बुलेंस, पुलिस, फ़ायर)', c108:'108 पर कॉल करें', c108s:'एम्बुलेंस',
+      cg:'कॉल करें:', cgNone:'यहाँ से कॉल या मैसेज करने के लिए केयरगिवर का फ़ोन नंबर जोड़ें।', cgAdd:'केयरगिवर नंबर जोड़ें',
+      loc:'केयरगिवर को मेरी लोकेशन भेजें (SMS)', locWait:'आपकी लोकेशन ढूँढ रहे हैं…', locFail:'लोकेशन नहीं मिली — बिना लोकेशन के मैसेज खोल रहे हैं।',
+      msg:'आपातकाल — मुझे मदद चाहिए। कृपया मुझे कॉल करें या मेरे पास आएँ।', msgLoc:' मेरी लोकेशन: ',
+      meds:'मेरी मौजूदा दवाइयाँ (डॉक्टर / एम्बुलेंस को दिखाएँ)', noMeds:'अभी कोई दवा नहीं जोड़ी गई।', close:'बंद करें',
+      note:'PharmaSaathi आपके बटन दबाए बिना न कॉल कर सकता है और न आपकी जगह जान सकता है। असली आपात स्थिति में सबसे पहले 112 पर कॉल करें।' }
+  };
+  function sosCaregiver(){
+    if (!isAccount() || !PROFILE || !PROFILE.caregiver_phone) return null;     // never offer the demo sample number
+    return { name:clean(PROFILE.caregiver_name || '') || (LANG === 'en' ? 'caregiver' : 'केयरगिवर'), phone:String(PROFILE.caregiver_phone).replace(/[^\d+]/g, '') };
+  }
+  function openSos(){
+    var t = SOS_T[LANG], cg = sosCaregiver();
+    var names = MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; }).map(function(m){ return esc(m[LANG].name); });
+    var html = '<h3>🆘 ' + t.title + '</h3><p class="muted" style="margin:0;font-size:.82rem">' + t.lead + '</p>' +
+      '<a class="sos-call" href="tel:112"><span class="n">112</span><span>' + t.c112 + '<small>' + t.c112s + '</small></span></a>' +
+      '<a class="sos-call alt" href="tel:108"><span class="n">108</span><span>' + t.c108 + '<small>' + t.c108s + '</small></span></a>';
+    if (cg){
+      html += '<a class="sos-call alt" href="tel:' + esc(cg.phone) + '"><span class="n">📞</span><span>' + t.cg + ' ' + esc(cg.name) + '<small>' + esc(cg.phone) + '</small></span></a>' +
+        '<button class="btn outline" type="button" onclick="sosLocation()">📍&nbsp; ' + t.loc + '</button>';
+    } else {
+      html += '<div class="sos-meds"><span class="muted">' + t.cgNone + '</span><button class="btn outline sm" type="button" style="margin-top:8px;width:100%" onclick="closeSos();go(\'caregiver\')">' + t.cgAdd + '</button></div>';
+    }
+    html += '<div class="sos-meds"><b>' + t.meds + '</b>' + (names.length ? names.join(', ') : t.noMeds) + '</div>' +
+      '<p class="muted" style="margin:0;font-size:.72rem">' + t.note + '</p>' +
+      '<button class="btn ghost" type="button" onclick="closeSosBtn()">' + t.close + '</button>';
+    document.getElementById('sosCard').innerHTML = html;
+    document.getElementById('sosOverlay').hidden = false;
+    try { if (!(history.state && history.state.ps === 'sos')) history.pushState({ ps:'sos' }, ''); } catch(e){}
+  }
+  function closeSos(){ var o = document.getElementById('sosOverlay'); if (o) o.hidden = true; }
+  function closeSosBtn(){ closeSos(); try { if (history.state && history.state.ps === 'sos') history.back(); } catch(e){} }
+  window.closeSosBtn = closeSosBtn;
+  function sosLocation(){
+    var t = SOS_T[LANG], cg = sosCaregiver(); if (!cg) return;
+    function open(link){
+      var body = t.msg + (link ? t.msgLoc + link : ''), ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      window.location.href = 'sms:' + cg.phone + (ios ? '&' : '?') + 'body=' + encodeURIComponent(body);
+    }
+    if (!navigator.geolocation){ toast(t.locFail); open(''); return; }
+    toast(t.locWait);
+    navigator.geolocation.getCurrentPosition(function(pos){
+      open('https://maps.google.com/?q=' + pos.coords.latitude.toFixed(6) + ',' + pos.coords.longitude.toFixed(6));
+    }, function(){ toast(t.locFail); open(''); }, { enableHighAccuracy:true, timeout:8000, maximumAge:60000 });
+  }
+  window.openSos = openSos; window.closeSos = closeSos; window.sosLocation = sosLocation;
 
   /* ================= REWARDS & COINS ================= */
   function getCoins(){
@@ -3343,7 +3380,7 @@
       el.innerHTML = preview +
         '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanItems.length+'</span></div><hr>' +
         '<p class="muted">'+(scanUsedAi ? sx.editHintAi : sx.editHint)+'</p>' + (scanFromCache ? '<p class="muted" style="font-size:.74rem">♻️ '+sx.fromCache+'</p>' : '') +
-        '<button class="btn outline sm" type="button" onclick="speakScan()" style="margin-top:8px">🔊 '+sx.readAloud+'</button></div>' + aiNoteHtml() + missedHtml() + rows + rxMetaHtml() + reviewHtml() + rawBlock +
+        speakBtnHtml(sx.readAloud, 'speakScan()', 'margin-top:8px')+'</div>' + aiNoteHtml() + missedHtml() + rows + rxMetaHtml() + reviewHtml() + rawBlock +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+sx.addMissing+'</button>' +
         '<button class="btn ghost" type="button" onclick="startScan(true)">'+s.retakeBtn+'</button>' +
@@ -3358,7 +3395,9 @@
     document.getElementById('h_notifNotify').textContent = t.notify;
     document.getElementById('h_scheduleTitle').innerHTML = t.scheduleTitle;
     document.getElementById('h_listenLabel').textContent = t.listenLabel;
-    document.getElementById('h_askBtn').innerHTML = '🎙&nbsp; ' + X().ask.btn;
+    document.getElementById('h_askBtn').innerHTML = '💬&nbsp; ' + X().ask.btn;
+    document.getElementById('h_sosLabel').textContent = SOS_T[LANG].btn;
+    setSpeaking(speakBusy);
     if (Date.now() - lastAiDoseRun > 600000){ lastAiDoseRun = Date.now(); setTimeout(requestAiDoseChecks, 0); }
     var draftEl = document.getElementById('h_scanDraft');
     if (draftEl){
@@ -3473,9 +3512,6 @@
     document.getElementById('pc_addLabel').textContent = X().manual.addLabel;
     if (isAuthOpen()) renderAuth();
     document.getElementById('pc_myRx').textContent = T[LANG].pcMyRx;
-    document.getElementById('qa_health').textContent = T[LANG].qaHealth;
-    document.getElementById('qa_care').textContent = T[LANG].qaCare;
-    document.getElementById('qa_doctor').textContent = T[LANG].qaDoctor;
     updateHeader();
     document.querySelectorAll('[data-lang]').forEach(function(b){
       b.setAttribute('aria-pressed', b.dataset.lang === LANG ? 'true' : 'false');
@@ -3534,7 +3570,8 @@
   function navPush(name){ try { if (!(history.state && history.state.ps === name)) history.pushState({ ps:name }, ''); } catch(e){} }
   function navInit(){ try { history.replaceState({ ps:'guard' }, ''); history.pushState({ ps:'home' }, ''); } catch(e){} }
   function closeTopOverlay(){
-    var ask = document.getElementById('askOverlay'), al = document.getElementById('alarmOverlay');
+    var ask = document.getElementById('askOverlay'), al = document.getElementById('alarmOverlay'), sos = document.getElementById('sosOverlay');
+    if (sos && !sos.hidden){ closeSos(); return true; }
     if (ask && !ask.hidden){ closeAsk(); return true; }
     if (al && !al.hidden){ closeAlarm(); return true; }
     return false;
@@ -3605,8 +3642,26 @@
   }
   buildWave(document.getElementById('homeWave'), 18);
 
-  var speakInterval = null;
+  var speakInterval = null, speakBusy = false, speakTok = 0;
+  var MIC_SVG = '<svg class="ic-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2.5" width="6" height="12" rx="3" fill="currentColor"/><path d="M5 11.5a7 7 0 0 0 14 0"/><path d="M12 18.5V22"/><path d="M8.5 22h7"/></svg>' +
+    '<svg class="ic-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>';
+  function setSpeaking(b){
+    speakBusy = !!b;
+    document.querySelectorAll('[data-speak]').forEach(function(el){ el.classList.toggle('speaking', speakBusy); el.setAttribute('aria-pressed', speakBusy ? 'true' : 'false'); });
+    var lb = document.getElementById('h_listenLabel');
+    if (lb) lb.textContent = speakBusy ? (LANG === 'en' ? 'Stop' : 'रोकें') : T[LANG].listenLabel;
+  }
+  /* one tap starts, the next tap stops — returns true when it stopped something */
+  function stopIfSpeaking(){
+    if (speakBusy || ('speechSynthesis' in window && window.speechSynthesis.speaking)){ stopSpeaking(); return true; }
+    return false;
+  }
+  function speakBtnHtml(label, onclick, extra){
+    return '<button class="btn outline sm' + (speakBusy ? ' speaking' : '') + '" data-speak type="button" onclick="' + onclick + '"' + (extra ? ' style="' + extra + '"' : '') + '>' +
+      MIC_SVG + '<span class="lbl-listen">' + label + '</span><span class="lbl-stop">' + (LANG === 'en' ? 'Stop' : 'रोकें') + '</span></button>';
+  }
   function stopSpeakAnim(){
+    setSpeaking(false);
     if (speakInterval){ clearInterval(speakInterval); speakInterval = null; }
     document.querySelectorAll('#homeWave i').forEach(function(b){ b.style.height = '5px'; });
   }
@@ -3657,7 +3712,9 @@
       return false;
     }
     window.speechSynthesis.cancel(); stopSpeakAnim();
+    var myTok = ++speakTok;
     await voicesReady();
+    if (myTok !== speakTok) return false;            // stopped while the voice list was loading
     var lang = langOverride || LANG, text = lang === 'hi' ? hiText : enText;
     if (lang === 'hi' && !pickVoice('hi')){
       if (cloudTtsOn()){
@@ -3675,15 +3732,16 @@
     }
     var utter = speakFriendly(text, lang), started = false;
     utter.onstart = function(){ started = true; };
-    utter.onend = utter.onerror = function(){ stopSpeakAnim(); if (onEnd) onEnd(); };
+    utter.onend = utter.onerror = function(){ if (myTok === speakTok) stopSpeakAnim(); if (onEnd) onEnd(); };
     if (!reduced){
       speakInterval = setInterval(function(){
         document.querySelectorAll('#homeWave i').forEach(function(b){ b.style.height = (5+Math.round(Math.random()*17))+'px'; });
       }, 160);
     }
+    setSpeaking(true);
     window.speechSynthesis.speak(utter);
     setTimeout(function(){
-      if (!started && !window.speechSynthesis.speaking){
+      if (myTok === speakTok && !started && !window.speechSynthesis.speaking){
         stopSpeakAnim();
         toast(LANG === 'en' ? 'The voice did not start — check your device volume and voice settings.' : 'आवाज़ शुरू नहीं हुई — डिवाइस की आवाज़ और वॉइस सेटिंग्स जाँचें।');
       }
@@ -3712,12 +3770,13 @@
     });
   }
   function speakMed(id){
+    if (stopIfSpeaking()) return;
     var m = MEDS.filter(function(x){ return x.id === id; })[0];
     if (m) speakBoth(medSpeech(m, 'en'), medSpeech(m, 'hi'));
   }
   window.speakMed = speakMed;
   function listenBtnHtml(m){
-    return '<button class="btn outline sm" type="button" onclick="speakMed(\'' + m.id + '\')" style="align-self:flex-start">🔊 ' + (LANG === 'en' ? 'Listen' : 'सुनें') + '</button>';
+    return speakBtnHtml(LANG === 'en' ? 'Listen' : 'सुनें', "speakMed('" + m.id + "')", 'align-self:flex-start');
   }
   function scanSpeech(l){
     return inLang(l, function(){
@@ -3732,7 +3791,7 @@
       return (l === 'en' ? 'I found ' + parts.length + ' medicines. ' : 'मुझे ' + parts.length + ' दवाइयाँ मिलीं। ') + parts.join('. ') + '.';
     });
   }
-  function speakScan(){ speakBoth(scanSpeech('en'), scanSpeech('hi')); }
+  function speakScan(){ if (stopIfSpeaking()) return; speakBoth(scanSpeech('en'), scanSpeech('hi')); }
   window.speakScan = speakScan;
 
   function buildSpeechText(){
@@ -3762,6 +3821,7 @@
     return greeting + ' ' + summary + nextLine + ' ' + safetyLine;
   }
   document.getElementById('listenBtn').addEventListener('click', function(){
+    if (stopIfSpeaking()) return;
     speakBoth(inLang('en', buildSpeechText), inLang('hi', buildSpeechText));
   });
 
@@ -5327,6 +5387,7 @@
 
   /* ---- voice output: cloud audio -> browser voice -> text stays on screen ---- */
   function stopSpeaking(){
+    speakTok++;
     try { if (ASK.audio){ ASK.audio.pause(); ASK.audio = null; } } catch(e){}
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     stopSpeakAnim();
@@ -5346,6 +5407,7 @@
     var a = new Audio(url); ASK.audio = a;
     a.onended = a.onerror = stopSpeakAnim;
     await a.play();                       // may be refused by the browser's autoplay rules -> caller falls back
+    setSpeaking(true);
     return true;
   }
   async function speakReply(enText, hiText, L){
