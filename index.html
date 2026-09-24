@@ -2764,8 +2764,11 @@
       var low = m.confidence === 'low';
       // an AI guess it is NOT sure about is never matched to the safety database or ticked — the person must confirm it
       var conf = low ? 'ai' : (hit ? (hit.confidence === 'high' ? 'catalog' : 'catalog-fuzzy') : 'ai');
-      var strength = clean(m.strength);
-      return { raw:clean(m.written || m.name), name:name, medId:!low && hit ? hit.med.id : null, dose:strength, qty:clean(m.quantity_per_dose),
+      var strength = clean(m.strength), qty = clean(m.quantity_per_dose);
+      var wr = String(m.written || '').replace(/\d+(?:\.\d+)?\s?(?:mg|mcg|µg|ug|g|iu|%)/gi, ' ');           // the strength is not an amount
+      var sn = parseFloat(strength); if (sn > 0) wr = wr.replace(new RegExp('(^|[^0-9.])' + String(sn).replace('.', '\.') + '(?![0-9.])', 'g'), '$1 ');
+      var qtyAssumed = !!qty && !/\d|\bone\b|\btwo\b|\bthree\b|\bhalf\b|½|tsp|teaspoon|spoon|\bml\b/i.test(wr);
+      return { raw:clean(m.written || m.name), name:name, medId:!low && hit ? hit.med.id : null, dose:strength, qty:qty, qtyAssumed:qtyAssumed,
                duration:clean(m.duration), times:times, conf:conf, aiLow:low, include:!low, doseCheck:!!strength && !parseDose(strength), freqCheck:false };
     });
   }
@@ -3104,7 +3107,7 @@
         var badge = { catalog:['good', sx.bCatalog], 'catalog-fuzzy':['warn', sx.bFuzzy], ai:['warn', it.aiLow ? sx.bAiLow : sx.bAi], dict:['warn', sx.bDict], 'dict-fuzzy':['warn', sx.bLoose], form:['warn', sx.bForm], weak:['warn', sx.bWeak] }[it.conf];
         var mm = strengthMismatch(it);
         var timesTxt = it.times ? (it.times.length ? timesWords(it.times) : sx.asNeeded) : sx.timesGuess.replace('{t}', timesWords(cm ? scheduleTimesFor(cm.en.doseLine) : ['08:00']));
-        var meta = [it.qty ? sx.take + ' ' + it.qty : '', it.duration ? sx.forDur.replace('{d}', it.duration) : ''].filter(Boolean).join(' · ');
+        var meta = [it.qty ? sx.take + ' ' + it.qty + (it.qtyAssumed ? ' ' + sx.assumed : '') : '', it.duration ? sx.forDur.replace('{d}', it.duration) : ''].filter(Boolean).join(' · ');
         return '<div class="card" style="padding:12px;'+(already ? 'opacity:.6' : '')+'"><div class="row" style="align-items:flex-start;gap:10px">' +
           '<input type="checkbox" style="width:20px;height:20px;margin-top:10px;accent-color:var(--accent)" '+(it.include && !already ? 'checked' : '')+(already ? ' disabled' : '')+' onchange="scanToggle('+i+',this.checked)" aria-label="'+esc(it.name)+'">' +
           '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">' +
@@ -3706,7 +3709,7 @@
         qTitle:'This photo may be hard to read', qRetake:'📷 Retake the photo', qUse:'Use this photo anyway',
         q:{ small:'The photo is small — move closer or use a higher camera quality.', dark:'It is too dark — use good, even light.', lowContrast:'The writing has low contrast — use bright light and avoid shadows.', blurry:'It looks blurry — hold the phone steady and tap the screen to focus.' },
         confirmName:'I couldn’t read this medicine clearly — please confirm or type the name, then tick it to add. PharmaSaathi will not guess.',
-        checkDose:'⚠ Check this strength against the paper.', checkFreq:'⚠ Check how often against the paper.',
+        checkDose:'⚠ Check this strength against the paper.', checkFreq:'⚠ Check how often against the paper.', assumed:'(not written on the paper — assumed)',
         fromCache:'Loaded from your earlier scan of this same photo — no AI request was used.',
         retryAi:'🤖 Read again with AI', missedTitle:'{n} more line(s) in the photo look like medicines.', missedBody:'The reader saw these but could not turn them into medicines. Compare with your paper and add any that are real:', missedAdd:'Add',
         noAi:{ signin:'AI handwriting reading was NOT used, because you are in sample-data mode. Sign in to switch it on — the on-device reader often misses handwritten medicines, so compare with your paper.',
@@ -3889,7 +3892,7 @@
         qTitle:'यह फ़ोटो पढ़ने में मुश्किल हो सकती है', qRetake:'📷 फ़ोटो दोबारा लें', qUse:'फिर भी यही फ़ोटो इस्तेमाल करें',
         q:{ small:'फ़ोटो छोटी है — पास जाएँ या कैमरा की गुणवत्ता बढ़ाएँ।', dark:'बहुत अँधेरा है — अच्छी, बराबर रोशनी में लें।', lowContrast:'लिखावट का कंट्रास्ट कम है — तेज़ रोशनी में लें और परछाई से बचें।', blurry:'फ़ोटो धुंधली है — फ़ोन स्थिर रखें और स्क्रीन दबाकर फ़ोकस करें।' },
         confirmName:'मैं यह दवा साफ़ नहीं पढ़ सका — कृपया नाम की पुष्टि करें या लिखें, फिर जोड़ने के लिए टिक करें। PharmaSaathi अंदाज़ा नहीं लगाएगा।',
-        checkDose:'⚠ यह मात्रा कागज़ से मिलाएँ।', checkFreq:'⚠ कितनी बार — यह कागज़ से मिलाएँ।',
+        checkDose:'⚠ यह मात्रा कागज़ से मिलाएँ।', checkFreq:'⚠ कितनी बार — यह कागज़ से मिलाएँ।', assumed:'(कागज़ पर नहीं लिखा — अनुमानित)',
         fromCache:'आपके इसी फ़ोटो के पिछले स्कैन से लिया गया — कोई AI अनुरोध इस्तेमाल नहीं हुआ।',
         retryAi:'🤖 AI से फिर पढ़ें', missedTitle:'फ़ोटो में {n} और पंक्ति(याँ) दवा जैसी लगती हैं।', missedBody:'रीडर ने इन्हें देखा पर दवा नहीं बना सका। अपने कागज़ से मिलाएँ और जो असली हों उन्हें जोड़ें:', missedAdd:'जोड़ें',
         noAi:{ signin:'AI से हस्तलिखित पढ़ना इस्तेमाल नहीं हुआ, क्योंकि आप नमूना-डेटा मोड में हैं। इसे चालू करने के लिए साइन इन करें — डिवाइस पर पढ़ने वाला रीडर हाथ से लिखी दवाइयाँ अक्सर छोड़ देता है, इसलिए अपने कागज़ से मिलाएँ।',
