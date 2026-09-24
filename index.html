@@ -377,6 +377,11 @@
   @media (prefers-reduced-motion: reduce){ .ask-mic.on{ animation:none; } }
   .ask-input{ display:flex; gap:6px; }
   .ask-input input{ flex:1; min-width:0; }
+  .alarm-list{ width:100%; display:flex; flex-direction:column; gap:6px; max-height:34vh; overflow-y:auto; text-align:left; }
+  .alarm-row{ display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--surface-2); border-radius:12px; }
+  .rx-chips{ display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 2px; }
+  .rx-chips .chip{ border:1px solid var(--border); background:var(--surface-2); color:var(--text); border-radius:999px; padding:5px 11px; font-size:.72rem; font-weight:700; cursor:pointer; }
+  .rx-chips .chip.on{ background:var(--accent); color:var(--accent-ink); border-color:transparent; }
 </style>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1485,7 +1490,7 @@
     }
     return minutesNow() > mins ? 'missed' : 'pending';
   }
-  function dosesToday(){ return SCHEDULE.filter(function(d){ return doseState(d) !== 'na'; }); }
+  function dosesToday(){ return SCHEDULE.filter(function(d){ return doseState(d) !== 'na' && courseActive(d.medId); }); }
   function firstMissedDose(){
     return SCHEDULE.filter(function(d){ return doseState(d) === 'missed'; })[0] || null;
   }
@@ -1497,14 +1502,123 @@
     return 'night';
   }
 
+  /* ---------- prescriptions on the schedule: who prescribed it, what for, and which day of the course ---------- */
+  var rxFilter = 'all';
+  var RX_HUES = [210, 150, 28, 280, 340, 180];
+  function rxNumber(rx){
+    var ordered = PRESCRIPTIONS.slice().sort(function(a, b){ return String(a.ts) < String(b.ts) ? -1 : 1; });
+    for (var i = 0; i < ordered.length; i++) if (ordered[i] === rx || String(ordered[i].id) === String(rx.id)) return i + 1;
+    return 1;
+  }
+  function rxTagText(rx){
+    var al = X().alm, who = rxDoctorName(rx);
+    return (PRESCRIPTIONS.length > 1 ? 'Rx ' + rxNumber(rx) + ' · ' : '') + who + (rx.diagnosis ? ' · ' + al.forLabel + ' ' + rx.diagnosis : '');
+  }
+  function rxTagHtml(medId){
+    var rx = prescriptionOf(medId);
+    if (!rx) return '<span class="muted" style="font-size:.68rem">' + (LANG === 'en' ? 'Self-reported' : 'स्व-रिपोर्टित') + '</span>';
+    var hue = RX_HUES[(rxNumber(rx) - 1) % RX_HUES.length];
+    return '<span style="display:inline-block;font-size:.66rem;font-weight:700;padding:1px 8px;border-radius:999px;background:hsla(' + hue + ',70%,50%,.16);border:1px solid hsla(' + hue + ',60%,45%,.45)">' + esc(rxTagText(rx)) + '</span>';
+  }
+  function rxChipsHtml(){
+    var used = PRESCRIPTIONS.filter(function(rx){ return rx.medIds.some(function(id){ return SCHEDULE.some(function(d){ return d.medId === id; }); }); });
+    if (used.length < 2) return '';
+    var chip = function(id, label, active){ return '<button type="button" class="chip' + (active ? ' on' : '') + '" onclick="setRxFilter(\'' + id + '\')">' + esc(label) + '</button>'; };
+    return '<div class="rx-chips">' + chip('all', X().alm.allRx, rxFilter === 'all') +
+      used.slice().sort(function(a, b){ return rxNumber(a) - rxNumber(b); }).map(function(rx){ return chip(rx.id, rxTagText(rx), String(rxFilter) === String(rx.id)); }).join('') + '</div>';
+  }
+  function setRxFilter(id){ rxFilter = id; renderSchedule(); }
+  window.setRxFilter = setRxFilter;
+
+  /* the course ends when the written duration ("for 5 days") is over — day 1 is the prescription day, or the next
+     day if every dose time had already passed when it was added */
+  function courseInfo(medId){
+    var m = medById(medId), rx = prescriptionOf(medId);
+    if (!m || !rx) return null;
+    var text = m.custom ? m.en.doseLine : (m.doseNote || '');
+    var dur = parseDuration(text || '');
+    if (!dur) return null;
+    var n = parseInt(dur.split(' ')[0], 10), unit = dur.split(' ')[1], days = unit === 'weeks' ? n * 7 : (unit === 'months' ? n * 30 : n);
+    var start = new Date(String(rx.rawDate || String(rx.ts || '').slice(0, 10)).slice(0, 10) + 'T00:00:00');
+    if (isNaN(start.getTime()) || !(days > 0)) return null;
+    var mine = SCHEDULE.filter(function(d){ return d.medId === medId && d.createdAt; });
+    if (mine.length && mine.every(function(d){
+      var c = new Date(d.createdAt);
+      return c.toDateString() === start.toDateString() && minutesOf(d.time) <= c.getHours() * 60 + c.getMinutes();
+    })) start = new Date(start.getTime() + 86400000);
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var end = new Date(start.getTime() + (days - 1) * 86400000), day = Math.floor((today.getTime() - start.getTime()) / 86400000) + 1;
+    return { days:days, day:day, end:end, active:today.getTime() <= end.getTime() };
+  }
+  function courseActive(medId){ var c = courseInfo(medId); return !c || c.active; }
+
+  /* ---------- what each medicine is commonly used for (general information, never a diagnosis) ---------- */
+  var PURPOSE_CATS = {
+    pain:{ en:'Pain and fever relief', hi:'दर्द और बुखार में राहत' }, painswell:{ en:'Pain and swelling', hi:'दर्द और सूजन में राहत' },
+    antibiotic:{ en:'Antibiotic — for bacterial infections', hi:'एंटीबायोटिक — जीवाणु संक्रमण के लिए' }, acid:{ en:'Acidity and stomach problems', hi:'एसिडिटी और पेट की समस्याएँ' },
+    antacid:{ en:'Acidity / gas relief', hi:'एसिडिटी / गैस में राहत' }, nausea:{ en:'Nausea and vomiting', hi:'मतली और उल्टी' }, digest:{ en:'Helps digestion', hi:'पाचन में मदद' },
+    cramps:{ en:'Stomach cramps and spasms', hi:'पेट दर्द और ऐंठन' }, constipation:{ en:'Constipation relief', hi:'कब्ज़ में राहत' }, diarrhoea:{ en:'Loose motions (diarrhoea)', hi:'दस्त में राहत' },
+    probiotic:{ en:'Probiotic — gut health', hi:'प्रोबायोटिक — पेट की सेहत' }, vitamin:{ en:'Vitamins / supplements', hi:'विटामिन / पूरक' }, iron:{ en:'Iron / blood building', hi:'आयरन / खून बढ़ाने के लिए' },
+    allergy:{ en:'Allergy and cold relief', hi:'एलर्जी और सर्दी-ज़ुकाम में राहत' }, cough:{ en:'Cough and chest congestion', hi:'खाँसी और सीने की जकड़न' }, asthma:{ en:'Asthma / breathing', hi:'दमा / साँस की तकलीफ़' },
+    bp:{ en:'Blood pressure', hi:'ब्लड प्रेशर' }, diuretic:{ en:'Water tablet — fluid, blood pressure or heart', hi:'पानी की गोली — शरीर में पानी, ब्लड प्रेशर या दिल' }, heart:{ en:'Heart', hi:'दिल की दवा' },
+    cholesterol:{ en:'Cholesterol', hi:'कोलेस्ट्रॉल' }, diabetes:{ en:'Diabetes (blood sugar)', hi:'मधुमेह (ब्लड शुगर)' }, thyroid:{ en:'Thyroid', hi:'थायरॉइड' },
+    bloodthin:{ en:'Blood thinner / clot prevention', hi:'खून पतला करने / थक्का रोकने की दवा' }, steroid:{ en:'Steroid — reduces inflammation', hi:'स्टेरॉइड — सूजन घटाती है' },
+    antifungal:{ en:'Antifungal', hi:'फफूंद संक्रमण की दवा' }, antiworm:{ en:'Worms / parasites', hi:'कृमि / परजीवी' }, antiviral:{ en:'Antiviral', hi:'वायरस संक्रमण की दवा' },
+    gum:{ en:'Gum and mouth care', hi:'मसूड़ों और मुँह की देखभाल' }, nerve:{ en:'Nerve pain / anxiety / sleep (as advised by your doctor)', hi:'नस का दर्द / घबराहट / नींद (डॉक्टर की सलाह अनुसार)' },
+    prostate:{ en:'Prostate / urine flow', hi:'प्रोस्टेट / पेशाब की समस्या' }, eye:{ en:'Eye pressure / eye medicine', hi:'आँख का दबाव / आँख की दवा' }
+  };
+  var PURPOSE_NAMES = {
+    pain:'paracetamol acetaminophen dolo crocin calpol pcm tramadol ultracet',
+    painswell:'ibuprofen brufen combiflam diclofenac voveran naproxen aceclofenac zerodol etoricoxib ketorolac mefenamic meftal nimesulide enzoflam piroxicam indomethacin celecoxib',
+    antibiotic:'amoxicillin amoxycillin augmentin mox novamox clavam moxikind ampicillin cloxacillin azithromycin azithral clarithromycin erythromycin cefixime taxim zifi cefpodoxime cefuroxime ceftriaxone monocef monocet cephalexin cefadroxil ciprofloxacin cipro ciplox levofloxacin ofloxacin oflox doxycycline metronidazole flagyl ornidazole tinidazole clindamycin nitrofurantoin cotrimoxazole linezolid',
+    acid:'pantoprazole pantop pantocid pan omeprazole omez esomeprazole nexpro rabeprazole lansoprazole ranitidine zinetac famotidine cimetidine sucralfate aciloc', antacid:'digene gelusil',
+    nausea:'domperidone domstal ondansetron ondem emeset metoclopramide', digest:'unizyme pancreatin', cramps:'dicyclomine cyclopam drotaverine hyoscine mebeverine',
+    constipation:'lactulose duphalac cremaffin bisacodyl', diarrhoea:'loperamide racecadotril', probiotic:'vizylac econorm',
+    vitamin:'becosules zincovit limcee shelcal calcirol evion neurobion supradyn folvite methylcobalamin cyanocobalamin cholecalciferol calcium vitamin multivitamin thiamine pyridoxine biotin zinc',
+    iron:'dexorange ferrous ferric iron', allergy:'cetirizine cetzine okacet levocetirizine levocet xyzal loratadine fexofenadine allegra chlorpheniramine benadryl sinarest montelukast montair',
+    cough:'ambroxol ascoril grilinctus bromhexine dextromethorphan guaifenesin phenylephrine', asthma:'salbutamol asthalin levosalbutamol deriphyllin budesonide theophylline formoterol ipratropium',
+    bp:'amlodipine amlong stamlo amlodac telmisartan telma losartan atenolol metoprolol betaloc bisoprolol ramipril enalapril lisinopril nifedipine hydrochlorothiazide',
+    diuretic:'spironolactone aldactone furosemide lasix torsemide', heart:'isosorbide nitroglycerin ranolazine digoxin carvedilol',
+    cholesterol:'atorvastatin atorva storvas rosuvastatin rosuvas simvastatin fenofibrate',
+    diabetes:'metformin glycomet glucophage glimepiride amaryl glimestar gliclazide sitagliptin januvia vildagliptin galvus pioglitazone insulin glipizide',
+    thyroid:'levothyroxine eltroxin thyronorm carbimazole', bloodthin:'clopidogrel clopilet ecosprin aspirin warfarin',
+    steroid:'prednisolone wysolone dexamethasone deflazacort hydrocortisone betamethasone methylprednisolone', antifungal:'fluconazole itraconazole terbinafine clotrimazole ketoconazole',
+    antiworm:'albendazole mebendazole ivermectin', antiviral:'acyclovir valacyclovir oseltamivir', gum:'hexigel chlorhexidine',
+    nerve:'gabapentin gabapin pregabalin lyrica amitriptyline alprazolam alprax clonazepam zolpidem sertraline escitalopram', prostate:'tamsulosin silodosin finasteride dutasteride',
+    eye:'dorzolamide dorzolamidum timolol latanoprost brimonidine'
+  };
+  var PURPOSE_INDEX = {};
+  Object.keys(PURPOSE_NAMES).forEach(function(cat){ PURPOSE_NAMES[cat].split(' ').forEach(function(n){ if (n) PURPOSE_INDEX[n] = cat; }); });
+  function purposeCache(){ try { return JSON.parse(localStorage.getItem('ps_purpose_cache') || '{}') || {}; } catch(e){ return {}; } }
+  function cachePurposes(list){
+    try {
+      var c = purposeCache();
+      (list || []).forEach(function(m){ var k = firstWordLower(m.likely_medicine || m.name_as_read); if (k && m.typical_use) c[k] = m.typical_use; });
+      localStorage.setItem('ps_purpose_cache', JSON.stringify(c));
+    } catch(e){}
+  }
+  function medPurpose(m){
+    if (!m) return '';
+    if (!m.custom) return (m[LANG] && m[LANG].use) || '';
+    var f = firstWordLower(m.en.name), cat = PURPOSE_INDEX[f] || PURPOSE_INDEX[BRAND_GENERIC[f]];
+    if (cat) return PURPOSE_CATS[cat][LANG];
+    return LANG === 'en' ? (purposeCache()[f] || '') : '';
+  }
+
   function renderSchedule(){
     var el = document.getElementById('scheduleList');
     if (!el) return;
     var t = T[LANG];
-    var groups = { morning:[], afternoon:[], night:[] };
-    SCHEDULE.forEach(function(dose){ groups[timeGroup(dose.time)].push(dose); });
+    var groups = { morning:[], afternoon:[], night:[] }, al = X().alm;
+    var shown = SCHEDULE.filter(function(d){
+      if (!courseActive(d.medId)) return false;                       // the course has finished: no more reminders
+      if (rxFilter === 'all') return true;
+      var rxx = prescriptionOf(d.medId);
+      return !!rxx && String(rxx.id) === String(rxFilter);
+    });
+    shown.forEach(function(dose){ groups[timeGroup(dose.time)].push(dose); });
     var labels = { morning:t.grpMorning, afternoon:t.grpAfternoon, night:t.grpNight };
-    var html = '';
+    var html = rxChipsHtml();
     ['morning','afternoon','night'].forEach(function(g){
       if (!groups[g].length) return;
       html += '<p class="section-label" style="margin-top:10px">'+labels[g]+'</p>';
@@ -1513,14 +1627,20 @@
         var name = med ? med[LANG].name : dose.medId;
         var st = doseState(dose);
         var cls = (st === 'pending' || st === 'na') ? 'pending' : (st === 'missed' ? 'missed' : '');
+        var pur = med ? medPurpose(med) : '', tag = rxTagHtml(dose.medId), ci = courseInfo(dose.medId);
         html += '<div class="schedule-row '+cls+'" data-dose-id="'+dose.id+'" style="align-items:flex-start">' +
           '<span class="time num" style="padding-top:2px">'+dose.time+'</span><span class="dot" style="margin-top:6px"></span>' +
-          '<span class="name">'+name+'<br><span class="muted" style="font-size:.68rem;font-weight:500">'+t.fromLabel+' '+doctorLabelFor(dose.medId)+(st === 'na' ? ' · '+X().startsTomorrow : '')+'</span></span></div>';
+          '<span class="name">'+name+
+            (pur ? '<br><span class="muted" style="font-size:.7rem;font-weight:500">💡 '+esc(pur)+'</span>' : '') +
+            '<br>'+tag+
+            (ci ? ' <span class="muted" style="font-size:.66rem;font-weight:600">· '+al.dayOf.replace('{d}', Math.max(1, ci.day)).replace('{n}', ci.days)+'</span>' : '') +
+            (st === 'na' ? ' <span class="muted" style="font-size:.66rem">· '+X().startsTomorrow+'</span>' : '') +
+          '</span></div>';
       });
     });
     var badgeEl = document.getElementById('h_scheduleBadge');
     var counted = dosesToday();
-    if (!SCHEDULE.length){
+    if (!shown.length && rxFilter === 'all'){
       html = '<p class="muted">'+X().empty.schedule+'</p>';
       badgeEl.hidden = true;
     } else {
@@ -1559,79 +1679,164 @@
     card.hidden = !supported || Notification.permission === 'granted' || Notification.permission === 'denied';
   }
 
+  /* ================= ALARMS =================
+     At a dose time the phone rings (sound + vibration) and a pop-up lists every medicine due. The person taps
+     "I took it", "Remind me in 10 minutes" or "Skip". An ignored alarm is repeated every 10 minutes (4 times in
+     all), then the dose stays marked as missed. If the app was in the background the alarm also arrives as a
+     notification, and a dose that came due while the phone was asleep is caught up as soon as the app is opened.
+     NOTE: a web app can only ring while it is open or running in the background — it cannot wake a closed app.
+     (Reminders when the app is fully closed need a native app or a push-notification server.) */
+  var AL = { max:4, snoozeMs:10 * 60 * 1000, windowMs:4 * 60 * 60 * 1000, ringMs:60 * 1000 };
+  var audioCtx = null, ringTimer = null, ringUntil = 0, alarmOpenedAt = 0, alarmCurrent = [], alarmIsTest = false;
+  function unlockAudio(){
+    try {
+      var C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return;
+      if (!audioCtx) audioCtx = new C();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch(e){}
+  }
+  /* phones only allow sound after the person has touched the page once, so unlock it on the first tap */
+  ['touchstart', 'click', 'keydown'].forEach(function(ev){ document.addEventListener(ev, unlockAudio, { passive:true }); });
   function beep(times){
     times = times || 3;
     try {
-      var Ctx = window.AudioContext || window.webkitAudioContext;
-      var ctx = new Ctx();
+      unlockAudio();
+      var ctx = audioCtx;
+      if (!ctx) return;
       var i = 0;
       (function playOne(){
         var o = ctx.createOscillator(), g = ctx.createGain();
         o.type = 'sine'; o.frequency.value = 880;
         o.connect(g); g.connect(ctx.destination);
         g.gain.setValueAtTime(0.0001, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.28, ctx.currentTime+0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.4);
-        o.start(); o.stop(ctx.currentTime+0.42);
+        g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+        o.start(); o.stop(ctx.currentTime + 0.42);
         i++;
         if (i < times) setTimeout(playOne, 480);
       })();
     } catch(e){}
   }
-
-  var snoozeTimers = {};
-  function triggerAlarm(dose){
-    var med = MEDS.filter(function(m){ return m.id === dose.medId; })[0];
-    if (!med) return;
-    var name = med[LANG].name;
-    beep(3);
-    if ('Notification' in window && Notification.permission === 'granted'){
-      try {
-        new Notification(LANG === 'en' ? 'PharmaSaathi reminder' : 'PharmaSaathi रिमाइंडर', {
-          body: name + ' — ' + dose.time,
-          icon: 'icon.svg'
-        });
-      } catch(e){}
-    }
-    var overlay = document.getElementById('alarmOverlay');
-    var card = document.getElementById('alarmCard');
+  function startRing(){
+    stopRing();
+    ringUntil = Date.now() + AL.ringMs;
+    var once = function(){
+      if (Date.now() > ringUntil){ stopRing(); return; }
+      beep(3);
+      try { if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]); } catch(e){}
+    };
+    once();
+    ringTimer = setInterval(once, 5000);
+  }
+  function stopRing(){
+    if (ringTimer){ clearInterval(ringTimer); ringTimer = null; }
+    try { if (navigator.vibrate) navigator.vibrate(0); } catch(e){}
+  }
+  function alarmMemKey(){ return 'ps_alarm_' + todayKey(); }
+  function alarmMem(){
+    try {
+      Object.keys(localStorage).forEach(function(k){ if (k.indexOf('ps_alarm_') === 0 && k !== alarmMemKey()) localStorage.removeItem(k); });
+      return JSON.parse(localStorage.getItem(alarmMemKey()) || '{}') || {};
+    } catch(e){ return {}; }
+  }
+  function saveAlarmMem(m){ try { localStorage.setItem(alarmMemKey(), JSON.stringify(m)); } catch(e){} }
+  function dueMs(dose){
+    var p = dose.time.split(':'), d = new Date();
+    d.setHours(parseInt(p[0], 10), parseInt(p[1], 10), 0, 0);
+    return d.getTime();
+  }
+  function alarmOpen(){ var o = document.getElementById('alarmOverlay'); return !!o && !o.hidden; }
+  function closeAlarm(){ stopRing(); alarmCurrent = []; var o = document.getElementById('alarmOverlay'); if (o) o.hidden = true; }
+  function doseMedName(dose){ var m = medById(dose.medId); return m ? m[LANG].name : dose.medId; }
+  function notifyDoses(doses){
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    var title = LANG === 'en' ? 'Time for your medicine' : 'दवा लेने का समय हो गया';
+    var opts = { body:doses.map(function(d){ return doseMedName(d) + ' ' + d.time; }).join(', '), tag:'ps-dose', renotify:true, requireInteraction:true,
+                 vibrate:[300, 150, 300, 150, 300], icon:'icon.svg' };
+    var fallback = function(){ try { new Notification(title, opts); } catch(e){} };
+    if (navigator.serviceWorker && navigator.serviceWorker.getRegistration){
+      navigator.serviceWorker.getRegistration().then(function(reg){ if (reg && reg.showNotification) reg.showNotification(title, opts); else fallback(); }, fallback);
+    } else fallback();
+  }
+  function renderAlarm(){
+    var t = X().alm, card = document.getElementById('alarmCard');
+    var rows = alarmCurrent.map(function(d){
+      var m = medById(d.medId), pur = m ? medPurpose(m) : '';
+      return '<div class="alarm-row"><div style="flex:1;min-width:0"><strong>' + esc(doseMedName(d)) + '</strong> <span class="muted">' + esc(d.time) + '</span>' +
+        (pur ? '<div class="muted" style="font-size:.72rem">💡 ' + esc(pur) + '</div>' : '') + '</div>' +
+        '<button class="btn outline sm" type="button" data-act="take" data-id="' + esc(d.id) + '">✓</button></div>';
+    }).join('');
     card.innerHTML =
-      '<span class="bell">⏰</span>' +
-      '<h3>'+(LANG === 'en' ? 'Time for your medicine' : 'दवा लेने का समय हो गया')+'</h3>' +
-      '<span class="time">'+dose.time+'</span>' +
-      '<div class="card-title">'+name+'</div>' +
+      '<span class="bell">⏰</span><h3>' + (alarmCurrent.length > 1 ? t.titleMany : t.title) + '</h3>' +
+      '<div class="alarm-list">' + rows + '</div>' +
       '<div class="actions">' +
-        '<button class="btn primary" type="button" id="alarmTakeBtn">'+(LANG === 'en' ? '✓ Mark as taken' : '✓ ली हुई दर्ज करें')+'</button>' +
-        '<button class="btn ghost" type="button" id="alarmSnoozeBtn">'+(LANG === 'en' ? '⏳ Snooze 10 min' : '⏳ 10 मिनट बाद याद दिलाएँ')+'</button>' +
-        '<button class="btn outline" type="button" id="alarmDismissBtn">'+(LANG === 'en' ? 'Dismiss' : 'बंद करें')+'</button>' +
+        '<button class="btn primary" type="button" data-act="all">' + (alarmCurrent.length > 1 ? t.tookAll : t.took) + '</button>' +
+        '<button class="btn ghost" type="button" data-act="snooze">⏳ ' + t.snooze + '</button>' +
+        '<button class="btn outline" type="button" data-act="skip">' + t.skip + '</button>' +
       '</div>';
-    overlay.hidden = false;
-    document.getElementById('alarmTakeBtn').addEventListener('click', function(){
-      markTaken(dose.id);
-      overlay.hidden = true;
+  }
+  function triggerAlarmGroup(doses, isTest){
+    var mem = alarmMem(), now = Date.now();
+    alarmIsTest = !!isTest;
+    if (!isTest){
+      doses.forEach(function(d){ var st = mem[d.id] || (mem[d.id] = { fires:0, nextAt:0, skipped:false }); st.fires++; st.nextAt = now + AL.snoozeMs; });
+      saveAlarmMem(mem);
+    }
+    alarmCurrent = doses.slice();
+    renderAlarm();
+    document.getElementById('alarmOverlay').hidden = false;
+    alarmOpenedAt = now;
+    startRing();
+    if (document.hidden) notifyDoses(doses);
+  }
+  function triggerAlarm(dose){ if (dose) triggerAlarmGroup([dose], true); }      // "test a reminder" button
+  document.getElementById('alarmCard').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-act]');
+    if (!b) return;
+    var act = b.getAttribute('data-act'), mem = alarmMem(), now = Date.now();
+    if (act === 'take'){
+      var id = b.getAttribute('data-id');
+      if (!alarmIsTest) markTaken(id);
+      alarmCurrent = alarmCurrent.filter(function(d){ return String(d.id) !== String(id); });
       renderHome();
-    });
-    document.getElementById('alarmSnoozeBtn').addEventListener('click', function(){
-      overlay.hidden = true;
-      if (snoozeTimers[dose.id]) clearTimeout(snoozeTimers[dose.id]);
-      snoozeTimers[dose.id] = setTimeout(function(){ triggerAlarm(dose); }, 10*60*1000);
-    });
-    document.getElementById('alarmDismissBtn').addEventListener('click', function(){ overlay.hidden = true; });
-  }
-
-  var firedAlarms = {};
-  function checkAlarms(){
-    var now = new Date();
-    var nowStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-    SCHEDULE.forEach(function(dose){
-      var fireKey = todayKey()+'_'+dose.id;
-      if (dose.time === nowStr && !isTaken(dose.id) && !firedAlarms[fireKey]){
-        firedAlarms[fireKey] = true;
-        triggerAlarm(dose);
+      if (!alarmCurrent.length) closeAlarm(); else renderAlarm();
+      return;
+    }
+    if (act === 'all'){
+      if (!alarmIsTest) alarmCurrent.forEach(function(d){ markTaken(d.id); });
+      closeAlarm(); renderHome();
+    } else if (act === 'snooze'){
+      if (!alarmIsTest){
+        alarmCurrent.forEach(function(d){ var st = mem[d.id] || (mem[d.id] = { fires:1, nextAt:0, skipped:false }); st.nextAt = now + AL.snoozeMs; });
+        saveAlarmMem(mem);
       }
+      closeAlarm(); toast(X().alm.snoozed);
+    } else {
+      if (!alarmIsTest){
+        alarmCurrent.forEach(function(d){ var st = mem[d.id] || (mem[d.id] = { fires:1, nextAt:0, skipped:false }); st.skipped = true; });
+        saveAlarmMem(mem);
+      }
+      closeAlarm();
+    }
+  });
+  function checkAlarms(){
+    var now = Date.now();
+    if (alarmOpen()){                                                  // ignored alarm: ring again every 10 minutes
+      if (now - alarmOpenedAt >= AL.snoozeMs){ alarmOpenedAt = now; startRing(); }
+      return;
+    }
+    var mem = alarmMem(), due = [];
+    SCHEDULE.forEach(function(dose){
+      if (isTaken(dose.id) || doseState(dose) === 'na' || !courseActive(dose.medId)) return;
+      var st = mem[dose.id] || { fires:0, nextAt:0, skipped:false }, at = dueMs(dose);
+      if (st.skipped || st.fires >= AL.max || now < at || now - at > AL.windowMs) return;
+      if (now >= Math.max(at, st.nextAt)) due.push(dose);
     });
+    if (due.length) triggerAlarmGroup(due, false);
   }
-  setInterval(checkAlarms, 20000);
+  setInterval(checkAlarms, 15000);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkAlarms(); });
 
   /* ================= REWARDS & COINS ================= */
   function getCoins(){
@@ -2433,6 +2638,7 @@
   var scanImageUrl = null;
   var scanItems = [];
   var scanRawText = '';
+  var scanRxMeta = { doctor:'', diagnosis:'' }, diagColumnMissing = false;
   var scanProgressPct = 0, scanStep = 0, scanStepTotal = 0;
 
   /* an unsaved scan is kept as a draft (this browser tab only) so pressing Back, reloading or
@@ -2441,7 +2647,7 @@
   function saveScanDraft(){
     try {
       if ((scanState === 'done' || scanState === 'no-match') && scanItems.length)
-        sessionStorage.setItem(SCAN_DRAFT_KEY, JSON.stringify({ state:scanState, items:scanItems, raw:scanRawText, ai:scanUsedAi, ts:Date.now() }));
+        sessionStorage.setItem(SCAN_DRAFT_KEY, JSON.stringify({ state:scanState, items:scanItems, raw:scanRawText, ai:scanUsedAi, meta:scanRxMeta, ts:Date.now() }));
       else if (scanState === 'idle') sessionStorage.removeItem(SCAN_DRAFT_KEY);
     } catch(e){}
   }
@@ -2450,7 +2656,7 @@
     try {
       var d = JSON.parse(sessionStorage.getItem(SCAN_DRAFT_KEY) || 'null');
       if (d && Array.isArray(d.items) && d.items.length && Date.now() - d.ts < 6 * 3600 * 1000){
-        scanItems = d.items; scanRawText = d.raw || ''; scanUsedAi = !!d.ai; scanState = d.state; return true;
+        scanItems = d.items; scanRawText = d.raw || ''; scanUsedAi = !!d.ai; scanState = d.state; scanRxMeta = d.meta || { doctor:'', diagnosis:'' }; return true;
       }
     } catch(e){}
     return false;
@@ -2467,6 +2673,7 @@
     if (!fresh && (scanState === 'done' || scanState === 'analyzing')){ renderScan(); go('scan'); return; }
     clearScanDraft();
     resetReview();
+    scanRxMeta = { doctor:'', diagnosis:'' };
     scanState = 'idle';
     scanImageUrl = null;
     scanItems = [];
@@ -2479,6 +2686,15 @@
   window.startScan = startScan;
 
   function needsConfirm(it){ return CONF_RANK[it.conf] < 3 || !!it.aiLow; }
+  function scanRxSet(k, v){ scanRxMeta[k] = clean(v).slice(0, 80); saveScanDraft(); }
+  window.scanRxSet = scanRxSet;
+  function rxMetaHtml(){
+    if (!scanItems.length) return '';
+    var sx = X().scanX;
+    return '<div class="card"><span class="card-title">' + sx.rxTitle + '</span><p class="muted" style="margin-top:4px">' + sx.rxHint + '</p>' +
+      '<div class="field" style="margin-top:8px"><label for="rx_doc">' + sx.rxDoctor + '</label><input id="rx_doc" type="text" maxlength="80" placeholder="' + esc(sx.rxDoctorPh) + '" value="' + esc(scanRxMeta.doctor) + '" oninput="scanRxSet(\'doctor\',this.value)"></div>' +
+      '<div class="field" style="margin-top:8px"><label for="rx_dx">' + sx.rxDiag + '</label><input id="rx_dx" type="text" maxlength="80" placeholder="' + esc(sx.rxDiagPh) + '" value="' + esc(scanRxMeta.diagnosis) + '" oninput="scanRxSet(\'diagnosis\',this.value)"></div></div>';
+  }
   function scanEditDose(i, val){ if (scanItems[i]){ scanItems[i].dose = clean(val).slice(0, 20); saveScanDraft(); renderScan(); } }
   window.scanEditDose = scanEditDose;
   function scanToggle(i, val){ if (scanItems[i]){ scanItems[i].include = !!val; saveScanDraft(); var rc = document.getElementById('reviewCard'); if (rc) rc.outerHTML = reviewHtml(); } }
@@ -2618,6 +2834,7 @@
       var d = await callFn(REVIEW_FN, { ageGroup:ageGroup(), medicines:reviewItems().map(reviewPayload) });
       if (!d || !Array.isArray(d.concerns)) throw new Error('bad answer');
       scanReview.result = d; scanReview.status = 'done'; scanReview.error = '';
+      cachePurposes(d.medicines);
     } catch(e){
       reviewDownUntil = Date.now() + pauseFor(e); scanReview.status = 'error'; scanReview.error = String((e && e.status) || '');
     }
@@ -2922,6 +3139,7 @@
       var ai = await runAiRead(file);
       if (ai){
         scanUsedAi = true; scanRawText = '';
+        scanRxMeta = { doctor:clean([ai.doctor_name, ai.clinic].filter(Boolean).join(' · ')).slice(0, 80), diagnosis:clean(ai.diagnosis).slice(0, 80) };
         scanItems = aiToItems(ai);
         scanState = scanItems.length ? 'done' : 'no-match';
         saveScanDraft(); renderHome();
@@ -3001,8 +3219,8 @@
     if (ageGroup() && reviewOutcome().level !== 'none' && !window.confirm(X().review.addAnyway)) return;
     scanBusy = true;
     try {
-      var ids = await persistPrescription({ doctorName:'', source:'scanned', items:items });
-      clearScanDraft(); scanState = 'idle'; scanItems = []; scanImageUrl = null; scanRawText = '';
+      var ids = await persistPrescription({ doctorName:scanRxMeta.doctor, diagnosis:scanRxMeta.diagnosis, source:'scanned', items:items });
+      clearScanDraft(); scanState = 'idle'; scanItems = []; scanImageUrl = null; scanRawText = ''; scanRxMeta = { doctor:'', diagnosis:'' };
       renderMedList(); renderRxList(); renderHome();
       requestAiDoseChecks();
       openMergeCheck(ids);
@@ -3125,7 +3343,7 @@
       el.innerHTML = preview +
         '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanItems.length+'</span></div><hr>' +
         '<p class="muted">'+(scanUsedAi ? sx.editHintAi : sx.editHint)+'</p>' + (scanFromCache ? '<p class="muted" style="font-size:.74rem">♻️ '+sx.fromCache+'</p>' : '') +
-        '<button class="btn outline sm" type="button" onclick="speakScan()" style="margin-top:8px">🔊 '+sx.readAloud+'</button></div>' + aiNoteHtml() + missedHtml() + rows + reviewHtml() + rawBlock +
+        '<button class="btn outline sm" type="button" onclick="speakScan()" style="margin-top:8px">🔊 '+sx.readAloud+'</button></div>' + aiNoteHtml() + missedHtml() + rows + rxMetaHtml() + reviewHtml() + rawBlock +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+sx.addMissing+'</button>' +
         '<button class="btn ghost" type="button" onclick="startScan(true)">'+s.retakeBtn+'</button>' +
@@ -3296,7 +3514,7 @@
     future: renderFuture,
     'merge-check': renderMergeCheck
   };
-  function go(name){
+  function go(name, opts){
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     stopSpeakAnim();
     screens.forEach(function(s){ document.getElementById('screen-'+s).hidden = (s !== name); });
@@ -3304,8 +3522,37 @@
     if (screenRenderers[name]) screenRenderers[name]();
     updateHeader();
     document.getElementById('content').scrollTop = 0;
+    if (!(opts && opts.pop)) navPush(name);
   }
   window.go = go;
+
+  /* ---------- Back button ----------
+     Every screen the person opens is a history entry, so the phone's Back button (or the browser's) goes back ONE
+     screen. An open pop-up (assistant / alarm) is closed first. From Home, the first Back shows "press back again
+     to exit" instead of closing the app by accident. The URL is never changed (login links keep working). */
+  var lastExitTap = 0;
+  function navPush(name){ try { if (!(history.state && history.state.ps === name)) history.pushState({ ps:name }, ''); } catch(e){} }
+  function navInit(){ try { history.replaceState({ ps:'guard' }, ''); history.pushState({ ps:'home' }, ''); } catch(e){} }
+  function closeTopOverlay(){
+    var ask = document.getElementById('askOverlay'), al = document.getElementById('alarmOverlay');
+    if (ask && !ask.hidden){ closeAsk(); return true; }
+    if (al && !al.hidden){ closeAlarm(); return true; }
+    return false;
+  }
+  window.addEventListener('popstate', function(e){
+    var st = e.state;
+    if (isAuthOpen() || closeTopOverlay()){ try { history.pushState({ ps:currentScreen }, ''); } catch(x){} return; }
+    if (st && st.ps === 'guard'){
+      if (Date.now() - lastExitTap < 2500){ history.back(); return; }        // second Back: really leave
+      lastExitTap = Date.now();
+      toast(LANG === 'en' ? 'Press Back again to exit' : 'बाहर निकलने के लिए फिर से बैक दबाएँ');
+      try { history.pushState({ ps:'home' }, ''); } catch(x){}
+      if (currentScreen !== 'home') go('home', { pop:true });
+      return;
+    }
+    if (currentScreen === 'scan' && scanState === 'done') toast(X().scanX.draftKept);
+    go(st && st.ps ? st.ps : 'home', { pop:true });
+  });
 
   document.getElementById('backBtn').addEventListener('click', function(){
     if (currentScreen === 'scan' && scanState === 'done') toast(X().scanX.draftKept);
@@ -3652,6 +3899,9 @@
         aiHead:'AI second opinion (unverified) — {name}:', aiLikely:'about {total} mg a day looks higher than the usual adult amount.', aiPossible:'about {total} mg a day may be higher than the usual adult amount.',
         aiTypical:'Reported usual adult maximum: {max}.', aiNote:'This is only a warning from an AI, not a check that any medicine is safe.',
         label:{ risk:'daily dose too high', warn:'check daily dose' } },
+      alm:{ title:'Time for your medicine', titleMany:'Time for your medicines', took:'✓ I took it', tookAll:'✓ I took them all', snooze:'Remind me in 10 min', skip:'Skip for today',
+        snoozed:'OK — I will remind you in 10 minutes.', allRx:'All prescriptions', forLabel:'for', dayOf:'Day {d} of {n}',
+        diagMissing:'Saved without the illness — run backend/prescriptions_diagnosis.sql in Supabase to keep it.' },
       diag:{ title:'🔧 Check AI connection', intro:'Tests photo reading, dose check and prescription review, and tells you in plain words what is wrong. Uses a few AI requests.', run:'Check now', running:'Checking…',
         fnPhoto:'Reading prescription photos', fnDose:'Dose second opinion', fnReview:'Prescription review',
         ok:'Working.', s401:'Your sign-in was not accepted. Sign out, sign in again, then check again.',
@@ -3710,6 +3960,8 @@
         q:{ small:'The photo is small — move closer or use a higher camera quality.', dark:'It is too dark — use good, even light.', lowContrast:'The writing has low contrast — use bright light and avoid shadows.', blurry:'It looks blurry — hold the phone steady and tap the screen to focus.' },
         confirmName:'I couldn’t read this medicine clearly — please confirm or type the name, then tick it to add. PharmaSaathi will not guess.',
         checkDose:'⚠ Check this strength against the paper.', checkFreq:'⚠ Check how often against the paper.', assumed:'(not written on the paper — assumed)',
+        rxTitle:'About this prescription', rxHint:'Optional — it is shown next to each medicine so you always know which doctor and illness it belongs to.',
+        rxDoctor:'Doctor / clinic', rxDoctorPh:'e.g. Dr. Fahad Imteyaz', rxDiag:'Illness / reason', rxDiagPh:'e.g. Dyspepsia, fever, tooth infection',
         fromCache:'Loaded from your earlier scan of this same photo — no AI request was used.',
         retryAi:'🤖 Read again with AI', missedTitle:'{n} more line(s) in the photo look like medicines.', missedBody:'The reader saw these but could not turn them into medicines. Compare with your paper and add any that are real:', missedAdd:'Add',
         noAi:{ signin:'AI handwriting reading was NOT used, because you are in sample-data mode. Sign in to switch it on — the on-device reader often misses handwritten medicines, so compare with your paper.',
@@ -3835,6 +4087,9 @@
         aiHead:'AI की दूसरी राय (असत्यापित) — {name}:', aiLikely:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा लगती है।', aiPossible:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा हो सकती है।',
         aiTypical:'बताई गई सामान्य वयस्क अधिकतम मात्रा: {max}।', aiNote:'यह केवल AI की चेतावनी है, किसी दवा के सुरक्षित होने की जाँच नहीं।',
         label:{ risk:'रोज़ की मात्रा बहुत अधिक', warn:'रोज़ की मात्रा जाँचें' } },
+      alm:{ title:'दवा लेने का समय हो गया', titleMany:'दवाइयाँ लेने का समय हो गया', took:'✓ मैंने ले ली', tookAll:'✓ मैंने सब ले लीं', snooze:'10 मिनट बाद याद दिलाएँ', skip:'आज छोड़ें',
+        snoozed:'ठीक है — 10 मिनट बाद याद दिलाऊँगा।', allRx:'सभी प्रिस्क्रिप्शन', forLabel:'कारण:', dayOf:'दिन {d} / {n}',
+        diagMissing:'बीमारी के बिना सहेजा गया — इसे रखने के लिए Supabase में backend/prescriptions_diagnosis.sql चलाएँ।' },
       diag:{ title:'🔧 AI कनेक्शन जाँचें', intro:'फ़ोटो पढ़ना, खुराक जाँच और प्रिस्क्रिप्शन समीक्षा को टेस्ट करता है और सरल शब्दों में बताता है कि क्या गड़बड़ है। कुछ AI अनुरोध लगते हैं।', run:'अभी जाँचें', running:'जाँच हो रही है…',
         fnPhoto:'प्रिस्क्रिप्शन फ़ोटो पढ़ना', fnDose:'खुराक की दूसरी राय', fnReview:'प्रिस्क्रिप्शन समीक्षा',
         ok:'ठीक चल रहा है।', s401:'आपका साइन-इन स्वीकार नहीं हुआ। साइन आउट करके फिर साइन इन करें, फिर जाँचें।',
@@ -3893,6 +4148,8 @@
         q:{ small:'फ़ोटो छोटी है — पास जाएँ या कैमरा की गुणवत्ता बढ़ाएँ।', dark:'बहुत अँधेरा है — अच्छी, बराबर रोशनी में लें।', lowContrast:'लिखावट का कंट्रास्ट कम है — तेज़ रोशनी में लें और परछाई से बचें।', blurry:'फ़ोटो धुंधली है — फ़ोन स्थिर रखें और स्क्रीन दबाकर फ़ोकस करें।' },
         confirmName:'मैं यह दवा साफ़ नहीं पढ़ सका — कृपया नाम की पुष्टि करें या लिखें, फिर जोड़ने के लिए टिक करें। PharmaSaathi अंदाज़ा नहीं लगाएगा।',
         checkDose:'⚠ यह मात्रा कागज़ से मिलाएँ।', checkFreq:'⚠ कितनी बार — यह कागज़ से मिलाएँ।', assumed:'(कागज़ पर नहीं लिखा — अनुमानित)',
+        rxTitle:'इस प्रिस्क्रिप्शन के बारे में', rxHint:'वैकल्पिक — यह हर दवा के साथ दिखेगा, ताकि पता रहे कि वह किस डॉक्टर और किस बीमारी की है।',
+        rxDoctor:'डॉक्टर / क्लिनिक', rxDoctorPh:'जैसे डॉ. फ़हद इम्तियाज़', rxDiag:'बीमारी / कारण', rxDiagPh:'जैसे अपच, बुखार, दाँत का संक्रमण',
         fromCache:'आपके इसी फ़ोटो के पिछले स्कैन से लिया गया — कोई AI अनुरोध इस्तेमाल नहीं हुआ।',
         retryAi:'🤖 AI से फिर पढ़ें', missedTitle:'फ़ोटो में {n} और पंक्ति(याँ) दवा जैसी लगती हैं।', missedBody:'रीडर ने इन्हें देखा पर दवा नहीं बना सका। अपने कागज़ से मिलाएँ और जो असली हों उन्हें जोड़ें:', missedAdd:'जोड़ें',
         noAi:{ signin:'AI से हस्तलिखित पढ़ना इस्तेमाल नहीं हुआ, क्योंकि आप नमूना-डेटा मोड में हैं। इसे चालू करने के लिए साइन इन करें — डिवाइस पर पढ़ने वाला रीडर हाथ से लिखी दवाइयाँ अक्सर छोड़ देता है, इसलिए अपने कागज़ से मिलाएँ।',
@@ -4072,7 +4329,7 @@
     PRESCRIPTIONS = (rows.prescriptions || []).map(function(r){
       var ids = (rows.items || []).filter(function(it){ return it.prescription_id === r.id; })
         .map(function(it){ return itemToMed[it.id]; }).filter(Boolean);
-      return { id:r.id, doctorId:null, doctorName:clean(r.doctor_name), selfLabel:rxLabel(r.source),
+      return { id:r.id, doctorId:null, doctorName:clean(r.doctor_name), diagnosis:clean(r.diagnosis), selfLabel:rxLabel(r.source),
                date:fmtDate(r.prescribed_date), rawDate:r.prescribed_date, ts:r.created_at || r.prescribed_date, medIds:ids };
     });
     ALL_SCHEDULE = (rows.schedule || []).map(function(s){
@@ -4122,7 +4379,14 @@
     var uid = isAccount() ? USER.id : null, rxId = null, created = [], newSched = [];
     try {
       if (isAccount()){
-        var rx = await SB.from('prescriptions').insert({ patient_id:uid, doctor_name:opts.doctorName || null, source:opts.source || 'manual', prescribed_date:todayISO() }).select().single();
+        var rxRow = { patient_id:uid, doctor_name:opts.doctorName || null, source:opts.source || 'manual', prescribed_date:todayISO() };
+        if (opts.diagnosis && !diagColumnMissing) rxRow.diagnosis = opts.diagnosis;
+        var rx = await SB.from('prescriptions').insert(rxRow).select().single();
+        if (rx.error && rxRow.diagnosis && (rx.error.code === 'PGRST204' || /diagnosis/i.test(rx.error.message || ''))){
+          diagColumnMissing = true; delete rxRow.diagnosis;                       // the database has no such column yet: save without it
+          rx = await SB.from('prescriptions').insert(rxRow).select().single();
+          toast(X().alm.diagMissing);
+        }
         if (rx.error) throw rx.error;
         rxId = rx.data.id;
       } else {
@@ -4159,7 +4423,7 @@
       throw e;
     }
     created.forEach(function(m){ MEDS.push(m); });
-    PRESCRIPTIONS.unshift({ id:rxId, doctorId:null, doctorName:clean(opts.doctorName), selfLabel:rxLabel(opts.source),
+    PRESCRIPTIONS.unshift({ id:rxId, doctorId:null, doctorName:clean(opts.doctorName), diagnosis:clean(opts.diagnosis), selfLabel:rxLabel(opts.source),
       date:fmtDate(todayISO()), rawDate:todayISO(), ts:new Date().toISOString(), medIds:created.map(function(m){ return m.id; }) });
     if (isAccount()){
       ALL_SCHEDULE = ALL_SCHEDULE.concat(newSched);
@@ -5332,6 +5596,7 @@
     } catch(e){ SB = null; }
   }
   function boot(){
+    navInit();
     loadScanDraft();
     migrateStorage();
     initSupabase();

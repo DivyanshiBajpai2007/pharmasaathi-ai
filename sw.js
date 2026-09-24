@@ -2,7 +2,7 @@
 // and the last-seen copy of the app shell when offline.
 // It only ever touches same-origin requests, so API calls (Supabase) and CDN scripts
 // are never cached — nothing personal or health-related is stored by this worker.
-const CACHE = 'pharmasaathi-v22';
+const CACHE = 'pharmasaathi-v23';
 
 self.addEventListener('install', function(){ self.skipWaiting(); });
 
@@ -28,4 +28,13 @@ self.addEventListener('fetch', function(e){
       return res;
     }).catch(function(){ return caches.match(req); })
   );
+});
+
+// tapping a medicine reminder notification opens (or focuses) the app
+self.addEventListener('notificationclick', function(e){
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type:'window', includeUncontrolled:true }).then(function(list){
+    for (var i = 0; i < list.length; i++){ if ('focus' in list[i]) return list[i].focus(); }
+    if (self.clients.openWindow) return self.clients.openWindow('./');
+  }));
 });
