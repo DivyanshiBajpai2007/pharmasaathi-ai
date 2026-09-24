@@ -2244,7 +2244,7 @@
      Here the phone only signs up for it. The person must be signed in and must allow notifications.
      VAPID_PUBLIC_KEY is the PUBLIC half of the key pair made by tools/make_vapid_keys.mjs (safe to keep in the app).
      ===================================================================== */
-  var VAPID_PUBLIC_KEY = '';
+  var VAPID_PUBLIC_KEY = 'BERFkgx7gWvfblQR92LaClBH6G7dU4YnlBSzWYW3o-CYS-JNveCYMoknnaxuLAplOmZEboA4zpaaDfu4-f-Musw';
   var pushSyncedAt = 0, pushOn = false;
   function b64uToBytes(str){
     var pad = '='.repeat((4 - str.length % 4) % 4), b = (str + pad).replace(/-/g, '+').replace(/_/g, '/'), raw = atob(b), out = new Uint8Array(raw.length);
