@@ -4172,6 +4172,8 @@
   function withTimeout(p, ms){
     return Promise.race([p, new Promise(function(_, rej){ setTimeout(function(){ rej({ code:'timeout' }); }, ms); })]);
   }
+  /* a function that isn't deployed / configured (404, 503) is left alone for an hour instead of retried every minute */
+  function pauseFor(e){ return e && (e.status === 404 || e.status === 503) ? 3600000 : (e && e.code === 'rate' ? VOICE_CFG.downMs * 2 : VOICE_CFG.downMs); }
   /* call one of our Supabase functions; errors carry code: 'rate' | 'timeout' | 'fail' */
   async function callFn(name, body){
     var r;
@@ -4179,7 +4181,7 @@
     catch(e){ var er = new Error('call failed'); er.code = (e && e.code) === 'timeout' ? 'timeout' : 'fail'; throw er; }
     if (r.error){
       var st = r.error.context && r.error.context.status, er2 = new Error(r.error.message || 'function error');
-      er2.code = st === 429 ? 'rate' : 'fail'; throw er2;
+      er2.code = st === 429 ? 'rate' : 'fail'; er2.status = st; throw er2;
     }
     return r.data;
   }
@@ -4533,7 +4535,7 @@
     if (!url){
       var d;
       try { d = await callFn(VOICE_CFG.ttsFn, { text:text.slice(0, 700), lang:lang }); }
-      catch(e){ ASK.ttsDownUntil = Date.now() + (e.code === 'rate' ? VOICE_CFG.downMs * 2 : VOICE_CFG.downMs); throw e; }
+      catch(e){ ASK.ttsDownUntil = Date.now() + pauseFor(e); throw e; }
       if (!d || !d.audio) throw new Error('empty audio');
       url = 'data:' + (d.mimeType || 'audio/mpeg') + ';base64,' + d.audio;
       ASK.cache[key] = url; ASK.cacheKeys.push(key);
@@ -4606,7 +4608,7 @@
       text = d && d.text ? String(d.text).trim() : '';
     } catch(e){                               // only a real speech-service failure switches to the fallback
       ASK.state = 'idle';
-      ASK.sttDownUntil = Date.now() + (e.code === 'rate' ? VOICE_CFG.downMs * 2 : VOICE_CFG.downMs);
+      ASK.sttDownUntil = Date.now() + pauseFor(e);
       addBot(e.code === 'rate' ? a.rate : (askSupported() ? a.cloudFallback : a.voiceOff));
       return;
     }
