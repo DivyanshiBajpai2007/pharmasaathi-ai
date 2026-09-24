@@ -939,7 +939,7 @@
         verifyWarning:'AI read this from your photo — please verify each name against the paper prescription before adding.',
         alreadyTaking:'Already in your medicine list',
         ocrFailed:'The OCR engine couldn\'t load (check your internet connection) — nothing was read from this photo.',
-        noMatch:'PharmaSaathi couldn\'t recognize any known medicine name in this photo. Handwriting — especially joined-up cursive — is hard to read automatically. Try a straight-on, well-lit photo with the paper filling the frame, or add the medicines manually.',
+        noMatch:'I couldn\'t read this prescription clearly, so PharmaSaathi will not guess. Handwriting — especially joined-up cursive — is hard to read automatically. Retake a straight-on, well-lit photo with the paper filling the frame, or add the medicines by hand.',
         rawTextLabel:'What PharmaSaathi actually read from the photo',
         addBtn:'➕&nbsp; Add selected to my medicines',
         retakeBtn:'↻ Scan a different prescription',
@@ -2380,7 +2380,9 @@
         if (loose){ name = titleCase(loose.term); conf = 'dict-fuzzy'; }
       }
       var it = { raw:line, name:name, medId:cat ? cat.med.id : null, dose:strength, qty:parseQty(line), duration:parseDuration(line),
-                 times:freq, conf:conf, include:conf !== 'weak' || !!(strength && freq) };
+                 times:freq, conf:conf, include:CONF_RANK[conf] >= 3,
+                 doseCheck:!!strength && !/\b\d+(?:\.\d+)?\s?(?:mg|mcg|µg|ug|g|ml|iu|%)/i.test(line),
+                 freqCheck:freq !== null && freq.length > 0 && !/\b(?:od|bd|bid|tds|tid|qid|qds|hs|sos|prn)\b|\d\s*[-–—]\s*\d\s*[-–—]\s*\d/i.test(line) };
       var key = it.medId || (dict ? dict.term : name.toLowerCase());
       if (seen[key]) return;
       seen[key] = true;
@@ -2476,6 +2478,7 @@
   }
   window.startScan = startScan;
 
+  function needsConfirm(it){ return CONF_RANK[it.conf] < 3 || !!it.aiLow; }
   function scanEditDose(i, val){ if (scanItems[i]){ scanItems[i].dose = clean(val).slice(0, 20); saveScanDraft(); renderScan(); } }
   window.scanEditDose = scanEditDose;
   function scanToggle(i, val){ if (scanItems[i]){ scanItems[i].include = !!val; saveScanDraft(); var rc = document.getElementById('reviewCard'); if (rc) rc.outerHTML = reviewHtml(); } }
@@ -2498,6 +2501,31 @@
   var aiDown = false, aiDownUntil = 0, pendingScanFile = null, scanUsedAi = false;   // aiDown: person chose "this device only"; aiDownUntil: short pause after a failure
   function aiConsent(){ try { return localStorage.getItem('ps_ai_consent'); } catch(e){ return null; } }
   function aiAvailable(){ return !!(SB && isAccount() && !aiDown && Date.now() > aiDownUntil); }
+  /* ---- image quality check: tell the person BEFORE reading if the photo is likely to be misread ---- */
+  var scanQuality = { issues:[] };
+  var QUALITY = { minSide:320, dark:70, blur:60 };   // tuned on 129 real prescription photos (a contrast rule was dropped: thin ink on white paper always looks low-contrast)
+  async function imageQuality(file){
+    var im = await loadImageFile(file), w = im.naturalWidth, h = im.naturalHeight;
+    var k = Math.min(1, 640 / Math.max(w, h)), cw = Math.max(8, Math.round(w * k)), ch = Math.max(8, Math.round(h * k));
+    var c = document.createElement('canvas'); c.width = cw; c.height = ch;
+    var g = c.getContext('2d', { willReadFrequently:true }); g.fillStyle = '#fff'; g.fillRect(0, 0, cw, ch); g.drawImage(im, 0, 0, cw, ch);
+    var px = g.getImageData(0, 0, cw, ch).data, n = cw * ch, gray = new Float32Array(n), i, x, y, sum = 0;
+    for (i = 0; i < n; i++){ gray[i] = 0.299 * px[i*4] + 0.587 * px[i*4+1] + 0.114 * px[i*4+2]; sum += gray[i]; }
+    var mean = sum / n, varSum = 0, hist = new Uint32Array(256), acc = 0, p5 = 0, p95 = 255;
+    for (i = 0; i < n; i++){ varSum += (gray[i] - mean) * (gray[i] - mean); hist[gray[i] | 0]++; }
+    for (i = 0; i < 256; i++){ acc += hist[i]; if (acc >= n * 0.05){ p5 = i; break; } }
+    acc = 0; for (i = 255; i >= 0; i--){ acc += hist[i]; if (acc >= n * 0.05){ p95 = i; break; } }
+    var std = Math.sqrt(varSum / n), spread = p95 - p5, lapSum = 0, lapSq = 0, cnt = 0;   // spread = darkest-5% to brightest-5%: how much the writing stands out      // sharpness = variance of the Laplacian
+    for (y = 1; y < ch - 1; y++) for (x = 1; x < cw - 1; x++){
+      var l = 4 * gray[y*cw + x] - gray[y*cw + x - 1] - gray[y*cw + x + 1] - gray[(y-1)*cw + x] - gray[(y+1)*cw + x];
+      lapSum += l; lapSq += l * l; cnt++;
+    }
+    var lapVar = cnt ? lapSq / cnt - (lapSum / cnt) * (lapSum / cnt) : 0, issues = [];
+    if (Math.max(w, h) < QUALITY.minSide) issues.push('small');
+    if (mean < QUALITY.dark) issues.push('dark');
+    if (lapVar < QUALITY.blur) issues.push('blurry');
+    return { issues:issues, w:w, h:h, mean:Math.round(mean), std:Math.round(std), spread:spread, lapVar:Math.round(lapVar) };
+  }
   function handleScanFile(file){
     if (!file) return;
     lastScanFile = file;
@@ -2505,14 +2533,22 @@
     reader.onload = function(e){
       scanImageUrl = e.target.result;
       scanProgressPct = 0; scanStep = 0; scanStepTotal = 0;
-      if (aiAvailable() && aiConsent() !== 'yes'){
-        pendingScanFile = file; scanState = 'consent'; renderScan(); return;
-      }
-      scanState = 'analyzing'; renderScan();
-      runOcr(file);
+      imageQuality(file).then(function(q){
+        if (q && q.issues.length){ scanQuality = q; pendingScanFile = file; scanState = 'quality'; renderScan(); return; }
+        proceedScan(file);
+      }, function(){ proceedScan(file); });          // if the check itself fails, just carry on
     };
     reader.readAsDataURL(file);
   }
+  function proceedScan(file){
+    if (aiAvailable() && aiConsent() !== 'yes'){
+      pendingScanFile = file; scanState = 'consent'; renderScan(); return;
+    }
+    scanState = 'analyzing'; renderScan();
+    runOcr(file);
+  }
+  function scanUseAnyway(){ var f = pendingScanFile; pendingScanFile = null; if (f) proceedScan(f); }
+  window.scanUseAnyway = scanUseAnyway;
   function scanConsent(useAi){
     var file = pendingScanFile; pendingScanFile = null;
     if (!file) return;
@@ -2725,10 +2761,12 @@
       if (m.when && m.when.length) times = m.when.map(function(w){ return WHEN_TIMES[w]; }).filter(Boolean).sort();
       else if (m.times_per_day === 0) times = [];
       else if (m.times_per_day > 0) times = PER_DAY_TIMES[m.times_per_day] || null;
-      var conf = hit ? (hit.confidence === 'high' ? 'catalog' : 'catalog-fuzzy') : 'ai';
       var low = m.confidence === 'low';
-      return { raw:clean(m.written || m.name), name:name, medId:hit ? hit.med.id : null, dose:clean(m.strength), qty:clean(m.quantity_per_dose),
-               duration:clean(m.duration), times:times, conf:conf, aiLow:low, include:!low };
+      // an AI guess it is NOT sure about is never matched to the safety database or ticked — the person must confirm it
+      var conf = low ? 'ai' : (hit ? (hit.confidence === 'high' ? 'catalog' : 'catalog-fuzzy') : 'ai');
+      var strength = clean(m.strength);
+      return { raw:clean(m.written || m.name), name:name, medId:!low && hit ? hit.med.id : null, dose:strength, qty:clean(m.quantity_per_dose),
+               duration:clean(m.duration), times:times, conf:conf, aiLow:low, include:!low, doseCheck:!!strength && !parseDose(strength), freqCheck:false };
     });
   }
   /* name of the Supabase function that reads prescription photos (this project deployed it as "photokey") */
@@ -2739,13 +2777,29 @@
   async function fnErrorInfo(err){
     try { return (err && err.context && typeof err.context.json === 'function') ? ((await err.context.json()) || {}) : {}; } catch(e){ return {}; }
   }
+  var RX_CACHE_KEY = 'ps_rx_cache_v1', scanFromCache = false;
+  function rxCache(){ try { return JSON.parse(localStorage.getItem(RX_CACHE_KEY) || '{}') || {}; } catch(e){ return {}; } }
+  function rxCacheGet(hash){ var c = rxCache()[hash]; return c && Date.now() - c.at < 30 * 86400000 ? c.data : null; }
+  function rxCachePut(hash, data){
+    try {
+      var c = rxCache(); c[hash] = { at:Date.now(), data:data };
+      var keys = Object.keys(c).sort(function(a, b){ return c[b].at - c[a].at; });
+      keys.slice(8).forEach(function(k){ delete c[k]; });                 // keep only the 8 most recent (each is tiny)
+      localStorage.setItem(RX_CACHE_KEY, JSON.stringify(c));
+    } catch(e){}
+  }
+  async function sha256(str){
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function(b){ return ('0' + b.toString(16)).slice(-2); }).join('');
+  }
   async function runAiRead(file){
     var lastErr = null;
     try {
-      var b64 = await imageToBase64(file);
+      var b64 = await imageToBase64(file), hash = null;
+      try { hash = await sha256(b64); var hit = rxCacheGet(hash); if (hit){ scanFromCache = true; return hit; } } catch(e){}
       for (var attempt = 0; attempt < 2; attempt++){
         var r = await SB.functions.invoke(PRESCRIPTION_FN, { body:{ image:b64, mediaType:'image/jpeg' } });
-        if (!r.error && r.data && Array.isArray(r.data.medicines)) return r.data;
+        if (!r.error && r.data && Array.isArray(r.data.medicines)){ if (hash && r.data.medicines.length) rxCachePut(hash, r.data); return r.data; }
         lastErr = r.error || new Error('no data');
         var st = lastErr.context && lastErr.context.status;
         if (st === 401 || st === 403 || st === 404 || st === 429 || st === 503) break;   // sign-in / not deployed / no key / quota: retrying will not help
@@ -2858,7 +2912,7 @@
      It reads clean printed text well; doctors' handwriting is genuinely hard for any OCR,
      which is why every result is shown as an editable suggestion, with the raw text visible. */
   async function runOcr(file){
-    scanUsedAi = false;
+    scanUsedAi = false; scanFromCache = false;
     scanAiNote = !isAccount() ? 'signin' : (aiDown ? 'declined' : (Date.now() <= aiDownUntil ? 'paused' : (aiConsent() === 'yes' ? '' : 'noconsent')));
     if (aiAvailable() && aiConsent() === 'yes'){
       scanStep = 1; scanStepTotal = 0; scanProgressPct = 0; renderScan();
@@ -3018,6 +3072,12 @@
           sx.tips.map(function(t){ return '<li>'+t+'</li>'; }).join('') + '</ul></div>' +
         (isAccount() ? '<div class="callout good"><span>🤖</span><span>'+sx.aiOn+'</span></div>' : '<div class="callout warn"><span>🔒</span><span>'+sx.aiNeedsAccount+'</span></div>') +
         '<button class="link-btn" type="button" onclick="openAddMed()">✍️ '+X().manual.addInstead+'</button>';
+    } else if (scanState === 'quality'){
+      el.innerHTML = preview +
+        '<div class="callout warn"><span>📷</span><div style="flex:1"><strong>'+sx.qTitle+'</strong><ul style="margin:6px 0 0;padding-left:18px">' +
+          scanQuality.issues.map(function(k){ return '<li>'+sx.q[k]+'</li>'; }).join('') + '</ul></div></div>' +
+        '<button class="btn primary" type="button" onclick="startScan(true)">'+sx.qRetake+'</button>' +
+        '<button class="btn ghost" type="button" onclick="scanUseAnyway()">'+sx.qUse+'</button>';
     } else if (scanState === 'consent'){
       el.innerHTML = preview +
         '<div class="card"><span class="card-title">'+sx.consentTitle+'</span><p class="muted" style="margin-top:6px;line-height:1.55">'+sx.consentBody+'</p></div>' +
@@ -3048,17 +3108,20 @@
         return '<div class="card" style="padding:12px;'+(already ? 'opacity:.6' : '')+'"><div class="row" style="align-items:flex-start;gap:10px">' +
           '<input type="checkbox" style="width:20px;height:20px;margin-top:10px;accent-color:var(--accent)" '+(it.include && !already ? 'checked' : '')+(already ? ' disabled' : '')+' onchange="scanToggle('+i+',this.checked)" aria-label="'+esc(it.name)+'">' +
           '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">' +
+            (needsConfirm(it) && !already ? '<div class="callout warn" style="padding:8px 10px"><span>❓</span><span>'+sx.confirmName+'</span></div>' : '') +
             '<div class="field"><input type="text" maxlength="60" value="'+esc(it.name)+'" onchange="scanEdit('+i+',this.value)" aria-label="'+esc(sx.nameLabel)+'"></div>' +
             '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="badge '+badge[0]+'" style="white-space:normal;text-align:left;line-height:1.3">'+(already ? s.alreadyTaking : badge[1].replace('{name}', cm ? esc(cm.en.name) : esc(it.name)))+'</span></div>' +
             '<div class="row" style="gap:8px;justify-content:flex-start;flex-wrap:wrap"><div class="field" style="width:120px"><input type="text" maxlength="20" placeholder="'+esc(sx.doseLabel)+'" value="'+esc(it.dose)+'" onchange="scanEditDose('+i+',this.value)" aria-label="'+esc(sx.doseLabel)+'"></div>'+(meta ? '<span class="muted">'+esc(meta)+'</span>' : '')+'</div>' +
+            (it.doseCheck ? '<span class="muted" style="color:#a05a00">'+sx.checkDose+'</span>' : '') +
             '<span class="muted">⏰ '+esc(timesTxt)+'</span>' +
+            (it.freqCheck ? '<span class="muted" style="color:#a05a00">'+sx.checkFreq+'</span>' : '') +
             (mm ? '<div class="callout warn" style="padding:8px 10px"><span>⚠️</span><span>'+sx.mismatch.replace('{a}', esc(it.dose)).replace(/\{b\}/g, esc(mm))+'</span></div>' : '') +
             '<span class="muted" style="font-size:.7rem">'+sx.readAs+' “'+esc(it.raw)+'”</span>' +
           '</div></div></div>';
       }).join('');
       el.innerHTML = preview +
         '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanItems.length+'</span></div><hr>' +
-        '<p class="muted">'+(scanUsedAi ? sx.editHintAi : sx.editHint)+'</p>' +
+        '<p class="muted">'+(scanUsedAi ? sx.editHintAi : sx.editHint)+'</p>' + (scanFromCache ? '<p class="muted" style="font-size:.74rem">♻️ '+sx.fromCache+'</p>' : '') +
         '<button class="btn outline sm" type="button" onclick="speakScan()" style="margin-top:8px">🔊 '+sx.readAloud+'</button></div>' + aiNoteHtml() + missedHtml() + rows + reviewHtml() + rawBlock +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+sx.addMissing+'</button>' +
@@ -3640,6 +3703,11 @@
         draftTitle:'You have an unsaved prescription scan ({n} medicines)', draftReading:'Your prescription is still being read…', draftContinue:'Continue', draftDiscard:'Discard',
         draftConfirm:'Discard this scan?', draftKept:'Your scan is kept as a draft — you can continue it from Home.',
         take:'Take', doseLabel:'Strength (e.g. 500 mg)', readAloud:'Read these aloud',
+        qTitle:'This photo may be hard to read', qRetake:'📷 Retake the photo', qUse:'Use this photo anyway',
+        q:{ small:'The photo is small — move closer or use a higher camera quality.', dark:'It is too dark — use good, even light.', lowContrast:'The writing has low contrast — use bright light and avoid shadows.', blurry:'It looks blurry — hold the phone steady and tap the screen to focus.' },
+        confirmName:'I couldn’t read this medicine clearly — please confirm or type the name, then tick it to add. PharmaSaathi will not guess.',
+        checkDose:'⚠ Check this strength against the paper.', checkFreq:'⚠ Check how often against the paper.',
+        fromCache:'Loaded from your earlier scan of this same photo — no AI request was used.',
         retryAi:'🤖 Read again with AI', missedTitle:'{n} more line(s) in the photo look like medicines.', missedBody:'The reader saw these but could not turn them into medicines. Compare with your paper and add any that are real:', missedAdd:'Add',
         noAi:{ signin:'AI handwriting reading was NOT used, because you are in sample-data mode. Sign in to switch it on — the on-device reader often misses handwritten medicines, so compare with your paper.',
           declined:'AI reading was not used because you chose "this device only". Handwritten medicines are often missed without it, so compare with your paper.',
@@ -3818,6 +3886,11 @@
         draftTitle:'आपका एक प्रिस्क्रिप्शन स्कैन सहेजा नहीं गया है ({n} दवाइयाँ)', draftReading:'आपका प्रिस्क्रिप्शन अभी पढ़ा जा रहा है…', draftContinue:'जारी रखें', draftDiscard:'हटाएँ',
         draftConfirm:'यह स्कैन हटाएँ?', draftKept:'आपका स्कैन ड्राफ़्ट के रूप में रखा है — होम से जारी रख सकते हैं।',
         take:'खुराक:', doseLabel:'मात्रा (जैसे 500 mg)', readAloud:'ये नाम सुनें',
+        qTitle:'यह फ़ोटो पढ़ने में मुश्किल हो सकती है', qRetake:'📷 फ़ोटो दोबारा लें', qUse:'फिर भी यही फ़ोटो इस्तेमाल करें',
+        q:{ small:'फ़ोटो छोटी है — पास जाएँ या कैमरा की गुणवत्ता बढ़ाएँ।', dark:'बहुत अँधेरा है — अच्छी, बराबर रोशनी में लें।', lowContrast:'लिखावट का कंट्रास्ट कम है — तेज़ रोशनी में लें और परछाई से बचें।', blurry:'फ़ोटो धुंधली है — फ़ोन स्थिर रखें और स्क्रीन दबाकर फ़ोकस करें।' },
+        confirmName:'मैं यह दवा साफ़ नहीं पढ़ सका — कृपया नाम की पुष्टि करें या लिखें, फिर जोड़ने के लिए टिक करें। PharmaSaathi अंदाज़ा नहीं लगाएगा।',
+        checkDose:'⚠ यह मात्रा कागज़ से मिलाएँ।', checkFreq:'⚠ कितनी बार — यह कागज़ से मिलाएँ।',
+        fromCache:'आपके इसी फ़ोटो के पिछले स्कैन से लिया गया — कोई AI अनुरोध इस्तेमाल नहीं हुआ।',
         retryAi:'🤖 AI से फिर पढ़ें', missedTitle:'फ़ोटो में {n} और पंक्ति(याँ) दवा जैसी लगती हैं।', missedBody:'रीडर ने इन्हें देखा पर दवा नहीं बना सका। अपने कागज़ से मिलाएँ और जो असली हों उन्हें जोड़ें:', missedAdd:'जोड़ें',
         noAi:{ signin:'AI से हस्तलिखित पढ़ना इस्तेमाल नहीं हुआ, क्योंकि आप नमूना-डेटा मोड में हैं। इसे चालू करने के लिए साइन इन करें — डिवाइस पर पढ़ने वाला रीडर हाथ से लिखी दवाइयाँ अक्सर छोड़ देता है, इसलिए अपने कागज़ से मिलाएँ।',
           declined:'AI से पढ़ना इस्तेमाल नहीं हुआ क्योंकि आपने "केवल इसी डिवाइस पर" चुना था। इसके बिना हाथ की लिखी दवाइयाँ अक्सर छूट जाती हैं, इसलिए अपने कागज़ से मिलाएँ।',
