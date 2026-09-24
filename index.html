@@ -213,6 +213,22 @@
   .btn.sm .ic-mic, .btn.sm .ic-stop{ width:15px; height:15px; display:inline-block; vertical-align:-3px; margin-right:4px; }
   .btn.sm .ic-stop{ display:none; }
   .btn.sm.speaking .ic-stop{ display:inline-block; }
+  .hold-btn{ position:relative; overflow:hidden; border:none; border-radius:12px; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:800; font-size:.8rem; padding:9px 14px; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:pan-y; }
+  .hold-btn.wide{ width:100%; padding:14px; font-size:.95rem; }
+  .hold-btn .hold-fill{ position:absolute; left:0; top:0; bottom:0; width:0; background:rgba(0,0,0,.25); }
+  .hold-btn.holding .hold-fill{ width:100%; transition:width 1.5s linear; }
+  .hold-btn .hold-label{ position:relative; }
+  .dose-act{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:6px; }
+  .st-chip{ font-size:.68rem; font-weight:800; border-radius:8px; padding:3px 8px; background:var(--surface-3); color:var(--text-muted); }
+  .st-chip.soon, .st-chip.due{ background:var(--accent-soft); color:var(--accent-ink); }
+  .st-chip.late, .st-chip.missed{ background:var(--risk-soft); color:var(--risk); }
+  .st-chip.confirmed{ background:var(--good-soft); color:var(--good); }
+  .st-chip.early{ background:var(--warn-soft); color:var(--warn); }
+  .fix-link{ font:inherit; font-size:.68rem; color:var(--text-muted); text-decoration:underline; background:none; border:none; cursor:pointer; padding:0; }
+  .rc-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .undo-bar{ position:absolute; left:16px; right:16px; bottom:84px; z-index:80; background:var(--text); color:var(--bg); border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:.82rem; font-weight:600; box-shadow:var(--shadow); }
+  .undo-bar button{ background:var(--accent); color:var(--accent-ink); border:none; border-radius:8px; padding:7px 14px; font:inherit; font-weight:800; cursor:pointer; }
+  .schedule-row{ cursor:default !important; }
   .confirm-overlay{ position:absolute; inset:0; z-index:65; background:rgba(10,8,4,.6); display:flex; align-items:center; justify-content:center; padding:22px; }
   .confirm-card{ background:var(--surface); border-radius:22px; padding:22px 18px; width:100%; max-width:340px; display:flex; flex-direction:column; gap:10px; box-shadow:var(--shadow); text-align:center; }
   .confirm-card h3{ margin:0; font-size:1.05rem; }
@@ -653,6 +669,8 @@
     <div class="ask-overlay" id="askOverlay" hidden>
       <div class="ask-card" id="askCard" role="dialog" aria-modal="true" aria-live="polite"></div>
     </div>
+
+    <div class="undo-bar" id="undoBar" role="status" aria-live="polite" hidden></div>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
@@ -1430,34 +1448,74 @@
   }
   /* In account mode "taken" lives in the dose_logs table (cached in memory for today);
      in demo mode it's just this browser's localStorage. */
-  function isTaken(doseId){
+  function infoFromLog(l){
+    return { at:l.taken_at || null, conf:('confirmed_at' in l) ? (l.confirmed_at || null) : (l.taken_at || 'legacy'), note:l.confirm_note || '' };
+  }
+  function demoInfo(doseId){
+    var raw = null;
+    try { raw = localStorage.getItem('ps_taken_'+todayKey()+'_'+doseId); } catch(e){}
+    if (!raw) return null;
+    if (raw === '1') return { at:null, conf:'legacy', note:'' };
+    try { var o = JSON.parse(raw); return o && typeof o === 'object' ? o : { at:null, conf:'legacy', note:'' }; } catch(e){ return { at:null, conf:'legacy', note:'' }; }
+  }
+  function takenInfo(doseId){
     if (isAccount()){
       if (takenDate !== todayISO()){ takenToday = {}; takenDate = todayISO(); refreshTakenToday(); }
-      return !!takenToday[doseId];
+      return takenToday[doseId] || null;
     }
-    try { return localStorage.getItem('ps_taken_'+todayKey()+'_'+doseId) === '1'; } catch(e){ return false; }
+    return demoInfo(doseId);
   }
+  function isTaken(doseId){ return !!takenInfo(doseId); }
+  /* marked during the 30 minutes before the dose time, not yet confirmed at dose time */
+  function isEarly(doseId){ var i = takenInfo(doseId); return !!i && !i.conf; }
   function refreshTakenToday(){
-    SB.from('dose_logs').select('schedule_id,status').eq('patient_id', USER.id).eq('dose_date', todayISO()).then(function(r){
+    SB.from('dose_logs').select('*').eq('patient_id', USER.id).eq('dose_date', todayISO()).then(function(r){
       if (r.error) return;
       takenToday = {};
-      (r.data || []).forEach(function(l){ if (l.status === 'taken') takenToday[l.schedule_id] = true; });
+      (r.data || []).forEach(function(l){ if (l.status === 'taken') takenToday[l.schedule_id] = infoFromLog(l); });
       renderHome();
     });
   }
-  function markTaken(doseId){
-    var already = isTaken(doseId);
+  var logsExtMissing = false, eventsMissing = false;
+  /* opts.early = marked before the dose time (stays "unconfirmed" until the dose time);  opts.note = 'late' etc. */
+  function markTaken(doseId, opts){
+    opts = opts || {};
+    var already = isTaken(doseId), now = new Date().toISOString();
+    var info = { at:now, conf:opts.early ? null : now, note:opts.note || '' };
     if (isAccount()){
-      takenToday[doseId] = true;
-      SB.from('dose_logs').upsert({ schedule_id:doseId, patient_id:USER.id, dose_date:todayISO(), status:'taken', taken_at:new Date().toISOString() },
-        { onConflict:'schedule_id,dose_date' }).then(function(r){ if (r.error) dbFail(r.error); });
+      takenToday[doseId] = info;
+      var row = { schedule_id:doseId, patient_id:USER.id, dose_date:todayISO(), status:'taken', taken_at:now };
+      var ext = { confirmed_at:info.conf, confirm_note:info.note || null };
+      var send = function(withExt){
+        var r0 = withExt ? Object.assign({}, row, ext) : row;
+        return SB.from('dose_logs').upsert(r0, { onConflict:'schedule_id,dose_date' }).then(function(r){
+          if (r.error && withExt && /confirmed_at|confirm_note|column/i.test(r.error.message || '')){
+            if (!logsExtMissing){ logsExtMissing = true; toast(DS_T[LANG].extMissing); }
+            return send(false);
+          }
+          if (r.error) dbFail(r.error);
+        });
+      };
+      send(!logsExtMissing);
     } else {
-      try { localStorage.setItem('ps_taken_'+todayKey()+'_'+doseId, '1'); } catch(e){}
+      try { localStorage.setItem('ps_taken_'+todayKey()+'_'+doseId, JSON.stringify(info)); } catch(e){}
     }
-    if (!already && !coinsAlreadyAwarded(doseId)){
+    if (!opts.early && !already && !coinsAlreadyAwarded(doseId)){
       markCoinsAwarded(doseId);
       awardDoseCoins();
     }
+  }
+  /* the person answered "Yes, I took it" when asked again at dose time */
+  function setConfirmed(doseId){
+    var info = takenInfo(doseId); if (!info) return;
+    var now = new Date().toISOString();
+    info.conf = now; info.note = 'after_early';
+    if (isAccount()){
+      SB.from('dose_logs').update({ confirmed_at:now, confirm_note:'after_early' }).eq('schedule_id', doseId).eq('dose_date', todayISO()).then(function(r){ if (r.error && !/confirmed_at|confirm_note|column/i.test(r.error.message || '')) dbFail(r.error); });
+    } else {
+      try { localStorage.setItem('ps_taken_'+todayKey()+'_'+doseId, JSON.stringify(info)); } catch(e){}
+    }
+    if (!coinsAlreadyAwarded(doseId)){ markCoinsAwarded(doseId); awardDoseCoins(); }
   }
   function unmarkTaken(doseId){
     if (isAccount()){
@@ -1467,8 +1525,141 @@
     }
     try { localStorage.removeItem('ps_taken_'+todayKey()+'_'+doseId); } catch(e){}
   }
+  /* append-only history of everything that happened to a dose (kept in Supabase; nothing is ever overwritten) */
+  function logEvent(doseId, ev, note){
+    if (!isAccount() || eventsMissing) return;
+    SB.from('dose_events').insert({ patient_id:USER.id, schedule_id:doseId, dose_date:todayISO(), event:ev, note:note || null }).then(function(r){
+      if (r.error){ eventsMissing = /dose_events|relation|schema cache|does not exist/i.test(r.error.message || ''); console.warn('dose event not saved', r.error.message); }
+    });
+  }
   function minutesNow(){ var n = new Date(); return n.getHours()*60 + n.getMinutes(); }
   function minutesOf(hhmm){ var p = hhmm.split(':'); return parseInt(p[0],10)*60 + parseInt(p[1],10); }
+  /* ---------- dose stages: upcoming -> due soon (last 30 min) -> due now -> late (30 min..4 h) -> missed ---------- */
+  var EARLY_MIN = 30, LATE_MIN = 240, HOLD_MS = 1500;
+  var DS_T = {
+    en:{ upcoming:'Upcoming', canFrom:'You can confirm from {time}', soon:'Due soon', due:'Due now', late:'Late', missed:'Missed',
+      hold:'Hold to confirm', holdLate:'Hold — I took it late', holdTook:'Hold — I took it', holdAll:'Hold — I took them all',
+      early:'✓ Marked at {t} — we will ask again at {due}', earlyAsk:'You marked this taken at {t}. Did you take it?', yes:'Yes, I took it', no:'No, not yet',
+      taken:'✓ Taken {t}', takenLate:'✓ Taken late {t}', takenPlain:'✓ Taken', fix:'Wrong? Fix', undo:'Undo',
+      marked:'{name} marked as taken', markedEarly:'{name} noted — we will check again at {due}', markedMany:'{n} medicines marked as taken',
+      tooEarly:'It is too early to confirm this dose. You can confirm from {time}.', reopened:'OK — this dose is open again and we will keep reminding you.',
+      undone:'Undone — not marked as taken.', extMissing:'Saved, but run backend/dose_events.sql in Supabase to keep the full record.' },
+    hi:{ upcoming:'आने वाली', canFrom:'{time} से पुष्टि कर सकते हैं', soon:'जल्द ही समय', due:'अभी लेने का समय', late:'देर हो गई', missed:'छूट गई',
+      hold:'पुष्टि के लिए दबाए रखें', holdLate:'दबाए रखें — मैंने देर से ली', holdTook:'दबाए रखें — मैंने ले ली', holdAll:'दबाए रखें — मैंने सब ले लीं',
+      early:'✓ {t} पर दर्ज — {due} पर फिर पूछेंगे', earlyAsk:'आपने इसे {t} पर ली हुई दर्ज किया था। क्या आपने ली?', yes:'हाँ, मैंने ले ली', no:'नहीं, अभी नहीं',
+      taken:'✓ ली {t}', takenLate:'✓ देर से ली {t}', takenPlain:'✓ ली', fix:'गलत है? सुधारें', undo:'वापस करें',
+      marked:'{name} ली हुई दर्ज हो गई', markedEarly:'{name} नोट की — {due} पर फिर जाँचेंगे', markedMany:'{n} दवाइयाँ ली हुई दर्ज हुईं',
+      tooEarly:'इस खुराक की पुष्टि के लिए अभी जल्दी है। {time} से कर सकते हैं।', reopened:'ठीक है — यह खुराक फिर खुल गई है, हम याद दिलाते रहेंगे।',
+      undone:'वापस किया — ली हुई दर्ज नहीं है।', extMissing:'सहेजा गया, पर पूरा रिकॉर्ड रखने के लिए Supabase में backend/dose_events.sql चलाएँ।' }
+  };
+  function hhmmOf(iso){ var d = new Date(iso); return isNaN(d.getTime()) ? '' : String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  function shiftHHMM(hhmm, delta){ var m = ((minutesOf(hhmm) + delta) % 1440 + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+  function doseById(id){ return SCHEDULE.filter(function(x){ return String(x.id) === String(id); })[0] || null; }
+  function doseStage(d){
+    if (doseState(d) === 'na') return 'na';
+    var info = takenInfo(d.id);
+    if (info) return info.conf ? 'confirmed' : 'early';
+    var diff = minutesNow() - minutesOf(d.time);
+    if (diff < -EARLY_MIN) return 'upcoming';
+    if (diff < 0) return 'soon';
+    if (diff <= LATE_MIN) return diff <= 30 ? 'due' : 'late';
+    return 'missed';
+  }
+  var lastStageSig = '';
+  function stageSig(){ return SCHEDULE.map(function(d){ return d.id + ':' + doseStage(d); }).join('|'); }
+  function holdBtnHtml(id, label, wide){
+    return '<button type="button" class="hold-btn' + (wide ? ' wide' : '') + '" data-hold="' + esc(id) + '"><span class="hold-fill"></span><span class="hold-label">' + label + '</span></button>';
+  }
+  /* the one place a dose gets recorded from a person's action — enforces the time window */
+  function confirmDoseNow(id, source){
+    var d = doseById(id); if (!d) return { ok:false };
+    var st = doseStage(d), t = DS_T[LANG];
+    if (st === 'upcoming' || st === 'na'){ toast(t.tooEarly.replace('{time}', shiftHHMM(d.time, -EARLY_MIN))); return { ok:false, reason:'early' }; }
+    if (isTaken(id)) return { ok:true, already:true };
+    if (st === 'soon'){ markTaken(id, { early:true }); logEvent(id, 'marked_taken_early', source); return { ok:true, early:true, dose:d }; }
+    var late = st === 'late' || st === 'missed';
+    markTaken(id, { note:late ? 'late' : '' }); logEvent(id, 'confirmed_taken', late ? 'late' : source);
+    return { ok:true, late:late, dose:d };
+  }
+  window.confirmDoseNow = confirmDoseNow;
+  /* asked again at dose time: the person marked it in the 30-minute early window */
+  function rcAnswer(id, yes){
+    var t = DS_T[LANG];
+    if (yes){ setConfirmed(id); logEvent(id, 'confirmed_taken', 'after_early'); toast(CF_T[LANG].done); }
+    else { unmarkTaken(id); logEvent(id, 'reopened', 'after_early'); toast(t.reopened); }
+  }
+  /* 10-second Undo after every confirmation */
+  var undoState = null;
+  function hideUndo(){ if (undoState){ clearInterval(undoState.timer); undoState = null; } var b = document.getElementById('undoBar'); if (b){ b.hidden = true; b.innerHTML = ''; } }
+  function showUndo(done){
+    hideUndo();
+    var t = DS_T[LANG], bar = document.getElementById('undoBar'); if (!bar || !done.length) return;
+    var text;
+    if (done.length > 1) text = t.markedMany.replace('{n}', done.length);
+    else if (done[0].early) text = t.markedEarly.replace('{name}', esc(doseMedName(done[0].dose))).replace('{due}', esc(done[0].dose.time));
+    else text = t.marked.replace('{name}', esc(doseMedName(done[0].dose)));
+    var left = 10;
+    var paint = function(){ bar.innerHTML = '<span>' + text + '</span><button type="button" data-undo="1">' + t.undo + ' (' + left + ')</button>'; };
+    paint(); bar.hidden = false;
+    undoState = { ids:done.map(function(x){ return x.dose.id; }), timer:setInterval(function(){ left--; if (left <= 0) hideUndo(); else paint(); }, 1000) };
+  }
+  document.getElementById('undoBar').addEventListener('click', function(e){
+    if (!e.target.closest('[data-undo]') || !undoState) return;
+    var ids = undoState.ids; hideUndo();
+    ids.forEach(function(i){ unmarkTaken(i); logEvent(i, 'undone', 'within_10s'); });
+    renderHome(); toast(DS_T[LANG].undone);
+  });
+  /* hold-to-confirm: a tap or a stray touch does nothing; the button must be held for 1.5 seconds */
+  var holdEl = null, holdTimer = null;
+  function holdCancel(){ if (holdTimer){ clearTimeout(holdTimer); holdTimer = null; } if (holdEl){ holdEl.classList.remove('holding'); holdEl = null; } }
+  function holdStart(btn){
+    holdCancel(); holdEl = btn;
+    void btn.offsetWidth;                                      // restart the fill animation
+    btn.classList.add('holding');
+    holdTimer = setTimeout(function(){
+      var b = holdEl; holdTimer = null;
+      if (holdEl){ holdEl.classList.remove('holding'); holdEl = null; }
+      if (b) onHold(b.getAttribute('data-hold'), b);
+    }, HOLD_MS);
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch(e){}
+  }
+  /* the release that ends a completed hold must not "click" whatever appears underneath the vanished button */
+  var swallowUntil = 0;
+  document.addEventListener('click', function(e){ if (Date.now() < swallowUntil){ e.stopPropagation(); e.preventDefault(); } }, true);
+  document.addEventListener('pointerdown', function(e){ swallowUntil = 0; if (e.pointerType === 'mouse' && e.button !== 0) return; var b = e.target.closest && e.target.closest('.hold-btn'); if (b) holdStart(b); });
+  ['pointerup', 'pointercancel'].forEach(function(ev){ document.addEventListener(ev, holdCancel); });
+  document.addEventListener('pointermove', function(e){
+    if (!holdEl) return;
+    var under = document.elementFromPoint(e.clientX, e.clientY);
+    if (!under || !holdEl.contains(under)) holdCancel();
+  });
+  document.addEventListener('contextmenu', function(e){ if (e.target.closest && e.target.closest('.hold-btn')) e.preventDefault(); });
+  document.addEventListener('keydown', function(e){ if ((e.key === 'Enter' || e.key === ' ') && !e.repeat){ var b = e.target.closest && e.target.closest('.hold-btn'); if (b){ e.preventDefault(); holdStart(b); } } });
+  document.addEventListener('keyup', function(e){ if (e.key === 'Enter' || e.key === ' ') holdCancel(); });
+  function onHold(id, btn){
+    swallowUntil = Date.now() + 2500;
+    var inAlarm = !!btn.closest('#alarmCard'), ids;
+    if (id === 'all') ids = alarmCurrent.filter(function(d){ return !isEarly(d.id); }).map(function(d){ return String(d.id); });
+    else ids = [String(id)];
+    var done = [];
+    if (!(inAlarm && alarmIsTest)){
+      ids.forEach(function(i){ var r = confirmDoseNow(i, 'hold'); if (r.ok && !r.already) done.push(r); });
+    }
+    if (inAlarm){
+      alarmCurrent = alarmCurrent.filter(function(d){ return ids.indexOf(String(d.id)) === -1; });
+      if (!alarmCurrent.length) closeAlarm(); else renderAlarm();
+    }
+    renderHome();
+    if (done.length) showUndo(done);
+  }
+  /* re-draw Home when a dose moves to the next stage (e.g. becomes "Due soon"), but never while a button is being held */
+  setInterval(function(){
+    if (holdEl || currentScreen !== 'home' || alarmOpen()) return;
+    var ov = ['confirmOverlay', 'sosOverlay', 'askOverlay'].some(function(x){ var o = document.getElementById(x); return o && !o.hidden; });
+    if (ov) return;
+    var sig = stageSig(); if (sig !== lastStageSig){ lastStageSig = sig; renderHome(); }
+  }, 20000);
+
   /* 'na' = the dose time had already passed today when this schedule was created, so it
      starts tomorrow — it must not show up as "missed" or count against today's adherence */
   function doseState(dose){
@@ -1595,6 +1786,23 @@
     return LANG === 'en' ? (purposeCache()[f] || '') : '';
   }
 
+  /* what the person sees under each dose: its stage and, only when confirming is allowed, a hold button */
+  function doseActionHtml(d){
+    var t = DS_T[LANG], stg = doseStage(d), info = takenInfo(d.id), id = esc(d.id), chip = function(c, txt){ return '<span class="st-chip ' + c + '">' + txt + '</span>'; };
+    if (stg === 'upcoming') return '<div class="dose-act">' + chip('up', '⏳ ' + t.upcoming) + '<span class="muted" style="font-size:.68rem">' + t.canFrom.replace('{time}', shiftHHMM(d.time, -EARLY_MIN)) + '</span></div>';
+    if (stg === 'soon') return '<div class="dose-act">' + chip('soon', '🔔 ' + t.soon) + holdBtnHtml(d.id, t.hold) + '</div>';
+    if (stg === 'due') return '<div class="dose-act">' + chip('due', '🔔 ' + t.due) + holdBtnHtml(d.id, t.hold) + '</div>';
+    if (stg === 'late') return '<div class="dose-act">' + chip('late', '⚠ ' + t.late) + holdBtnHtml(d.id, t.hold) + '</div>';
+    if (stg === 'missed') return '<div class="dose-act">' + chip('missed', '⚠ ' + t.missed) + holdBtnHtml(d.id, t.holdLate) + '</div>';
+    var at = info && info.at ? hhmmOf(info.at) : '';
+    if (stg === 'early'){
+      if (minutesNow() >= minutesOf(d.time))
+        return '<div class="dose-act">' + chip('early', t.earlyAsk.replace('{t}', at || '—')) + '<div class="rc-row"><button type="button" class="btn primary sm" data-rc="yes" data-id="' + id + '" style="width:auto">' + t.yes + '</button><button type="button" class="btn outline sm" data-rc="no" data-id="' + id + '" style="width:auto">' + t.no + '</button></div></div>';
+      return '<div class="dose-act">' + chip('early', t.early.replace('{t}', at || '—').replace('{due}', esc(d.time))) + '</div>';
+    }
+    var late = info && info.note === 'late';
+    return '<div class="dose-act">' + chip('confirmed', at ? (late ? t.takenLate : t.taken).replace('{t}', at) : t.takenPlain) + '<button type="button" class="fix-link" data-fix="' + id + '">' + t.fix + '</button></div>';
+  }
   function renderSchedule(){
     var el = document.getElementById('scheduleList');
     if (!el) return;
@@ -1619,12 +1827,12 @@
         var cls = (st === 'pending' || st === 'na') ? 'pending' : (st === 'missed' ? 'missed' : '');
         var pur = med ? medPurpose(med) : '', tag = rxTagHtml(dose.medId), ci = courseInfo(dose.medId);
         html += '<div class="schedule-row '+cls+'" data-dose-id="'+dose.id+'" style="align-items:flex-start">' +
-          '<span class="time num" style="padding-top:2px">'+dose.time+'</span><span class="dot" style="margin-top:6px"></span>' +
+          '<span class="time num" style="padding-top:2px">'+dose.time+'</span>' +
           '<span class="name">'+name+
             (pur ? '<br><span class="muted" style="font-size:.7rem;font-weight:500">💡 '+esc(pur)+'</span>' : '') +
             '<br>'+tag+
             (ci ? ' <span class="muted" style="font-size:.66rem;font-weight:600">· '+al.dayOf.replace('{d}', Math.max(1, ci.day)).replace('{n}', ci.days)+'</span>' : '') +
-            (st === 'na' ? ' <span class="muted" style="font-size:.66rem">· '+X().startsTomorrow+'</span>' : '') +
+            (st === 'na' ? ' <span class="muted" style="font-size:.66rem">· '+X().startsTomorrow+'</span>' : doseActionHtml(dose)) +
           '</span></div>';
       });
     });
@@ -1637,6 +1845,7 @@
       badgeEl.hidden = false;
     }
     el.innerHTML = html;
+    lastStageSig = stageSig();
     var takenCount = counted.filter(function(d){ return doseState(d) === 'taken'; }).length;
     badgeEl.textContent = LANG === 'en'
       ? takenCount+' of '+counted.length+' taken'
@@ -1652,7 +1861,9 @@
       document.getElementById('h_notifDesc').textContent = LANG === 'en'
         ? mname+' · '+missed.time+' dose not marked taken'
         : mname+' · '+missed.time+' की खुराक अभी दर्ज नहीं है';
-      document.getElementById('markTakenBtn').onclick = function(){ askConfirmDose(missed.id); };
+      var mtb = document.getElementById('markTakenBtn');
+      mtb.className = 'hold-btn'; mtb.setAttribute('data-hold', missed.id); mtb.onclick = null;
+      mtb.innerHTML = '<span class="hold-fill"></span><span class="hold-label">' + DS_T[LANG].holdTook + '</span>';
       var who = patientLabel();
       var smsBody = LANG === 'en'
         ? 'Reminder from PharmaSaathi: '+who+' has not marked '+mname+' ('+missed.time+') as taken today.'
@@ -1790,18 +2001,22 @@
     } else fallback();
   }
   function renderAlarm(){
-    var t = X().alm, card = document.getElementById('alarmCard');
+    var t = X().alm, ds = DS_T[LANG], card = document.getElementById('alarmCard');
+    var open = alarmCurrent.filter(function(d){ return !isEarly(d.id); });
     var rows = alarmCurrent.map(function(d){
-      var m = medById(d.medId), pur = m ? medPurpose(m) : '';
-      return '<div class="alarm-row"><div style="flex:1;min-width:0"><strong>' + esc(doseMedName(d)) + '</strong> <span class="muted">' + esc(d.time) + '</span>' +
-        (pur ? '<div class="muted" style="font-size:.72rem">💡 ' + esc(pur) + '</div>' : '') + '</div>' +
-        '<button class="btn outline sm" type="button" data-act="take" data-id="' + esc(d.id) + '">' + t.tookShort + '</button></div>';
+      var m = medById(d.medId), pur = m ? medPurpose(m) : '', early = isEarly(d.id), info = takenInfo(d.id), at = info && info.at ? hhmmOf(info.at) : '';
+      var right = '';
+      if (early) right = '<div class="rc-row"><button type="button" class="btn primary sm" data-rc="yes" data-id="' + esc(d.id) + '" style="width:auto">' + ds.yes + '</button><button type="button" class="btn outline sm" data-rc="no" data-id="' + esc(d.id) + '" style="width:auto">' + ds.no + '</button></div>';
+      else if (open.length > 1) right = holdBtnHtml(d.id, ds.hold);
+      return '<div class="alarm-row" style="flex-wrap:wrap"><div style="flex:1;min-width:0"><strong>' + esc(doseMedName(d)) + '</strong> <span class="muted">' + esc(d.time) + '</span>' +
+        (pur ? '<div class="muted" style="font-size:.72rem">💡 ' + esc(pur) + '</div>' : '') +
+        (early ? '<div style="font-size:.74rem;color:var(--warn);font-weight:700;margin-top:2px">' + ds.earlyAsk.replace('{t}', at || '—') + '</div>' : '') + '</div>' + right + '</div>';
     }).join('');
     card.innerHTML =
       '<span class="bell">⏰</span><h3>' + (alarmCurrent.length > 1 ? t.titleMany : t.title) + '</h3>' +
       '<div class="alarm-list">' + rows + '</div>' +
       '<div class="actions">' +
-        '<button class="btn primary" type="button" data-act="all">' + (alarmCurrent.length > 1 ? t.tookAll : t.took) + '</button>' +
+        (open.length ? holdBtnHtml(open.length > 1 ? 'all' : open[0].id, open.length > 1 ? ds.holdAll : ds.holdTook, true) : '') +
         '<button class="btn ghost" type="button" data-act="snooze">⏳ ' + t.snooze + '</button>' +
         '<button class="btn outline" type="button" data-act="skip">' + t.skip + '</button>' +
       '</div>';
@@ -1822,27 +2037,25 @@
   }
   function triggerAlarm(dose){ if (dose) triggerAlarmGroup([dose], true); }      // "test a reminder" button
   document.getElementById('alarmCard').addEventListener('click', function(e){
-    var b = e.target.closest('button[data-act]');
+    var b = e.target.closest('button[data-act], button[data-rc]');
     if (!b) return;
-    var act = b.getAttribute('data-act'), mem = alarmMem(), now = Date.now();
-    if (act === 'take'){
-      var id = b.getAttribute('data-id');
-      if (!alarmIsTest) markTaken(id);
-      alarmCurrent = alarmCurrent.filter(function(d){ return String(d.id) !== String(id); });
+    var mem = alarmMem(), now = Date.now();
+    if (b.hasAttribute('data-rc')){
+      var rid = b.getAttribute('data-id');
+      if (!alarmIsTest) rcAnswer(rid, b.getAttribute('data-rc') === 'yes');
+      alarmCurrent = alarmCurrent.filter(function(d){ return String(d.id) !== String(rid); });
       renderHome();
       if (!alarmCurrent.length) closeAlarm(); else renderAlarm();
       return;
     }
-    if (act === 'all'){
-      if (!alarmIsTest) alarmCurrent.forEach(function(d){ markTaken(d.id); });
-      closeAlarm(); renderHome();
-    } else if (act === 'snooze'){
+    var act = b.getAttribute('data-act');
+    if (act === 'snooze'){
       if (!alarmIsTest){
         alarmCurrent.forEach(function(d){ var st = mem[d.id] || (mem[d.id] = { fires:1, nextAt:0, skipped:false }); st.nextAt = now + AL.snoozeMs; });
         saveAlarmMem(mem);
       }
       closeAlarm(); renderHome(); toast(X().alm.snoozed);
-    } else {
+    } else if (act === 'skip'){
       if (!alarmIsTest){
         alarmCurrent.forEach(function(d){ var st = mem[d.id] || (mem[d.id] = { fires:1, nextAt:0, skipped:false }); st.skipped = true; });
         saveAlarmMem(mem);
@@ -1858,7 +2071,7 @@
     }
     var mem = alarmMem(), due = [];
     SCHEDULE.forEach(function(dose){
-      if (isTaken(dose.id) || doseState(dose) === 'na' || !courseActive(dose.medId)) return;
+      if ((isTaken(dose.id) && !isEarly(dose.id)) || doseState(dose) === 'na' || !courseActive(dose.medId)) return;
       var st = mem[dose.id] || { fires:0, nextAt:0, skipped:false }, at = dueMs(dose);
       if (st.skipped || st.fires >= AL.max || now < at || now - at > AL.windowMs) return;
       if (now >= Math.max(at, st.nextAt)) due.push(dose);
@@ -1879,7 +2092,7 @@
   var cfDoseId = null;
   function askConfirmDose(id){
     var d = SCHEDULE.filter(function(x){ return String(x.id) === String(id); })[0];
-    if (!d || doseState(d) === 'na') return;
+    if (!d || doseState(d) === 'na' || !isTaken(d.id)) return;                 // only a recorded dose can be corrected here
     var t = CF_T[LANG], name = esc(doseMedName(d)), taken = isTaken(d.id), card = document.getElementById('confirmCard');
     cfDoseId = d.id;
     if (taken){
@@ -1897,8 +2110,7 @@
     var b = e.target.closest('button[data-cf]'); if (!b) return;
     var act = b.getAttribute('data-cf'), id = cfDoseId, t = CF_T[LANG];
     closeConfirm();
-    if (act === 'yes' && id != null){ markTaken(id); renderHome(); toast(t.done); }
-    else if (act === 'undo' && id != null){ unmarkTaken(id); renderHome(); toast(t.undone); }
+    if (act === 'undo' && id != null){ hideUndo(); unmarkTaken(id); logEvent(id, 'corrected_not_taken', 'fix'); renderHome(); toast(t.undone); }
   });
   window.askConfirmDose = askConfirmDose;
 
@@ -1916,15 +2128,10 @@
     var hhmm = String(at.getHours()).padStart(2, '0') + ':' + String(at.getMinutes()).padStart(2, '0');
     el.innerHTML = '<strong>⏳ ' + (hi ? 'याद दिलाना टाला गया — ' + hhmm + ' बजे फिर बजेगा' : 'Reminder snoozed — rings again at ' + hhmm) + '</strong>' +
       list.map(function(d){
-        return '<div class="snooze-row"><span>' + esc(doseMedName(d)) + ' <span class="muted">' + esc(d.time) + '</span></span>' +
-          '<button class="btn primary sm" type="button" data-snz="' + esc(d.id) + '" style="width:auto">' + (hi ? '✓ हाँ, मैंने ले ली' : '✓ Yes, I have taken it') + '</button></div>';
+        return '<div class="snooze-row"><span>' + esc(doseMedName(d)) + ' <span class="muted">' + esc(d.time) + '</span></span>' + holdBtnHtml(d.id, DS_T[LANG].holdTook) + '</div>';
       }).join('');
     el.hidden = false;
   }
-  document.getElementById('snoozeCard').addEventListener('click', function(e){
-    var b = e.target.closest('button[data-snz]'); if (!b) return;
-    markTaken(b.getAttribute('data-snz')); renderHome(); toast(CF_T[LANG].done);
-  });
 
   /* ---------- Profile: alarm sound settings ---------- */
   var AP_T = {
@@ -3540,7 +3747,6 @@
   function renderHome(){
     var t = T[LANG];
     document.getElementById('h_notifTitle').textContent = t.notifTitle;
-    document.getElementById('markTakenBtn').textContent = t.markTaken;
     document.getElementById('h_notifNotify').textContent = t.notify;
     document.getElementById('h_scheduleTitle').innerHTML = t.scheduleTitle;
     document.getElementById('h_listenLabel').textContent = t.listenLabel;
@@ -3762,13 +3968,13 @@
     });
   });
 
-  /* tapping a schedule row never changes anything by itself — it asks first, so a stray tap cannot mark a dose */
+  /* tapping a schedule row never changes anything: only the hold button, the "Did you take it?" answers and the
+     "Wrong? Fix" link inside a row react */
   document.getElementById('scheduleList').addEventListener('click', function(e){
-    var row = e.target.closest('.schedule-row');
-    if (!row) return;
-    var id = row.dataset.doseId;
-    if (!id) return;
-    askConfirmDose(id);
+    var fx = e.target.closest('[data-fix]');
+    if (fx){ askConfirmDose(fx.getAttribute('data-fix')); return; }
+    var rc = e.target.closest('[data-rc]');
+    if (rc){ rcAnswer(rc.getAttribute('data-id'), rc.getAttribute('data-rc') === 'yes'); renderHome(); }
   });
 
   var rpBtn = document.getElementById('rp_enableBtn');
@@ -4550,7 +4756,7 @@
     }).filter(function(s){ return s.medId; });
     rebuildSchedule();
     takenToday = {}; takenDate = todayISO();
-    (rows.logs || []).forEach(function(l){ if (l.status === 'taken') takenToday[l.schedule_id] = true; });
+    (rows.logs || []).forEach(function(l){ if (l.status === 'taken') takenToday[l.schedule_id] = infoFromLog(l); });
     REWARDS = rows.rewards
       ? { coins:rows.rewards.coins || 0, streak:rows.rewards.streak || 0, last_full_day:rows.rewards.last_full_day || '' }
       : { coins:0, streak:0, last_full_day:'' };
@@ -5345,7 +5551,7 @@
   /* Decide what "I took X" should do. It marks a dose ONLY when both the medicine and the dose are
      clear; otherwise it asks. Returns { kind: done | confirm | which | none | alldone | notmine } */
   function markPlan(intent, opts){
-    var untaken = dosesToday().filter(function(d){ return !isTaken(d.id); });
+    var untaken = dosesToday().filter(function(d){ return !isTaken(d.id) && doseStage(d) !== 'upcoming'; });
     var meds = intent.meds || [];
     if (meds.length > 1){
       var opts2 = [];
@@ -5360,12 +5566,15 @@
       if (!isActiveMed(m.id)) return { kind:'notmine', med:m };
       var pool2 = untaken.filter(function(d){ return d.medId === m.id; })
         .sort(function(a, b){ return Math.abs(minutesOf(a.time) - minutesNow()) - Math.abs(minutesOf(b.time) - minutesNow()); });
-      if (!pool2.length) return { kind:'alldone', med:m };
+      if (!pool2.length){
+        var soonest = dosesToday().filter(function(d){ return d.medId === m.id && !isTaken(d.id) && doseStage(d) === 'upcoming'; }).sort(function(p, q){ return minutesOf(p.time) - minutesOf(q.time); })[0];
+        return soonest ? { kind:'tooearly', med:m, dose:soonest } : { kind:'alldone', med:m };
+      }
       var best = pool2[0], near = Math.abs(minutesOf(best.time) - minutesNow()) <= 90;
       var otherNear = pool2[1] && Math.abs(minutesOf(pool2[1].time) - minutesNow()) <= 90;
       var ahead = minutesOf(best.time) - minutesNow();
       var sure = x.exact && !opts.uncertain && ((near && !otherNear) || (pool2.length === 1 && ahead <= 90));
-      if (sure){ markTaken(best.id); renderHome(); return { kind:'done', dose:best }; }
+      if (sure && confirmDoseNow(best.id, 'assistant').ok){ renderHome(); return { kind:'done', dose:best }; }
       return { kind:'confirm', dose:best };
     }
     var soon = untaken.filter(function(d){ return Math.abs(minutesOf(d.time) - minutesNow()) <= 120; });
@@ -5452,6 +5661,7 @@
           }
           if (plan.kind === 'confirm') return T3(L, 'I found ' + doseDesc(plan.dose, 'en') + '. Did you take this dose?', 'मुझे ' + doseDesc(plan.dose, 'hi') + ' मिली। क्या आपने यह खुराक ली?', 'Mujhe ' + doseDesc(plan.dose, 'hg') + ' mili. Kya aapne yeh dose li?');
           if (plan.kind === 'which') return T3(L, 'Which one did you take? Tap a button below.', 'कौन सी खुराक ली? नीचे बटन दबाएँ।', 'Kaun si dose li? Neeche button dabayein.');
+          if (plan.kind === 'tooearly') return T3(L, 'It is too early to mark ' + name(plan.med) + ' as taken. You can confirm it from ' + fmt12(shiftHHMM(plan.dose.time, -EARLY_MIN)) + '.', 'अभी ' + name(plan.med) + ' को ली हुई दर्ज करना जल्दी है। आप इसे ' + fmt12(shiftHHMM(plan.dose.time, -EARLY_MIN)) + ' बजे से दर्ज कर सकते हैं।', 'Abhi ' + name(plan.med) + ' mark karna jaldi hai. Aap ise ' + fmt12(shiftHHMM(plan.dose.time, -EARLY_MIN)) + ' baje se mark kar sakte hain.');
           if (plan.kind === 'alldone') return T3(L, 'All of today’s doses of ' + name(plan.med) + ' are already marked as taken.', 'आज की ' + name(plan.med) + ' की सारी खुराकें पहले से ली हुई दर्ज हैं।', 'Aaj ki ' + name(plan.med) + ' ki saari doses pehle se li hui hain.');
           if (plan.kind === 'notmine') return T3(L, name(plan.med) + ' is not in your current medicines, so I did not mark anything.', name(plan.med) + ' आपकी मौजूदा दवाइयों में नहीं है, इसलिए मैंने कुछ दर्ज नहीं किया।', name(plan.med) + ' aapki maujooda dawaiyon mein nahi hai, isliye maine kuch mark nahi kiya.');
           return T3(L, 'I could not tell which dose you took. Say the medicine name, for example “I took Metformin”.', 'मैं समझ नहीं पाया कि कौन सी खुराक ली। दवा का नाम बोलें, जैसे “मैंने Metformin ले ली”।', 'Main samajh nahi paya kaun si dose li. Dawai ka naam bolein, jaise “Maine Metformin le li”.');
@@ -5528,7 +5738,8 @@
     var d = SCHEDULE.filter(function(x){ return String(x.id) === String(doseId); })[0], L = ASK.lastL;
     ASK.pending = null;
     if (!d){ addBot(T3(L, 'I could not find that dose any more.', 'वह खुराक अब नहीं मिली।', 'Woh dose ab nahi mili.')); return; }
-    markTaken(d.id); renderHome();
+    if (!confirmDoseNow(d.id, 'assistant').ok){ addBot(T3(L, 'It is too early to mark that dose — you can confirm it from 30 minutes before its time.', 'इस खुराक को दर्ज करने के लिए अभी जल्दी है — समय से 30 मिनट पहले से कर सकते हैं।', 'Is dose ko mark karne ke liye abhi jaldi hai — time se 30 minute pehle se kar sakte hain.')); return; }
+    renderHome();
     deliver({ type:'mark' }, { kind:'done', dose:d }, L);
   }
   function askCancel(){
