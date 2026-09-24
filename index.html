@@ -453,6 +453,8 @@
           <span class="muted" style="font-size:.72rem" id="h_listenLabel">Listen</span>
         </div>
 
+        <div id="h_scanDraft" hidden></div>
+
         <button class="btn outline" type="button" onclick="openAsk()" id="h_askBtn">🎙&nbsp; Ask PharmaSaathi</button>
 
         <button class="btn primary" type="button" onclick="startScan()" id="h_scanBtn">📷&nbsp; Scan a new prescription</button>
@@ -1204,6 +1206,7 @@
       timesCardHtml(m) +
       '<div class="callout warn"><span>⚠️</span><span>'+x.customNote+'</span></div>';
     document.getElementById('medDetail').insertAdjacentHTML('afterbegin', listenBtnHtml(m));
+    document.getElementById('medDetail').insertAdjacentHTML('beforeend', doseAlertsHtml([m.id]));
   }
   // interaction severity for medicines that still carry a general (non-drug-specific) note
   var INTERACTION_LEVEL = { metformin:'warn', levothyroxine:'warn', paracetamol:'warn' };
@@ -1250,13 +1253,29 @@
      shortest sensible hours between doses. Informational only — a doctor or pharmacist decides,
      and these numbers are to be validated by a pharmacist before public launch. */
   var DOSE_LIMITS = {
-    paracetamol:{ warn:3000, risk:4000, gap:4 },
-    ibuprofen:{ warn:1200, risk:2400, gap:4 },
-    metformin:{ warn:2550, risk:3000 },
-    amoxicillin:{ warn:3000, risk:6000 },
-    cetirizine:{ warn:10, risk:20 },
-    omeprazole:{ warn:40, risk:80 }
+    paracetamol:{ warn:3000, risk:4000, gap:4 }, ibuprofen:{ warn:1200, risk:2400, gap:4 }, aspirin:{ warn:3000, risk:4000, gap:4 },
+    diclofenac:{ warn:100, risk:150 }, naproxen:{ warn:1000, risk:1250 }, tramadol:{ warn:300, risk:400 },
+    metformin:{ warn:2550, risk:3000 }, amoxicillin:{ warn:3000, risk:6000 }, ciprofloxacin:{ warn:1000, risk:1500 },
+    cetirizine:{ warn:10, risk:20 }, levocetirizine:{ warn:5, risk:10 }, loratadine:{ warn:10, risk:20 }, montelukast:{ warn:10, risk:20 },
+    omeprazole:{ warn:40, risk:80 }, pantoprazole:{ warn:40, risk:80 }, esomeprazole:{ warn:40, risk:80 }, rabeprazole:{ warn:20, risk:60 },
+    domperidone:{ warn:30, risk:30 }, ondansetron:{ warn:24, risk:32 },
+    atorvastatin:{ warn:40, risk:80 }, rosuvastatin:{ warn:20, risk:40 }, simvastatin:{ warn:40, risk:80 },
+    amlodipine:{ warn:10, risk:10 }, metoprolol:{ warn:200, risk:400 }, atenolol:{ warn:100, risk:200 }, losartan:{ warn:100, risk:150 },
+    telmisartan:{ warn:80, risk:120 }, lisinopril:{ warn:40, risk:80 }, enalapril:{ warn:20, risk:40 }, ramipril:{ warn:10, risk:20 },
+    glimepiride:{ warn:6, risk:8 }, gliclazide:{ warn:240, risk:320 }, glibenclamide:{ warn:15, risk:20 }, sitagliptin:{ warn:100, risk:100 }, pioglitazone:{ warn:30, risk:45 },
+    levothyroxine:{ warn:0.2, risk:0.4 }, prednisolone:{ warn:60, risk:100 }, warfarin:{ warn:10, risk:20 }, digoxin:{ warn:0.25, risk:0.5 },
+    gabapentin:{ warn:2400, risk:3600 }, pregabalin:{ warn:450, risk:600 }, amitriptyline:{ warn:100, risk:150 }, sertraline:{ warn:150, risk:200 },
+    escitalopram:{ warn:20, risk:20 }, alprazolam:{ warn:4, risk:10 }, clonazepam:{ warn:8, risk:20 }, allopurinol:{ warn:600, risk:900 }
   };
+  /* the medicine's generic name, whether typed as a brand ("Dolo"), a misspelling or a scanned name, so a limit on file is found for it */
+  function limitKeyFor(name){
+    var first = String(name || '').toLowerCase().replace(/[^a-z\s]/g, ' ').trim().split(/\s+/)[0] || '';
+    if (!first) return null;
+    if (DOSE_LIMITS[first]) return first;
+    if (BRAND_GENERIC[first] && DOSE_LIMITS[BRAND_GENERIC[first]]) return BRAND_GENERIC[first];
+    var hit = bestTermHit(tokensOf(first), Object.keys(DOSE_LIMITS));
+    return hit ? hit.term : null;
+  }
   function doseToMg(text){
     var d = parseDose(text || '');
     if (!d) return 0;
@@ -1269,32 +1288,44 @@
     var n = q.split(' ')[0];
     return n === '½' ? 0.5 : (parseFloat(n) || 1);
   }
-  /* strength written on the paper (or, failing that, the catalog strength) x amount per dose x doses per day */
-  function evalDose(medId, doseText, times, catalogName){
-    var lim = DOSE_LIMITS[medId];
-    if (!lim || !times || !times.length) return null;
-    var per = doseToMg(doseText) || doseToMg(catalogName);
-    if (!per) return null;
-    var qty = qtyNumber(doseText), count = times.length, total = per * qty * count;
-    var level = total > lim.risk ? 'risk' : (total > lim.warn ? 'warn' : null);
-    var gapWarn = false;
-    if (lim.gap && count > 1){
-      var mins = times.map(minutesOf).sort(function(a, b){ return a - b; }), minGap = 1e9;
-      for (var i = 0; i < mins.length; i++) minGap = Math.min(minGap, ((mins[(i + 1) % mins.length] - mins[i]) + 1440) % 1440 || 1440);
-      gapWarn = minGap < lim.gap * 60;
+  /* strength written on the paper (or, failing that, the catalog strength) x amount per dose x doses per day.
+     With a limit on file it is compared to that limit; for any other medicine it can still catch
+     clearly unusual amounts (huge single dose, huge daily total, many tablets, too many doses). */
+  function evalDose(key, doseText, times, catalogName){
+    if (!times || !times.length) return null;
+    var lim = key ? DOSE_LIMITS[key] : null;
+    var strength = doseToMg(doseText) || doseToMg(catalogName);
+    var qty = qtyNumber(doseText), count = times.length, perDose = strength * qty, total = perDose * count;
+    if (lim){
+      if (!strength) return null;
+      var level = total > lim.risk ? 'risk' : (total > lim.warn ? 'warn' : null), gapWarn = false;
+      if (lim.gap && count > 1){
+        var mins = times.map(minutesOf).sort(function(a, b){ return a - b; }), minGap = 1e9;
+        for (var i = 0; i < mins.length; i++) minGap = Math.min(minGap, ((mins[(i + 1) % mins.length] - mins[i]) + 1440) % 1440 || 1440);
+        gapWarn = minGap < lim.gap * 60;
+      }
+      if (!level && gapWarn) level = 'warn';
+      return level ? { kind:'table', medId:key, level:level, total:total, per:perDose, count:count, lim:lim, gapWarn:gapWarn } : null;
     }
-    if (!level && gapWarn) level = 'warn';
-    return level ? { medId:medId, level:level, total:total, per:per * qty, count:count, lim:lim, gapWarn:gapWarn } : null;
+    var reasons = [];
+    if (perDose > 2000) reasons.push('big1');
+    if (total > 8000) reasons.push('big');
+    if (count > 6) reasons.push('many');
+    if (qty > 4) reasons.push('tabs');
+    return reasons.length ? { kind:'sanity', level:'warn', total:total, per:perDose, count:count, qty:qty, reasons:reasons, lim:{ risk:Infinity, warn:Infinity } } : null;
   }
   function doseAlertFor(m){
-    if (!m || m.custom || medRxStatus(m) === 'stopped') return null;
+    if (!m || medRxStatus(m) === 'stopped') return null;
     var times = SCHEDULE.filter(function(d){ return d.medId === m.id; }).map(function(d){ return d.time; });
-    var al = evalDose(m.id, m.doseNote || '', times, m.en.name);
+    var al = m.custom ? evalDose(limitKeyFor(m.en.name), m.en.doseLine, times, '') : evalDose(m.id, m.doseNote || '', times, m.en.name);
     if (al) al.name = m[LANG].name.split(' ')[0];
     return al;
   }
   function doseAlertText(al, lang){
     var d = T2[lang || LANG].dose, n = function(v){ return String(Math.round(v * 10) / 10); };
+    if (al.kind === 'sanity'){
+      return al.name + ': ' + al.reasons.map(function(r){ return d[r].replace('{total}', n(al.total)).replace('{per}', n(al.per)); }).join(' ') + ' ' + d.noLimit + ' ' + d.ask;
+    }
     var out = d.perDay.replace('{name}', al.name).replace('{total}', n(al.total)).replace('{n}', al.count).replace('{per}', n(al.per));
     if (al.total > al.lim.risk) out += ' ' + d.risk.replace('{max}', al.lim.risk);
     else if (al.total > al.lim.warn) out += ' ' + d.warn.replace('{max}', al.lim.warn);
@@ -1311,7 +1342,7 @@
   /* safety level is DERIVED from the live interaction check — never a stored label — so it
      can't drift out of date. 'unknown' = not in the safety catalog, so nothing was checked. */
   function medSafety(m){
-    if (m.custom) return 'unknown';
+    if (m.custom){ var cda = doseAlertFor(m); return cda ? cda.level : 'unknown'; }
     var live = getInteractions(m.id);
     var lvl = !live.length ? 'good' : (live.some(function(x){ return x.severity === 'risk'; }) ? 'risk' : 'warn');
     var da = doseAlertFor(m);
@@ -2391,7 +2422,37 @@
   var scanRawText = '';
   var scanProgressPct = 0, scanStep = 0, scanStepTotal = 0;
 
-  function startScan(){
+  /* an unsaved scan is kept as a draft (this browser tab only) so pressing Back, reloading or
+     opening another screen never throws the result away */
+  var SCAN_DRAFT_KEY = 'ps_scan_draft';
+  function saveScanDraft(){
+    try {
+      if ((scanState === 'done' || scanState === 'no-match') && scanItems.length)
+        sessionStorage.setItem(SCAN_DRAFT_KEY, JSON.stringify({ state:scanState, items:scanItems, raw:scanRawText, ai:scanUsedAi, ts:Date.now() }));
+      else if (scanState === 'idle') sessionStorage.removeItem(SCAN_DRAFT_KEY);
+    } catch(e){}
+  }
+  function clearScanDraft(){ try { sessionStorage.removeItem(SCAN_DRAFT_KEY); } catch(e){} }
+  function loadScanDraft(){
+    try {
+      var d = JSON.parse(sessionStorage.getItem(SCAN_DRAFT_KEY) || 'null');
+      if (d && Array.isArray(d.items) && d.items.length && Date.now() - d.ts < 6 * 3600 * 1000){
+        scanItems = d.items; scanRawText = d.raw || ''; scanUsedAi = !!d.ai; scanState = d.state; return true;
+      }
+    } catch(e){}
+    return false;
+  }
+  function discardScanDraft(){
+    if (!window.confirm(X().scanX.draftConfirm)) return;
+    clearScanDraft(); scanState = 'idle'; scanItems = []; scanImageUrl = null; scanRawText = '';
+    renderHome();
+  }
+  window.discardScanDraft = discardScanDraft;
+
+  /* with no argument this RESUMES an unsaved scan; startScan(true) starts a fresh one */
+  function startScan(fresh){
+    if (!fresh && (scanState === 'done' || scanState === 'analyzing')){ renderScan(); go('scan'); return; }
+    clearScanDraft();
     scanState = 'idle';
     scanImageUrl = null;
     scanItems = [];
@@ -2404,9 +2465,9 @@
   }
   window.startScan = startScan;
 
-  function scanEditDose(i, val){ if (scanItems[i]){ scanItems[i].dose = clean(val).slice(0, 20); renderScan(); } }
+  function scanEditDose(i, val){ if (scanItems[i]){ scanItems[i].dose = clean(val).slice(0, 20); saveScanDraft(); renderScan(); } }
   window.scanEditDose = scanEditDose;
-  function scanToggle(i, val){ if (scanItems[i]) scanItems[i].include = !!val; }
+  function scanToggle(i, val){ if (scanItems[i]){ scanItems[i].include = !!val; saveScanDraft(); } }
   /* fixing a misread name re-checks it against the safety catalog straight away */
   function scanEdit(i, val){
     var it = scanItems[i];
@@ -2416,6 +2477,7 @@
     it.medId = hit ? hit.med.id : null;
     it.conf = hit ? (hit.confidence === 'high' ? 'catalog' : 'catalog-fuzzy') : (bestTermHit(tokensOf(it.name), DRUG_NAMES) ? 'dict' : 'form');
     if (it.name) it.include = true;
+    saveScanDraft();
     renderScan();
   }
   window.scanToggle = scanToggle; window.scanEdit = scanEdit;
@@ -2591,6 +2653,7 @@
         scanUsedAi = true; scanRawText = '';
         scanItems = aiToItems(ai);
         scanState = scanItems.length ? 'done' : 'no-match';
+        saveScanDraft(); renderHome();
         renderScan();
         return;
       }
@@ -2638,6 +2701,7 @@
       scanRawText = texts.join('\n');
       scanItems = found;
       scanState = scanItems.length ? 'done' : 'no-match';
+      saveScanDraft(); renderHome();
     } catch(e){
       console.error(e);
       ocrWorker = null;
@@ -2664,6 +2728,7 @@
     scanBusy = true;
     try {
       var ids = await persistPrescription({ doctorName:'', source:'scanned', items:items });
+      clearScanDraft(); scanState = 'idle'; scanItems = []; scanImageUrl = null; scanRawText = '';
       renderMedList(); renderRxList(); renderHome();
       openMergeCheck(ids);
     } catch(e){ dbFail(e); }
@@ -2746,12 +2811,12 @@
     } else if (scanState === 'ocr-failed'){
       el.innerHTML = preview +
         '<div class="callout risk"><span>⚠️</span><span>'+s.ocrFailed+'</span></div>' +
-        '<button class="btn primary" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
+        '<button class="btn primary" type="button" onclick="startScan(true)">'+s.retakeBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+X().manual.addInstead+'</button>';
     } else if (scanState === 'no-match'){
       el.innerHTML = preview +
         '<div class="callout warn"><span>🔍</span><span>'+s.noMatch+'</span></div>' + rawBlock +
-        '<button class="btn primary" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
+        '<button class="btn primary" type="button" onclick="startScan(true)">'+s.retakeBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+X().manual.addInstead+'</button>';
     } else if (scanState === 'done'){
       var rows = scanItems.map(function(it, i){
@@ -2778,7 +2843,7 @@
         '<button class="btn outline sm" type="button" onclick="speakScan()" style="margin-top:8px">🔊 '+sx.readAloud+'</button></div>' + rows + rawBlock +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+sx.addMissing+'</button>' +
-        '<button class="btn ghost" type="button" onclick="startScan()">'+s.retakeBtn+'</button>' +
+        '<button class="btn ghost" type="button" onclick="startScan(true)">'+s.retakeBtn+'</button>' +
         '<p class="muted" style="text-align:center">'+(scanUsedAi ? sx.disclaimerAi : s.disclaimer)+'</p>';
     }
   }
@@ -2791,6 +2856,15 @@
     document.getElementById('h_scheduleTitle').innerHTML = t.scheduleTitle;
     document.getElementById('h_listenLabel').textContent = t.listenLabel;
     document.getElementById('h_askBtn').innerHTML = '🎙&nbsp; ' + X().ask.btn;
+    var draftEl = document.getElementById('h_scanDraft');
+    if (draftEl){
+      var hasDraft = (scanState === 'done' && scanItems.length) || scanState === 'analyzing', sxd = X().scanX;
+      draftEl.hidden = !hasDraft;
+      if (hasDraft) draftEl.innerHTML = '<div class="callout warn"><span>📝</span><div style="flex:1"><strong>' +
+        (scanState === 'analyzing' ? sxd.draftReading : sxd.draftTitle.replace('{n}', scanItems.length)) + '</strong>' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><button class="btn primary sm" type="button" onclick="startScan()">' + sxd.draftContinue + '</button>' +
+        '<button class="btn outline sm" type="button" onclick="discardScanDraft()">' + sxd.draftDiscard + '</button></div></div></div>';
+    }
     document.getElementById('h_scanBtn').innerHTML = t.scanBtn;
     document.getElementById('h_safetyTitle').textContent = t.safetyTitle;
     document.getElementById('testAlarmBtn').textContent = LANG === 'en' ? '🔔 Test a reminder alarm now' : '🔔 अभी अलार्म टेस्ट करें';
@@ -2947,7 +3021,10 @@
   }
   window.go = go;
 
-  document.getElementById('backBtn').addEventListener('click', function(){ go(this.dataset.target || 'home'); });
+  document.getElementById('backBtn').addEventListener('click', function(){
+    if (currentScreen === 'scan' && scanState === 'done') toast(X().scanX.draftKept);
+    go(this.dataset.target || 'home');
+  });
   document.querySelectorAll('#tabbar button').forEach(function(b){
     b.addEventListener('click', function(){ go(b.dataset.tab); });
   });
@@ -3280,6 +3357,9 @@
         warn:'That is more than most adults usually take in a day (up to {max} mg).',
         gap:'Some doses are less than {h} hours apart.',
         ask:'Please check with your doctor or pharmacist before continuing.',
+        big1:'A single dose of about {per} mg is unusually large.', big:'About {total} mg a day is unusually large.', many:'More than 6 doses a day is unusual.', tabs:'More than 4 tablets in one dose is unusual.',
+        noLimit:'PharmaSaathi has no dose limit on file for this medicine, so it can only flag unusually large amounts.',
+        noUnit:'Add the strength with its unit (for example 500 mg) so I can check the daily amount.',
         label:{ risk:'daily dose too high', warn:'check daily dose' } },
       ask:{ btn:'Ask PharmaSaathi', title:'What do you need?', prompt:'What do you need?', mic:'Tap and speak', listening:'Listening… tap when you are done', processing:'Processing…',
         typePh:'Or type here…', send:'Send',
@@ -3302,6 +3382,8 @@
         nameLabel:'Medicine name', readAs:'Read as:',
         bCatalog:'✓ In safety database', bFuzzy:'≈ Looks like {name} — check', bDict:'Name recognised — not safety-checked',
         bForm:'Please check this name', bWeak:'Not in my medicine list — check the spelling',
+        draftTitle:'You have an unsaved prescription scan ({n} medicines)', draftReading:'Your prescription is still being read…', draftContinue:'Continue', draftDiscard:'Discard',
+        draftConfirm:'Discard this scan?', draftKept:'Your scan is kept as a draft — you can continue it from Home.',
         take:'Take', doseLabel:'Strength (e.g. 500 mg)', readAloud:'Read these aloud',
         consentTitle:'Read handwriting with AI?',
         consentBody:'Handwriting is very hard to read on a phone alone. With your OK, this photo is sent securely to an AI service (Anthropic or Google) that reads it, and is not stored by PharmaSaathi. Please do not photograph anything except the prescription. You can always check and correct the result before anything is saved.',
@@ -3406,6 +3488,9 @@
         warn:'यह ज़्यादातर वयस्कों की रोज़ की सामान्य मात्रा (अधिकतम {max} mg) से अधिक है।',
         gap:'कुछ खुराकों के बीच {h} घंटे से कम का अंतर है।',
         ask:'आगे लेने से पहले कृपया अपने डॉक्टर या फार्मासिस्ट से पूछें।',
+        big1:'एक बार में लगभग {per} mg की खुराक असामान्य रूप से बड़ी है।', big:'रोज़ लगभग {total} mg असामान्य रूप से अधिक है।', many:'दिन में 6 से ज़्यादा खुराकें असामान्य हैं।', tabs:'एक बार में 4 से ज़्यादा गोलियाँ असामान्य हैं।',
+        noLimit:'इस दवा की खुराक-सीमा PharmaSaathi में दर्ज नहीं है, इसलिए यह केवल असामान्य रूप से बड़ी मात्रा ही पकड़ सकता है।',
+        noUnit:'मात्रा इकाई के साथ लिखें (जैसे 500 mg) ताकि मैं रोज़ की मात्रा जाँच सकूँ।',
         label:{ risk:'रोज़ की मात्रा बहुत अधिक', warn:'रोज़ की मात्रा जाँचें' } },
       ask:{ btn:'PharmaSaathi से पूछें', title:'आपको क्या चाहिए?', prompt:'आपको क्या चाहिए?', mic:'दबाएँ और बोलें', listening:'सुन रहा हूँ… बोल चुकें तो दबाएँ', processing:'प्रोसेस हो रहा है…',
         typePh:'या यहाँ लिखें…', send:'भेजें',
@@ -3428,6 +3513,8 @@
         nameLabel:'दवा का नाम', readAs:'ऐसा पढ़ा:',
         bCatalog:'✓ सुरक्षा डेटाबेस में', bFuzzy:'≈ {name} जैसा लगता है — जाँचें', bDict:'नाम पहचाना — सुरक्षा जाँच नहीं हुई',
         bForm:'कृपया यह नाम जाँचें', bWeak:'मेरी दवा-सूची में नहीं — वर्तनी जाँचें',
+        draftTitle:'आपका एक प्रिस्क्रिप्शन स्कैन सहेजा नहीं गया है ({n} दवाइयाँ)', draftReading:'आपका प्रिस्क्रिप्शन अभी पढ़ा जा रहा है…', draftContinue:'जारी रखें', draftDiscard:'हटाएँ',
+        draftConfirm:'यह स्कैन हटाएँ?', draftKept:'आपका स्कैन ड्राफ़्ट के रूप में रखा है — होम से जारी रख सकते हैं।',
         take:'खुराक:', doseLabel:'मात्रा (जैसे 500 mg)', readAloud:'ये नाम सुनें',
         consentTitle:'हाथ की लिखावट AI से पढ़वाएँ?',
         consentBody:'केवल फ़ोन से हस्तलिखित पर्चा पढ़ना बहुत कठिन है। आपकी अनुमति से यह फ़ोटो सुरक्षित रूप से एक AI सेवा (Anthropic या Google) को भेजी जाती है जो इसे पढ़ती है; PharmaSaathi इसे सहेजता नहीं है। कृपया प्रिस्क्रिप्शन के अलावा कुछ और फ़ोटो में न रखें। कुछ भी सहेजने से पहले आप नतीजा जाँचकर सुधार सकते हैं।',
@@ -3743,7 +3830,7 @@
   var manualForm = null, manualBusy = false;
   var MANUAL_DEFAULTS = { 1:['08:00'], 2:['08:00','20:00'], 3:['08:00','14:00','20:00'], 4:['08:00','13:00','18:00','22:00'] };
   function openAddMed(){
-    manualForm = { name:'', dose:'', doctor:'', n:1, times:MANUAL_DEFAULTS[1].slice() };
+    if (!manualForm) manualForm = { name:'', dose:'', doctor:'', n:1, times:MANUAL_DEFAULTS[1].slice() };
     renderAddMed(); go('add-med');
   }
   function manualSet(k, v){ manualForm[k] = v; if (k === 'name' || k === 'dose') updateManualPreview(); }
@@ -3774,10 +3861,14 @@
   function updateManualPreview(){
     var box = document.getElementById('mf_preview');
     if (!box || !manualForm) return;
-    var hit = clean(manualForm.name) ? matchMedicinesFromText(clean(manualForm.name))[0] : null;
-    var al = hit ? evalDose(hit.med.id, manualForm.dose, manualForm.times, hit.med.en.name) : null;
-    if (al) al.name = hit.med[LANG].name.split(' ')[0];
-    box.innerHTML = al ? doseAlertHtml(al) : '';
+    var name = clean(manualForm.name);
+    if (!name){ box.innerHTML = ''; return; }
+    var hit = matchMedicinesFromText(name)[0];
+    var al = evalDose(hit ? hit.med.id : limitKeyFor(name), manualForm.dose, manualForm.times, hit ? hit.med.en.name : '');
+    if (al) al.name = hit ? hit.med[LANG].name.split(' ')[0] : name.split(' ')[0];
+    var html = al ? doseAlertHtml(al) : '';
+    if (manualForm.dose && !doseToMg(manualForm.dose)) html += '<p class="muted" style="font-size:.78rem">' + T2[LANG].dose.noUnit + '</p>';
+    box.innerHTML = html;
   }
   async function submitManual(){
     if (manualBusy) return;
@@ -3792,6 +3883,7 @@
       var ids = await persistPrescription({ doctorName:clean(manualForm.doctor), source:'manual',
         items:[{ medId:medId, customName:name, customDose:clean(manualForm.dose), times:manualForm.times.slice() }] });
       renderMedList(); renderRxList(); renderHome();
+      manualForm = null;
       toast(m.added);
       openMergeCheck(ids);
     } catch(e){ dbFail(e); }
@@ -3964,15 +4056,16 @@
       }
       var rw = await SB.from('rewards').upsert({ patient_id:USER.id, coins:0, streak:0, last_full_day:null });
       if (rw.error) throw rw.error;
-      toast(X().acct.deleted);
+      clearScanDraft(); toast(X().acct.deleted);
       setTimeout(function(){ location.reload(); }, 900);
     } catch(e){ dbFail(e); }
   }
   function signOut(){
+    clearScanDraft();
     var done = function(){ clearLocalAppData(); location.reload(); };
     if (SB) SB.auth.signOut().then(done, done); else done();
   }
-  function leaveDemo(){ try { localStorage.removeItem('ps_demo'); } catch(e){} location.reload(); }
+  function leaveDemo(){ clearScanDraft(); try { localStorage.removeItem('ps_demo'); } catch(e){} location.reload(); }
   window.deleteMyData = deleteMyData; window.signOut = signOut; window.leaveDemo = leaveDemo;
 
   /* ---------- sign-in / sign-up screen ---------- */
@@ -4221,8 +4314,12 @@
     cetirizine:['सेटिरिज़िन','सेटिरिजिन','सिटिरिजिन','सेट्रिजिन','सेटीरिजिन','सिट्रिजिन']
   };
   Object.keys(DEV_ALIASES).forEach(function(k){ DEV_ALIASES[k] = DEV_ALIASES[k].map(askNorm); });
-  var BRAND_GENERIC = { dolo:'paracetamol', crocin:'paracetamol', calpol:'paracetamol', pcm:'paracetamol', acetaminophen:'paracetamol', brufen:'ibuprofen', combiflam:'ibuprofen',
-    glycomet:'metformin', glucophage:'metformin', augmentin:'amoxicillin', mox:'amoxicillin', omez:'omeprazole', thyronorm:'levothyroxine', eltroxin:'levothyroxine', cetzine:'cetirizine', azithral:'azithromycin' };
+  var BRAND_GENERIC = { dolo:'paracetamol', crocin:'paracetamol', calpol:'paracetamol', pcm:'paracetamol', acetaminophen:'paracetamol', brufen:'ibuprofen', ibugesic:'ibuprofen', combiflam:'ibuprofen',
+    glycomet:'metformin', glucophage:'metformin', augmentin:'amoxicillin', mox:'amoxicillin', omez:'omeprazole', thyronorm:'levothyroxine', eltroxin:'levothyroxine', cetzine:'cetirizine', azithral:'azithromycin',
+    voveran:'diclofenac', pantop:'pantoprazole', pantocid:'pantoprazole', pan:'pantoprazole', nexpro:'esomeprazole', ecosprin:'aspirin', disprin:'aspirin', atorva:'atorvastatin', atorlip:'atorvastatin',
+    rosuvas:'rosuvastatin', telma:'telmisartan', amlong:'amlodipine', stamlo:'amlodipine', amlodac:'amlodipine', glimestar:'glimepiride', amaryl:'glimepiride', betaloc:'metoprolol', metolar:'metoprolol',
+    tenormin:'atenolol', losar:'losartan', cipro:'ciprofloxacin', ciplox:'ciprofloxacin', gabapin:'gabapentin', lyrica:'pregabalin', domstal:'domperidone', ondem:'ondansetron', xyzal:'levocetirizine',
+    montair:'montelukast', wysolone:'prednisolone', alprax:'alprazolam', zapiz:'clonazepam', rivotril:'clonazepam' };
   var DEV_MAP = { 'क':'k','ख':'k','ग':'g','घ':'g','ङ':'n','च':'k','छ':'k','ज':'j','झ':'j','ञ':'n','ट':'t','ठ':'t','ड':'d','ढ':'d','ण':'n','त':'t','थ':'t','द':'d','ध':'d','न':'n',
     'प':'p','फ':'f','ब':'b','भ':'b','म':'m','र':'r','ल':'l','व':'v','श':'s','ष':'s','स':'s','ं':'n' };
   function collapse(s){ return s.replace(/(.)\1+/g, '$1'); }
@@ -4700,6 +4797,7 @@
   /* ---------- local storage hygiene ---------- */
   var STORAGE_VERSION = '4';
   function clearLocalAppData(){
+    clearScanDraft();
     try {
       Object.keys(localStorage).forEach(function(k){ if (k.indexOf('ps_') === 0 && k !== 'ps_lang') localStorage.removeItem(k); });
     } catch(e){}
@@ -4750,6 +4848,7 @@
     } catch(e){ SB = null; }
   }
   function boot(){
+    loadScanDraft();
     migrateStorage();
     initSupabase();
     checkBackendSetup();
