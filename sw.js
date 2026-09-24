@@ -2,7 +2,7 @@
 // and the last-seen copy of the app shell when offline.
 // It only ever touches same-origin requests, so API calls (Supabase) and CDN scripts
 // are never cached — nothing personal or health-related is stored by this worker.
-const CACHE = 'pharmasaathi-v30';
+const CACHE = 'pharmasaathi-v31';
 
 self.addEventListener('install', function(){ self.skipWaiting(); });
 
@@ -36,5 +36,18 @@ self.addEventListener('notificationclick', function(e){
   e.waitUntil(self.clients.matchAll({ type:'window', includeUncontrolled:true }).then(function(list){
     for (var i = 0; i < list.length; i++){ if ('focus' in list[i]) return list[i].focus(); }
     if (self.clients.openWindow) return self.clients.openWindow('./');
+  }));
+});
+
+// a reminder sent by the server (works even when the app is closed). If the app is open and in front it rings by itself.
+self.addEventListener('push', function(e){
+  var d = {};
+  try { d = e.data ? e.data.json() : {}; } catch(x){ d = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.clients.matchAll({ type:'window', includeUncontrolled:true }).then(function(list){
+    for (var i = 0; i < list.length; i++){ if (list[i].visibilityState === 'visible' && list[i].focused) return; }
+    return self.registration.showNotification(d.title || 'PharmaSaathi', {
+      body: d.body || '', tag: d.tag || 'ps-dose', renotify: true, requireInteraction: true,
+      vibrate: [300, 150, 300, 150, 300, 150, 300], icon: 'icon.svg', data: { url: d.url || './' }
+    });
   }));
 });

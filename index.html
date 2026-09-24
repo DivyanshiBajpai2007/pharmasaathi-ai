@@ -1904,6 +1904,7 @@
     el.innerHTML = html;
     lastStageSig = stageSig();
     setTimeout(fillUnknownPurposes, 600);
+    setTimeout(syncPush, 900);
     var takenCount = counted.filter(function(d){ return doseState(d) === 'taken'; }).length;
     badgeEl.textContent = LANG === 'en'
       ? takenCount+' of '+counted.length+' taken'
@@ -2213,6 +2214,7 @@
       '<label style="display:flex;gap:8px;align-items:center;font-size:.84rem"><input type="checkbox" id="apVib"' + (ALP.vib ? ' checked' : '') + ' style="accent-color:var(--accent);width:18px;height:18px"> ' + t.vib + '</label>' +
       '<button class="btn outline sm" type="button" id="apPlay">' + t.play + '</button>' +
       (SCHEDULE.length ? '<button class="btn outline sm" type="button" id="apTest">' + t.test + '</button>' : '') +
+      '<div style="border-top:1px solid var(--border);padding-top:10px;display:flex;flex-direction:column;gap:8px">' + pushStatusHtml() + '</div>' +
       '<p class="muted" style="margin:0;font-size:.72rem">' + t.note + '</p></div>';
   }
   var apOpen = false;
@@ -2230,9 +2232,62 @@
       var c = e.target.closest('[data-tone]');
       if (c){ ALP.tone = c.getAttribute('data-tone'); saveAlp(); renderAlarmPrefs(); playTone(ALP.tone, ALP.vol); return; }
       if (e.target.closest('#apPlay')) playTone(ALP.tone, ALP.vol);
+      if (e.target.closest('#apPushOn') && pushSupported()){ Notification.requestPermission().then(function(){ updateReminderPermCard(); return syncPush(true); }).then(function(){ renderAlarmPrefs(); }); }
       if (e.target.closest('#apTest')){ var up = SCHEDULE.filter(function(d){ return doseState(d) !== 'taken'; })[0] || SCHEDULE[0]; if (up) triggerAlarm(up); }
     });
   })();
+
+  /* =====================================================================
+     REMINDERS WHEN THE APP IS CLOSED
+     A web page cannot run once it is closed, so the reminder comes from the server: every minute a small function
+     looks for doses that are due and sends a push notification to the phone (backend/functions/send-reminders).
+     Here the phone only signs up for it. The person must be signed in and must allow notifications.
+     VAPID_PUBLIC_KEY is the PUBLIC half of the key pair made by tools/make_vapid_keys.mjs (safe to keep in the app).
+     ===================================================================== */
+  var VAPID_PUBLIC_KEY = '';
+  var pushSyncedAt = 0, pushOn = false;
+  function b64uToBytes(str){
+    var pad = '='.repeat((4 - str.length % 4) % 4), b = (str + pad).replace(/-/g, '+').replace(/_/g, '/'), raw = atob(b), out = new Uint8Array(raw.length);
+    for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+  function pushSupported(){ return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+  async function syncPush(force){
+    if (!isAccount() || !VAPID_PUBLIC_KEY || !pushSupported() || Notification.permission !== 'granted') return;
+    if (!force && Date.now() - pushSyncedAt < 6 * 3600 * 1000) return;
+    pushSyncedAt = Date.now();
+    try {
+      var reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+      if (!sub){
+        try { sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64uToBytes(VAPID_PUBLIC_KEY) }); }
+        catch(e){ var old = await reg.pushManager.getSubscription(); if (old) await old.unsubscribe(); sub = await reg.pushManager.subscribe({ userVisibleOnly:true, applicationServerKey:b64uToBytes(VAPID_PUBLIC_KEY) }); }
+      }
+      var j = sub.toJSON(), tz = 'Asia/Kolkata';
+      try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch(e){}
+      var r = await SB.from('push_subscriptions').upsert({ patient_id:USER.id, endpoint:sub.endpoint, p256dh:j.keys.p256dh, auth:j.keys.auth, tz:tz, lang:LANG, last_seen:new Date().toISOString() }, { onConflict:'endpoint' });
+      pushOn = !r.error;
+      if (r.error) console.warn('push signup not saved', r.error.message);
+    } catch(e){ pushOn = false; console.warn('push signup failed', e && e.message); }
+  }
+  /* signing out (or switching person) must stop reminders for this phone */
+  function pushForget(){
+    var work = (async function(){
+      if (!pushSupported()) return;
+      var reg = await navigator.serviceWorker.getRegistration(), sub = reg && await reg.pushManager.getSubscription();
+      if (sub){ if (isAccount() && SB) await SB.from('push_subscriptions').delete().eq('endpoint', sub.endpoint); await sub.unsubscribe(); }
+    })();
+    return Promise.race([work.catch(function(){}), new Promise(function(res){ setTimeout(res, 3000); })]);
+  }
+  function pushStatusHtml(){
+    var en = LANG === 'en', line, btn = '';
+    if (!isAccount()) line = en ? 'Sign in to get reminders even when the app is closed.' : 'ऐप बंद होने पर भी रिमाइंडर पाने के लिए साइन इन करें।';
+    else if (!pushSupported()) line = en ? 'This phone or browser cannot receive reminders while the app is closed. (On iPhone, first use Share → Add to Home Screen.)' : 'यह फ़ोन या ब्राउज़र ऐप बंद होने पर रिमाइंडर नहीं ले सकता। (iPhone पर पहले Share → Add to Home Screen करें।)';
+    else if (!VAPID_PUBLIC_KEY) line = en ? 'Reminders while the app is closed are not switched on for this app yet.' : 'ऐप बंद होने पर रिमाइंडर इस ऐप में अभी चालू नहीं हैं।';
+    else if (Notification.permission === 'denied') line = en ? '🚫 Notifications are blocked for this app. Allow them in your phone’s site settings to get reminders when the app is closed.' : '🚫 इस ऐप के लिए सूचनाएँ बंद हैं। ऐप बंद होने पर रिमाइंडर के लिए फ़ोन की साइट सेटिंग्स में उन्हें अनुमति दें।';
+    else if (Notification.permission !== 'granted'){ line = en ? 'Allow notifications to get reminders even when the app is closed.' : 'ऐप बंद होने पर भी रिमाइंडर पाने के लिए सूचनाओं की अनुमति दें।'; btn = '<button class="btn primary sm" type="button" id="apPushOn">' + (en ? 'Allow notifications' : 'सूचनाओं की अनुमति दें') + '</button>'; }
+    else line = pushOn ? (en ? '✅ Reminders will arrive on this phone even when the app is closed.' : '✅ ऐप बंद होने पर भी इस फ़ोन पर रिमाइंडर आएँगे।') : (en ? '⏳ Setting up reminders for when the app is closed…' : '⏳ ऐप बंद होने पर रिमाइंडर की तैयारी हो रही है…');
+    return '<p style="margin:0;font-size:.8rem;font-weight:600">' + line + '</p>' + btn;
+  }
 
   /* =====================================================================
      SOS — one tap to the dialer. The app never dials or sends anything by itself:
@@ -3900,8 +3955,8 @@
     document.getElementById('h_safetyTitle').textContent = t.safetyTitle;
     document.getElementById('rp_title').textContent = LANG === 'en' ? '🔔 Turn on dose reminders' : '🔔 खुराक रिमाइंडर चालू करें';
     document.getElementById('rp_desc').textContent = LANG === 'en'
-      ? 'Get an alarm and notification when it\'s time for a dose, even while using other apps.'
-      : 'खुराक का समय होने पर अलार्म और सूचना पाएँ, भले ही आप कोई और ऐप इस्तेमाल कर रहे हों।';
+      ? 'Get a notification when it\'s time for a dose — even when the app is closed (when signed in).'
+      : 'खुराक का समय होने पर सूचना पाएँ — ऐप बंद होने पर भी (साइन-इन होने पर)।';
     document.getElementById('rp_enableBtn').textContent = LANG === 'en' ? 'Enable reminders' : 'रिमाइंडर चालू करें';
     var activeMeds = MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; });
     var pairs = attentionPairs();
@@ -4008,7 +4063,7 @@
   function setLang(l){
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     stopSpeakAnim();
-    LANG = l;
+    LANG = l; pushSyncedAt = 0;
     try { localStorage.setItem('ps_lang', l); } catch(e){}
     if (isAccount() && PROFILE){
       PROFILE.lang = l;
@@ -4112,7 +4167,7 @@
   if (rpBtn){
     rpBtn.addEventListener('click', function(){
       if ('Notification' in window){
-        Notification.requestPermission().then(function(){ updateReminderPermCard(); });
+        Notification.requestPermission().then(function(){ updateReminderPermCard(); syncPush(true); });
       }
     });
   }
@@ -5310,7 +5365,8 @@
   function signOut(){
     clearScanDraft();
     var done = function(){ clearLocalAppData(); location.reload(); };
-    if (SB) SB.auth.signOut().then(done, done); else done();
+    var out = function(){ if (SB) SB.auth.signOut().then(done, done); else done(); };
+    pushForget().then(out, out);
   }
   function leaveDemo(){ clearScanDraft(); try { localStorage.removeItem('ps_demo'); } catch(e){} location.reload(); }
   window.deleteMyData = deleteMyData; window.signOut = signOut; window.leaveDemo = leaveDemo;
