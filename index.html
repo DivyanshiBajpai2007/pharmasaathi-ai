@@ -456,8 +456,6 @@
             <span class="badge good" id="h_scheduleBadge">4 of 6 taken</span>
           </div>
           <div id="scheduleList"></div>
-          <button class="btn outline sm" type="button" id="testAlarmBtn" style="margin-top:10px;width:100%"></button>
-          <button class="btn ghost sm" type="button" id="alarmPrefLink" style="margin-top:6px;width:100%"></button>
         </div>
 
         <div class="listenbtn">
@@ -2135,8 +2133,8 @@
 
   /* ---------- Profile: alarm sound settings ---------- */
   var AP_T = {
-    en:{ title:'🔔 Alarm sound', vol:'Volume', tone:'Ringtone', vib:'Vibrate when the alarm rings', play:'▶ Play sample', note:'Your phone’s own volume also matters — turn it up so you can hear the alarm. Settings are kept on this phone.' },
-    hi:{ title:'🔔 अलार्म की आवाज़', vol:'वॉल्यूम', tone:'रिंगटोन', vib:'अलार्म बजने पर कंपन करें', play:'▶ नमूना सुनें', note:'आपके फ़ोन का अपना वॉल्यूम भी मायने रखता है — अलार्म सुनने के लिए उसे बढ़ाएँ। ये सेटिंग्स इसी फ़ोन में रहती हैं।' }
+    en:{ title:'🔔 Alarm sound', vol:'Volume', tone:'Ringtone', vib:'Vibrate when the alarm rings', play:'▶ Play sample', test:'🔔 Test a reminder alarm now', note:'Your phone’s own volume also matters — turn it up so you can hear the alarm. Settings are kept on this phone.' },
+    hi:{ title:'🔔 अलार्म की आवाज़', vol:'वॉल्यूम', tone:'रिंगटोन', vib:'अलार्म बजने पर कंपन करें', play:'▶ नमूना सुनें', test:'🔔 अभी अलार्म टेस्ट करें', note:'आपके फ़ोन का अपना वॉल्यूम भी मायने रखता है — अलार्म सुनने के लिए उसे बढ़ाएँ। ये सेटिंग्स इसी फ़ोन में रहती हैं।' }
   };
   function renderAlarmPrefs(){
     var el = document.getElementById('alarmPrefCard'); if (!el) return;
@@ -2148,6 +2146,7 @@
       '<div class="rx-chips">' + Object.keys(TONES).map(function(k){ return '<button type="button" class="chip' + (ALP.tone === k ? ' on' : '') + '" data-tone="' + k + '">' + TONES[k][LANG] + '</button>'; }).join('') + '</div>' +
       '<label style="display:flex;gap:8px;align-items:center;font-size:.84rem"><input type="checkbox" id="apVib"' + (ALP.vib ? ' checked' : '') + ' style="accent-color:var(--accent);width:18px;height:18px"> ' + t.vib + '</label>' +
       '<button class="btn outline sm" type="button" id="apPlay">' + t.play + '</button>' +
+      (SCHEDULE.length ? '<button class="btn outline sm" type="button" id="apTest">' + t.test + '</button>' : '') +
       '<p class="muted" style="margin:0;font-size:.72rem">' + t.note + '</p>';
   }
   (function(){
@@ -2163,12 +2162,9 @@
       var c = e.target.closest('[data-tone]');
       if (c){ ALP.tone = c.getAttribute('data-tone'); saveAlp(); renderAlarmPrefs(); playTone(ALP.tone, ALP.vol); return; }
       if (e.target.closest('#apPlay')) playTone(ALP.tone, ALP.vol);
+      if (e.target.closest('#apTest')){ var up = SCHEDULE.filter(function(d){ return doseState(d) !== 'taken'; })[0] || SCHEDULE[0]; if (up) triggerAlarm(up); }
     });
   })();
-  document.getElementById('alarmPrefLink').addEventListener('click', function(){
-    go('future');
-    setTimeout(function(){ var c = document.getElementById('alarmPrefCard'); if (c && c.scrollIntoView) c.scrollIntoView({ block:'center' }); }, 60);
-  });
 
   /* =====================================================================
      SOS — one tap to the dialer. The app never dials or sends anything by itself:
@@ -3765,8 +3761,6 @@
     }
     document.getElementById('h_scanBtn').innerHTML = t.scanBtn;
     document.getElementById('h_safetyTitle').textContent = t.safetyTitle;
-    document.getElementById('testAlarmBtn').textContent = LANG === 'en' ? '🔔 Test a reminder alarm now' : '🔔 अभी अलार्म टेस्ट करें';
-    document.getElementById('alarmPrefLink').textContent = LANG === 'en' ? '🔊 Alarm sound & volume' : '🔊 अलार्म की आवाज़ और वॉल्यूम';
     document.getElementById('rp_title').textContent = LANG === 'en' ? '🔔 Turn on dose reminders' : '🔔 खुराक रिमाइंडर चालू करें';
     document.getElementById('rp_desc').textContent = LANG === 'en'
       ? 'Get an alarm and notification when it\'s time for a dose, even while using other apps.'
@@ -3797,8 +3791,6 @@
     }
     renderSchedule();
     updateReminderPermCard();
-    document.getElementById('testAlarmBtn').hidden = !SCHEDULE.length;
-    document.getElementById('alarmPrefLink').hidden = !SCHEDULE.length;
     var detailBtn = document.getElementById('h_safetyDetailBtn');
     detailBtn.hidden = !activeMeds.length;
     detailBtn.textContent = LANG === 'en' ? '🛡️ See full safety check' : '🛡️ पूरी सुरक्षा जाँच देखें';
@@ -3983,14 +3975,6 @@
       if ('Notification' in window){
         Notification.requestPermission().then(function(){ updateReminderPermCard(); });
       }
-    });
-  }
-
-  var testAlarmBtn = document.getElementById('testAlarmBtn');
-  if (testAlarmBtn){
-    testAlarmBtn.addEventListener('click', function(){
-      var upcoming = SCHEDULE.filter(function(d){ return doseState(d) !== 'taken'; })[0] || SCHEDULE[0];
-      triggerAlarm(upcoming);
     });
   }
 
