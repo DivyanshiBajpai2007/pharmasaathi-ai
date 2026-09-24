@@ -3352,10 +3352,10 @@
   /* downscale to keep the upload small (about 300-700 KB) but readable */
   async function imageToBase64(file){
     var im = await loadImageFile(file);
-    var w = im.naturalWidth, h = im.naturalHeight, k = Math.min(1, 1800 / Math.max(w, h));
+    var w = im.naturalWidth, h = im.naturalHeight, k = Math.min(1, 1600 / Math.max(w, h));
     var c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
     var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
-    return c.toDataURL('image/jpeg', 0.85).split(',')[1];
+    return c.toDataURL('image/jpeg', 0.8).split(',')[1];
   }
   var WHEN_TIMES = { morning:'08:00', afternoon:'14:00', evening:'18:00', night:'21:00', bedtime:'22:00' };
   var PER_DAY_TIMES = { 1:['08:00'], 2:['08:00','20:00'], 3:['08:00','14:00','21:00'], 4:['08:00','13:00','18:00','22:00'], 5:['06:00','10:00','14:00','18:00','22:00'], 6:['06:00','10:00','14:00','18:00','21:00','23:00'] };
@@ -3379,7 +3379,7 @@
     });
   }
   /* name of the Supabase function that reads prescription photos (this project deployed it as "photokey") */
-  var PRESCRIPTION_FN = 'photokey';
+  var PRESCRIPTION_FN = 'photokey', scanAiT0 = 0;
   /* A temporary failure on Google's side (503/500, timeouts) is retried once. Only a real refusal or a
      second failure pauses AI reading, and only for two minutes — not for the rest of the session. */
   /* the function's own JSON error ({ error, code, upstream }) — never contains secrets */
@@ -3407,7 +3407,7 @@
       var b64 = await imageToBase64(file), hash = null;
       try { hash = await sha256(b64); var hit = rxCacheGet(hash); if (hit){ scanFromCache = true; return hit; } } catch(e){}
       for (var attempt = 0; attempt < 2; attempt++){
-        var r = await SB.functions.invoke(PRESCRIPTION_FN, { body:{ image:b64, mediaType:'image/jpeg' } });
+        var r = await withTimeout(SB.functions.invoke(PRESCRIPTION_FN, { body:{ image:b64, mediaType:'image/jpeg' } }), 60000);
         if (!r.error && r.data && Array.isArray(r.data.medicines)){ if (hash && r.data.medicines.length) rxCachePut(hash, r.data); return r.data; }
         lastErr = r.error || new Error('no data');
         var st = lastErr.context && lastErr.context.status;
@@ -3524,8 +3524,10 @@
     scanUsedAi = false; scanFromCache = false;
     scanAiNote = !isAccount() ? 'signin' : (aiDown ? 'declined' : (Date.now() <= aiDownUntil ? 'paused' : (aiConsent() === 'yes' ? '' : 'noconsent')));
     if (aiAvailable() && aiConsent() === 'yes'){
-      scanStep = 1; scanStepTotal = 0; scanProgressPct = 0; renderScan();
-      var ai = await runAiRead(file);
+      scanStep = 1; scanStepTotal = 0; scanProgressPct = 0; scanAiT0 = Date.now(); renderScan();
+      var tick = setInterval(function(){ if (scanState === 'analyzing') renderScan(); }, 1000);
+      var ai;
+      try { ai = await runAiRead(file); } finally { clearInterval(tick); scanAiT0 = 0; }
       if (ai){
         scanUsedAi = true; scanRawText = '';
         scanRxMeta = { doctor:clean([ai.doctor_name, ai.clinic].filter(Boolean).join(' · ')).slice(0, 80), diagnosis:clean(ai.diagnosis).slice(0, 80) };
@@ -3567,7 +3569,7 @@
         found = mergeCandidates(texts.map(extractCandidates));
         await worker.setParameters({ tessedit_pageseg_mode:'6', preserve_interword_spaces:'1' });
       }
-      var degrees = [-15, 15, 90, 270, 180, -30, 30];
+      var degrees = [-15, 15, 90];
       for (var d = 0; d < degrees.length && strongCount(found) < 2; d++){
         scanStep = variants.length + 1 + d; scanStepTotal = variants.length + 1 + degrees.length; scanProgressPct = 0; renderScan();
         var rr = await worker.recognize(rotateCanvas(variants[0].canvas, degrees[d]));
@@ -3696,7 +3698,8 @@
     } else if (scanState === 'analyzing'){
       el.innerHTML = preview +
         '<div class="scan-preview"><div class="spinner"></div>' +
-        '<span class="muted">'+(scanStepTotal ? sx.pass.replace('{i}', scanStep).replace('{n}', scanStepTotal) : (aiAvailable() && aiConsent() === 'yes' ? sx.aiReading : s.analyzing))+(scanProgressPct ? ' '+scanProgressPct+'%' : '')+'</span></div>';
+        '<span class="muted">'+(scanStepTotal ? sx.pass.replace('{i}', scanStep).replace('{n}', scanStepTotal) : (aiAvailable() && aiConsent() === 'yes' ? sx.aiReading : s.analyzing))+(scanProgressPct ? ' '+scanProgressPct+'%' : '')+
+        (scanAiT0 && !scanStepTotal ? ' ' + Math.round((Date.now() - scanAiT0) / 1000) + ' s' + (Date.now() - scanAiT0 > 20000 ? '<br><span style="font-size:.74rem">' + sx.aiSlow + '</span>' : '') : '') + '</span></div>';
     } else if (scanState === 'ocr-failed'){
       el.innerHTML = preview +
         '<div class="callout risk"><span>⚠️</span><span>'+s.ocrFailed+'</span></div>' +
@@ -4306,7 +4309,7 @@
         diagMissing:'Saved without the illness — run backend/prescriptions_diagnosis.sql in Supabase to keep it.' },
       diag:{ title:'🔧 Check AI connection', intro:'Tests photo reading, dose check and prescription review, and tells you in plain words what is wrong. Uses a few AI requests.', run:'Check now', running:'Checking…',
         fnPhoto:'Reading prescription photos', fnDose:'Dose second opinion', fnReview:'Prescription review',
-        ok:'Working.', s401:'Your sign-in was not accepted. Sign out, sign in again, then check again.',
+        ok:'Working.', slow:'slow: the AI service is taking long to answer', s401:'Your sign-in was not accepted. Sign out, sign in again, then check again.',
         s404:'This function is not deployed in Supabase (or its name is different). Deploy it in Edge Functions.',
         s503:'The function is deployed but has NO API key. Add the key in Edge Functions → Secrets (PhotoKey / dosecheck, or GEMINI_API_KEY).',
         s429:'The AI service limit was reached. Wait and try again.',
@@ -4381,7 +4384,7 @@
         consentTitle:'Read handwriting with AI?',
         consentBody:'Handwriting is very hard to read on a phone alone. With your OK, this photo is sent securely to an AI service (Anthropic or Google) that reads it, and is not stored by PharmaSaathi. Please do not photograph anything except the prescription. You can always check and correct the result before anything is saved.',
         consentYes:'Yes, read it with AI', consentNo:'No, read on this device only',
-        aiReading:'AI is reading your prescription…', aiDown:'AI reading is not available right now — used on-device reading instead.',
+        aiReading:'AI is reading your prescription…', aiSlow:'Taking longer than usual — the free AI service can be busy. Please keep this page open.', aiDown:'AI reading is not available right now — used on-device reading instead.',
         aiOn:'AI handwriting reading is on for your account.', aiNeedsAccount:'Sign in to switch on AI handwriting reading. Without an account, only printed or very neat writing is read.',
         bAi:'🤖 Read by AI — check against the paper', bAiLow:'🤖 AI is unsure — please check this name',
         editHintAi:'The AI read these from your photo. Check each name against the paper, fix anything wrong, and untick anything that is not a medicine.',
@@ -4494,7 +4497,7 @@
         diagMissing:'बीमारी के बिना सहेजा गया — इसे रखने के लिए Supabase में backend/prescriptions_diagnosis.sql चलाएँ।' },
       diag:{ title:'🔧 AI कनेक्शन जाँचें', intro:'फ़ोटो पढ़ना, खुराक जाँच और प्रिस्क्रिप्शन समीक्षा को टेस्ट करता है और सरल शब्दों में बताता है कि क्या गड़बड़ है। कुछ AI अनुरोध लगते हैं।', run:'अभी जाँचें', running:'जाँच हो रही है…',
         fnPhoto:'प्रिस्क्रिप्शन फ़ोटो पढ़ना', fnDose:'खुराक की दूसरी राय', fnReview:'प्रिस्क्रिप्शन समीक्षा',
-        ok:'ठीक चल रहा है।', s401:'आपका साइन-इन स्वीकार नहीं हुआ। साइन आउट करके फिर साइन इन करें, फिर जाँचें।',
+        ok:'ठीक चल रहा है।', slow:'धीमा: AI सेवा को जवाब देने में समय लग रहा है', s401:'आपका साइन-इन स्वीकार नहीं हुआ। साइन आउट करके फिर साइन इन करें, फिर जाँचें।',
         s404:'यह फ़ंक्शन Supabase में डिप्लॉय नहीं है (या नाम अलग है)। Edge Functions में डिप्लॉय करें।',
         s503:'फ़ंक्शन डिप्लॉय है पर उसमें API कुंजी नहीं है। Edge Functions → Secrets में कुंजी जोड़ें।',
         s429:'AI सेवा की सीमा पूरी हो गई। रुककर फिर कोशिश करें।',
@@ -4569,7 +4572,7 @@
         consentTitle:'हाथ की लिखावट AI से पढ़वाएँ?',
         consentBody:'केवल फ़ोन से हस्तलिखित पर्चा पढ़ना बहुत कठिन है। आपकी अनुमति से यह फ़ोटो सुरक्षित रूप से एक AI सेवा (Anthropic या Google) को भेजी जाती है जो इसे पढ़ती है; PharmaSaathi इसे सहेजता नहीं है। कृपया प्रिस्क्रिप्शन के अलावा कुछ और फ़ोटो में न रखें। कुछ भी सहेजने से पहले आप नतीजा जाँचकर सुधार सकते हैं।',
         consentYes:'हाँ, AI से पढ़ें', consentNo:'नहीं, केवल इसी डिवाइस पर पढ़ें',
-        aiReading:'AI आपका प्रिस्क्रिप्शन पढ़ रहा है…', aiDown:'AI से पढ़ना अभी उपलब्ध नहीं है — इसी डिवाइस पर पढ़ा गया।',
+        aiReading:'AI आपका प्रिस्क्रिप्शन पढ़ रहा है…', aiSlow:'सामान्य से ज़्यादा समय लग रहा है — मुफ़्त AI सेवा व्यस्त हो सकती है। कृपया यह पेज खुला रखें।', aiDown:'AI से पढ़ना अभी उपलब्ध नहीं है — इसी डिवाइस पर पढ़ा गया।',
         aiOn:'आपके खाते में AI से हस्तलिखित पढ़ना चालू है।', aiNeedsAccount:'AI से हस्तलिखित पढ़ने के लिए साइन इन करें। खाते के बिना केवल छपा या बहुत साफ़ लिखा हुआ पढ़ा जाता है।',
         bAi:'🤖 AI ने पढ़ा — कागज़ से मिलाएँ', bAiLow:'🤖 AI को पक्का नहीं — कृपया यह नाम जाँचें',
         editHintAi:'AI ने आपकी फ़ोटो से ये पढ़े हैं। हर नाम कागज़ से मिलाएँ, गलत नाम सुधारें, और जो दवा नहीं है उसे अनचेक करें।',
@@ -5118,8 +5121,10 @@
     for (var i = 0; i < tests.length; i++){
       var res;
       try {
-        var r = await withTimeout(SB.functions.invoke(tests[i].name, { body:tests[i].body }), 30000);
-        if (!r.error) res = diagExplain(200, {});
+        var t0 = Date.now();
+        var r = await withTimeout(SB.functions.invoke(tests[i].name, { body:tests[i].body }), 60000);
+        var secs = Math.round((Date.now() - t0) / 100) / 10;
+        if (!r.error){ res = diagExplain(200, {}); res.text += ' (' + secs + ' s' + (secs > 15 ? ' — ' + t.slow : '') + ')'; }
         else res = diagExplain(r.error.context && r.error.context.status, await fnErrorInfo(r.error));
       } catch(e){ res = { ok:false, text:(e && e.code === 'timeout') ? t.timeout : t.net }; }
       rows.push({ label:tests[i].label, name:tests[i].name, ok:res.ok, text:res.text });
