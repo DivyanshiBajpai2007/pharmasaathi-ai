@@ -961,6 +961,7 @@
         ['Voice assistant','Voice is optional. If you are signed in and agree to online voice, your microphone recording is sent securely to a speech-to-text service to turn it into text, and short assistant replies may be sent to a text-to-speech service to be read aloud. PharmaSaathi does not store recordings, and your medical record is never sent with them — only the recording or the short reply text. If you decline, or in sample-data mode, your browser’s own voice tools are used, which may also use an online service. Typing and buttons always work.'],
         ['Third-party services','The app uses Supabase for sign-in and storage, loads fonts from Google Fonts and its text-reading engine from a public CDN, and may use your browser’s built-in voice engine for speech. If you speak a question to the assistant, your browser may send that audio to its own online speech-recognition service to turn it into text. Your data is not sold or used for advertising.'],
         ['Dose second opinion','For a medicine with no dose limit on file, the app may send only a generic medicine name, the amount per dose and doses per day to an AI service to ask whether the daily amount looks high. No name, ID or other medicines are sent. The answer can only add a warning; it never says a dose is safe.'],
+        ['AI prescription review','After a scan, the app can send only the medicine names, strengths, amounts, times per day, durations and the age group you choose to an AI service for a draft review. No name, ID, photo or other personal data is sent. If you tap "Send to a pharmacist", the medicines, age group and findings are saved in your account so a pharmacist can review them. The review is a draft to help a pharmacist — it is not medical advice.'],
         ['Deleting your data','You can delete all your stored data from the Profile tab at any time. "Clear app data on this device" also removes everything saved in this browser.'],
         ['Not medical advice','The safety checks cover only a limited set of medicines and are informational. They do not replace your doctor or pharmacist — always confirm with them before changing any medicine.'],
         ['Contact','Questions about privacy: support@pharmasaathi.example']
@@ -1066,6 +1067,7 @@
         ['आवाज़ सहायक','आवाज़ वैकल्पिक है। यदि आप साइन इन हैं और ऑनलाइन आवाज़ की अनुमति देते हैं, तो आपकी माइक्रोफ़ोन रिकॉर्डिंग टेक्स्ट में बदलने के लिए सुरक्षित रूप से स्पीच-टू-टेक्स्ट सेवा को भेजी जाती है, और सुनाने के लिए सहायक के छोटे जवाब टेक्स्ट-टू-स्पीच सेवा को भेजे जा सकते हैं। PharmaSaathi रिकॉर्डिंग सहेजता नहीं है, और आपका मेडिकल रिकॉर्ड उसके साथ कभी नहीं भेजा जाता — केवल रिकॉर्डिंग या जवाब का छोटा टेक्स्ट। मना करने पर, या नमूना-डेटा मोड में, आपके ब्राउज़र के अपने आवाज़ टूल इस्तेमाल होते हैं, जो ऑनलाइन सेवा भी ले सकते हैं। लिखना और बटन हमेशा काम करते हैं।'],
         ['थर्ड-पार्टी सेवाएँ','ऐप साइन-इन और स्टोरेज हेतु Supabase का उपयोग करता है, Google Fonts से फ़ॉन्ट और सार्वजनिक CDN से टेक्स्ट-रीडिंग इंजन लोड करता है, और आवाज़ हेतु आपके ब्राउज़र का वॉइस इंजन उपयोग कर सकता है। यदि आप सहायक से बोलकर सवाल पूछते हैं, तो आपका ब्राउज़र उस आवाज़ को टेक्स्ट में बदलने के लिए अपनी ऑनलाइन स्पीच-रिकग्निशन सेवा को भेज सकता है। आपका डेटा बेचा या विज्ञापन हेतु उपयोग नहीं किया जाता।'],
         ['खुराक की दूसरी राय','जिस दवा की खुराक-सीमा दर्ज नहीं है, उसके लिए ऐप केवल एक सामान्य दवा-नाम, एक बार की मात्रा और दिन में कितनी बार — यह AI सेवा को भेज सकता है, ताकि पूछा जा सके कि रोज़ की मात्रा ज़्यादा तो नहीं लगती। कोई नाम, पहचान या अन्य दवाइयाँ नहीं भेजी जातीं। जवाब केवल चेतावनी जोड़ सकता है; वह कभी नहीं कहता कि खुराक सुरक्षित है।'],
+        ['AI प्रिस्क्रिप्शन समीक्षा','स्कैन के बाद ऐप केवल दवाइयों के नाम, मात्रा, दिन में कितनी बार, अवधि और आपके चुने आयु-वर्ग को ड्राफ़्ट समीक्षा के लिए AI सेवा को भेज सकता है। कोई नाम, पहचान, फ़ोटो या अन्य निजी डेटा नहीं भेजा जाता। यदि आप "फार्मासिस्ट को भेजें" दबाते हैं, तो दवाइयाँ, आयु-वर्ग और निष्कर्ष आपके खाते में सहेजे जाते हैं ताकि फार्मासिस्ट उन्हें देख सकें। यह समीक्षा फार्मासिस्ट की मदद के लिए ड्राफ़्ट है — चिकित्सीय सलाह नहीं।'],
         ['अपना डेटा हटाना','आप प्रोफ़ाइल टैब से कभी भी अपना सारा संग्रहीत डेटा हटा सकते हैं। "इस डिवाइस का ऐप डेटा साफ़ करें" इस ब्राउज़र में सहेजा सब कुछ भी हटा देता है।'],
         ['यह चिकित्सीय सलाह नहीं है','सुरक्षा जाँच केवल सीमित दवाइयों को कवर करती है और केवल जानकारी हेतु है। यह आपके डॉक्टर या फार्मासिस्ट का विकल्प नहीं है — कोई भी दवा बदलने से पहले उनसे पुष्टि करें।'],
         ['संपर्क','गोपनीयता संबंधी प्रश्न: support@pharmasaathi.example']
@@ -2462,6 +2464,7 @@
   function startScan(fresh){
     if (!fresh && (scanState === 'done' || scanState === 'analyzing')){ renderScan(); go('scan'); return; }
     clearScanDraft();
+    resetReview();
     scanState = 'idle';
     scanImageUrl = null;
     scanItems = [];
@@ -2475,7 +2478,7 @@
 
   function scanEditDose(i, val){ if (scanItems[i]){ scanItems[i].dose = clean(val).slice(0, 20); saveScanDraft(); renderScan(); } }
   window.scanEditDose = scanEditDose;
-  function scanToggle(i, val){ if (scanItems[i]){ scanItems[i].include = !!val; saveScanDraft(); } }
+  function scanToggle(i, val){ if (scanItems[i]){ scanItems[i].include = !!val; saveScanDraft(); var rc = document.getElementById('reviewCard'); if (rc) rc.outerHTML = reviewHtml(); } }
   /* fixing a misread name re-checks it against the safety catalog straight away */
   function scanEdit(i, val){
     var it = scanItems[i];
@@ -2519,6 +2522,142 @@
     runOcr(file);
   }
   window.scanConsent = scanConsent;
+
+  /* ================= PRESCRIPTION REVIEW (draft) =================
+     After a scan: PharmaSaathi's own checks (dose limits, interactions, duplicates, doubtful names) plus an AI
+     DRAFT review that also considers the patient's age group. Anything found is shown as "have a pharmacist
+     verify this" and can be sent to a pharmacist queue. Nothing here diagnoses, says a medicine is safe, or
+     changes a dose. The AI only receives medicine names, strengths, amounts, times per day, duration and age group. */
+  var REVIEW_FN = 'prescription-review', reviewDownUntil = 0;
+  var scanReview = { status:'idle', result:null, error:'', sent:null, sig:'' };
+  function ageGroup(){ try { return localStorage.getItem('ps_age_group') || ''; } catch(e){ return ''; } }
+  function resetReview(){ scanReview = { status:'idle', result:null, error:'', sent:null, sig:'' }; }
+  function reviewItems(){ return scanItems.filter(function(i){ return i.include; }); }
+  function reviewPayload(it){
+    return { name:it.name, strength:it.dose || '', amount:it.qty || '', timesPerDay:it.times === null || it.times === undefined ? null : it.times.length, duration:it.duration || '' };
+  }
+  function reviewSig(){ return ageGroup() + '|' + JSON.stringify(reviewItems().map(reviewPayload)); }
+  function firstWordLower(n){ return String(n || '').toLowerCase().replace(/[^a-z0-9\- ]/g, ' ').trim().split(/\s+/)[0] || ''; }
+
+  /* PharmaSaathi's own deterministic checks — these do not need the AI */
+  function localFindings(){
+    var out = [], d = X().review, items = reviewItems();
+    items.forEach(function(it){
+      var times = it.times === null || it.times === undefined ? ['08:00'] : it.times;
+      var key = it.medId || limitKeyFor(it.name), cm = it.medId ? catalogMed(it.medId) : null;
+      var al = times.length ? evalDose(key, [it.dose, it.qty].filter(Boolean).join(' '), times, cm ? cm.en.name : '') : null;
+      if (al){ al.name = firstWordLower(it.name); out.push({ source:'app', severity:al.level === 'risk' ? 'urgent' : 'verify', medicine:it.name, issue:doseAlertText(al) }); }
+      if (it.conf === 'weak' || it.conf === 'form' || it.conf === 'dict-fuzzy' || (it.conf === 'ai' && it.aiLow))
+        out.push({ source:'app', severity:'verify', medicine:it.name, issue:d.nameDoubt.replace('{name}', it.name) });
+    });
+    var selIds = items.map(function(i){ return i.medId; }).filter(Boolean);
+    var allIds = selIds.concat(activeMedIds().filter(function(id){ return selIds.indexOf(id) === -1; }));
+    INTERACTIONS.forEach(function(x){
+      var a = x.pair[0], b = x.pair[1];
+      if (allIds.indexOf(a) !== -1 && allIds.indexOf(b) !== -1 && (selIds.indexOf(a) !== -1 || selIds.indexOf(b) !== -1))
+        out.push({ source:'app', severity:x.severity === 'risk' ? 'urgent' : 'verify', medicine:'', issue:x[LANG] });
+    });
+    var groups = {};
+    items.forEach(function(it){ var f = firstWordLower(it.name), g = it.medId || BRAND_GENERIC[f] || f; (groups[g] = groups[g] || []).push(it.name); });
+    Object.keys(groups).forEach(function(g){ if (groups[g].length > 1) out.push({ source:'app', severity:'verify', medicine:'', issue:d.dupSame.replace('{a}', groups[g][0]).replace('{b}', groups[g][1]) }); });
+    activeMeds().forEach(function(m){
+      var g = genericOf(m);
+      if (groups[g] && !(m.id && selIds.indexOf(m.id) !== -1)) out.push({ source:'app', severity:'verify', medicine:'', issue:d.dupActive.replace('{a}', groups[g][0]).replace('{b}', m.en.name) });
+    });
+    if (ageGroup() === 'child') out.push({ source:'app', severity:'verify', medicine:'', issue:d.childNote });
+    return out;
+  }
+  function reviewOutcome(){
+    var f = localFindings(), ai = scanReview.result;
+    if (ai) (ai.concerns || []).forEach(function(c){ f.push({ source:'ai', severity:c.severity, medicine:c.medicine, issue:c.issue }); });
+    return { findings:f, level:f.some(function(x){ return x.severity === 'urgent'; }) ? 'urgent' : (f.length ? 'verify' : 'none'), aiRan:!!ai };
+  }
+  async function runReview(){
+    if (!reviewItems().length || !ageGroup()) { renderScan(); return; }
+    if (!(SB && SB.functions && isAccount() && aiConsent() === 'yes' && !aiDown)){ scanReview.status = 'off'; renderScan(); return; }
+    if (Date.now() < reviewDownUntil){ scanReview.result = null; scanReview.status = 'error'; renderScan(); return; }
+    scanReview.result = null;                       // an old answer must never be shown as if it were the result of this run
+    scanReview.status = 'running'; scanReview.sig = reviewSig(); renderScan();
+    try {
+      var d = await callFn(REVIEW_FN, { ageGroup:ageGroup(), medicines:reviewItems().map(reviewPayload) });
+      if (!d || !Array.isArray(d.concerns)) throw new Error('bad answer');
+      scanReview.result = d; scanReview.status = 'done'; scanReview.error = '';
+    } catch(e){
+      reviewDownUntil = Date.now() + pauseFor(e); scanReview.status = 'error'; scanReview.error = String((e && e.status) || '');
+    }
+    renderScan();
+  }
+  function startReviewIfReady(){ resetReview(); if (ageGroup()) runReview(); }
+  function setAgeGroup(g){
+    if (['child', 'adult', 'older'].indexOf(g) === -1) return;
+    try { localStorage.setItem('ps_age_group', g); } catch(e){}
+    scanReview.result = null; scanReview.sent = null; reviewDownUntil = 0;
+    runReview();
+  }
+  window.setAgeGroup = setAgeGroup; window.runReview = runReview;
+  async function sendForVerification(){
+    var t = X().review;
+    if (!SB || !isAccount()){ toast(t.needAccount); return; }
+    var oc = reviewOutcome();
+    try {
+      var r = await SB.from('pharmacist_reviews').insert({ patient_id:USER.id, age_group:ageGroup(), medicines:reviewItems().map(reviewPayload),
+        findings:{ level:oc.level, findings:oc.findings, ai_draft:scanReview.result, sent_from:'scan' } }).select('id,status').single();
+      if (r.error) throw r.error;
+      scanReview.sent = { id:r.data.id, status:r.data.status, note:'' }; toast(t.sentToast);
+    } catch(e){
+      var missing = e && (e.code === 'PGRST205' || /does not exist|schema cache/i.test(e.message || ''));
+      toast(missing ? t.queueMissing : (t.sendFail + ((e && e.message) ? ' ' + e.message : '')));
+    }
+    renderScan();
+  }
+  async function checkReviewStatus(){
+    if (!scanReview.sent || !SB) return;
+    try {
+      var r = await SB.from('pharmacist_reviews').select('status,pharmacist_note').eq('id', scanReview.sent.id).single();
+      if (r.error) throw r.error;
+      scanReview.sent.status = r.data.status; scanReview.sent.note = clean(r.data.pharmacist_note || '');
+    } catch(e){ dbFail(e); }
+    renderScan();
+  }
+  window.sendForVerification = sendForVerification; window.checkReviewStatus = checkReviewStatus;
+  function reviewHtml(){
+    if (!scanItems.length || !reviewItems().length) return '';
+    var d = X().review, age = ageGroup(), st = scanReview.status;
+    var html = '<div class="card" id="reviewCard"><span class="card-title">' + d.title + '</span>';
+    html += '<p class="muted" style="margin-top:6px">' + (age ? d.ageLabel : d.whoFor) + '</p>' +
+      '<div class="seg" style="margin-top:8px">' + ['child', 'adult', 'older'].map(function(g){
+        return '<button type="button" aria-pressed="' + (age === g) + '" onclick="setAgeGroup(\'' + g + '\')">' + d.ages[g] + '</button>'; }).join('') + '</div>';
+    if (!age) return html + '</div>';
+    var oc = reviewOutcome(), ai = scanReview.result;
+    var msg = oc.level === 'urgent' ? d.levelUrgent : (oc.level === 'verify' ? d.levelVerify : (oc.aiRan ? d.levelNoneAi : d.levelNone));
+    html += '<div class="callout ' + (oc.level === 'urgent' ? 'risk' : (oc.level === 'verify' ? 'warn' : 'good')) + '" style="margin-top:10px"><span>' + (oc.level === 'urgent' ? '⛔' : (oc.level === 'verify' ? '⚠️' : 'ℹ️')) + '</span><span><strong>' + msg + '</strong></span></div>';
+    if (st === 'running') html += '<p class="muted" style="margin-top:8px"><span class="spinner" style="display:inline-block;width:14px;height:14px;vertical-align:middle"></span> ' + d.running + '</p>';
+    else if (st === 'off') html += '<p class="muted" style="margin-top:8px">' + d.off + '</p>';
+    else if (st === 'error') html += '<p class="muted" style="margin-top:8px">' + d.error + '</p><button class="btn outline sm" type="button" onclick="runReview()">' + d.retry + '</button>';
+    else if (st === 'done' && scanReview.sig && scanReview.sig !== reviewSig()) html += '<p class="muted" style="margin-top:8px">' + d.stale + '</p><button class="btn outline sm" type="button" onclick="runReview()">' + d.retry + '</button>';
+    if (ai && ai.commonly_used_for) html += '<p style="margin-top:10px"><strong>' + d.commonlyFor + '</strong><br>' + esc(ai.commonly_used_for) + '</p>';
+    if (oc.findings.length) html += '<div style="margin-top:10px">' + oc.findings.map(function(f){
+      return '<div class="callout ' + (f.severity === 'urgent' ? 'risk' : 'warn') + '" style="margin-top:6px"><span>' + (f.severity === 'urgent' ? '⛔' : '⚠️') + '</span><div style="flex:1"><div>' +
+        (f.medicine ? '<strong>' + esc(f.medicine) + '</strong> — ' : '') + esc(f.issue) + '</div><span class="muted" style="font-size:.7rem">' + (f.source === 'ai' ? d.sourceAi : d.sourceApp) + '</span></div></div>'; }).join('') + '</div>';
+    if (age === 'older') html += '<p class="muted" style="margin-top:8px">' + d.olderNote + '</p>';
+    if (ai && ai.medicines && ai.medicines.length) html += '<details style="margin-top:10px"><summary>' + d.medsTitle + '</summary>' + ai.medicines.map(function(m){
+      var differs = m.likely_medicine && m.likely_medicine.toLowerCase() !== String(m.name_as_read).toLowerCase();
+      return '<div style="margin-top:8px;font-size:.84rem"><strong>' + esc(m.name_as_read) + '</strong>' + (differs ? ' → ' + d.likely + ' <strong>' + esc(m.likely_medicine) + '</strong>' : '') +
+        ' <span class="muted">(' + d.conf[m.name_confidence] + ')</span>' + (m.typical_use ? '<br><span class="muted">' + esc(m.typical_use) + '</span>' : '') +
+        '<br><span class="muted">' + d.dose[m.dose_vs_age] + (m.dose_note ? ' — ' + esc(m.dose_note) : '') + '</span></div>'; }).join('') + '<p class="muted" style="font-size:.7rem;margin-top:6px">' + d.sourceAi + '</p></details>';
+    if (ai && ai.questions_for_pharmacist && ai.questions_for_pharmacist.length) html += '<div style="margin-top:10px"><strong>' + d.questions + '</strong><ul class="muted" style="margin:4px 0 0;padding-left:18px">' +
+      ai.questions_for_pharmacist.map(function(q){ return '<li>' + esc(q) + '</li>'; }).join('') + '</ul></div>';
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">';
+    if (oc.level !== 'none') html += '<a class="btn outline sm" href="tel:' + CONTACTS.supportPhone + '">' + d.call + '</a>';
+    if (isAccount()){
+      if (scanReview.sent) html += '<div class="callout good"><span>📨</span><div style="flex:1"><div>' + d.sent.replace('{s}', d.status[scanReview.sent.status] || scanReview.sent.status) + '</div>' +
+        (scanReview.sent.note ? '<div style="margin-top:4px"><strong>' + d.note + '</strong> ' + esc(scanReview.sent.note) + '</div>' : '') +
+        '<button class="btn outline sm" style="margin-top:6px" type="button" onclick="checkReviewStatus()">' + d.check + '</button></div></div>';
+      else html += '<button class="btn ' + (oc.level === 'none' ? 'outline' : 'primary') + ' sm" type="button" onclick="sendForVerification()">' + d.send + '</button>';
+    }
+    html += '</div><p class="muted" style="font-size:.7rem;margin-top:10px">' + d.footer + '</p></div>';
+    return html;
+  }
 
   /* run the same photo again, this time with AI reading */
   function scanRetryAi(){
@@ -2724,6 +2863,7 @@
         scanState = scanItems.length ? 'done' : 'no-match';
         saveScanDraft(); renderHome();
         renderScan();
+        startReviewIfReady();
         return;
       }
     }
@@ -2777,6 +2917,7 @@
       scanState = 'ocr-failed';
     }
     renderScan();
+    if (scanState === 'done') startReviewIfReady();
   }
 
   var scanBusy = false;
@@ -2794,6 +2935,7 @@
       items.push({ medId:medId, customName:name, customDose:note, times:times });
     });
     if (!items.length){ toast(skipped ? X().manual.already : X().scanX.nothing); return; }
+    if (ageGroup() && reviewOutcome().level !== 'none' && !window.confirm(X().review.addAnyway)) return;
     scanBusy = true;
     try {
       var ids = await persistPrescription({ doctorName:'', source:'scanned', items:items });
@@ -2911,7 +3053,7 @@
       el.innerHTML = preview +
         '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanItems.length+'</span></div><hr>' +
         '<p class="muted">'+(scanUsedAi ? sx.editHintAi : sx.editHint)+'</p>' +
-        '<button class="btn outline sm" type="button" onclick="speakScan()" style="margin-top:8px">🔊 '+sx.readAloud+'</button></div>' + aiNoteHtml() + missedHtml() + rows + rawBlock +
+        '<button class="btn outline sm" type="button" onclick="speakScan()" style="margin-top:8px">🔊 '+sx.readAloud+'</button></div>' + aiNoteHtml() + missedHtml() + rows + reviewHtml() + rawBlock +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+sx.addMissing+'</button>' +
         '<button class="btn ghost" type="button" onclick="startScan(true)">'+s.retakeBtn+'</button>' +
@@ -3438,6 +3580,27 @@
         aiHead:'AI second opinion (unverified) — {name}:', aiLikely:'about {total} mg a day looks higher than the usual adult amount.', aiPossible:'about {total} mg a day may be higher than the usual adult amount.',
         aiTypical:'Reported usual adult maximum: {max}.', aiNote:'This is only a warning from an AI, not a check that any medicine is safe.',
         label:{ risk:'daily dose too high', warn:'check daily dose' } },
+      review:{ title:'🩺 Prescription review (draft)', whoFor:'Who is this prescription for? Doses depend on age.', ageLabel:'This prescription is for:',
+        ages:{ child:'Child (under 12)', adult:'Adult', older:'Older adult (65+)' },
+        running:'AI is reviewing the medicines…', off:'The AI review is off: sign in and allow AI reading to switch it on. PharmaSaathi’s own checks are shown below.',
+        error:'The AI review could not run just now. PharmaSaathi’s own checks are shown below.', retry:'Check again', stale:'You changed the list — check again to update the AI review.',
+        levelUrgent:'A pharmacist or doctor must verify this prescription before you take these medicines.',
+        levelVerify:'Please have a pharmacist verify the points below before you take these medicines.',
+        levelNoneAi:'The AI review and PharmaSaathi’s own checks did not spot a problem. This is NOT a safety guarantee — always follow your doctor and pharmacist.',
+        levelNone:'PharmaSaathi’s own checks did not spot a problem, but the AI review did not run. This is NOT a safety guarantee — compare with your paper.',
+        commonlyFor:'Commonly used for (general information, not a diagnosis):', medsTitle:'What the AI read, medicine by medicine', likely:'probably',
+        conf:{ high:'sure', medium:'fairly sure', low:'not sure' },
+        dose:{ above_usual:'⚠️ above the usual range for this age group', below_usual:'below the usual range for this age group', within_usual:'no dose concern noticed', unclear:'dose could not be judged' },
+        sourceApp:'PharmaSaathi check', sourceAi:'AI draft — unverified', questions:'Questions to ask the pharmacist:',
+        childNote:'Children’s doses depend on weight and age, which this app does not know. A pharmacist or doctor must confirm each dose.',
+        olderNote:'Older adults are more sensitive to some medicines. Ask a pharmacist to double-check.',
+        nameDoubt:'The name “{name}” may have been misread — compare with the paper.',
+        dupSame:'“{a}” and “{b}” may be the same medicine listed twice.', dupActive:'“{a}” may be the same as a medicine already in your list ({b}).',
+        call:'📞 Call a pharmacist', send:'📨 Send to a pharmacist for verification', sent:'Sent to a pharmacist — status: {s}', check:'🔄 Check status',
+        status:{ pending:'waiting for a pharmacist', verified:'verified by a pharmacist', changed:'the pharmacist suggests changes', rejected:'the pharmacist advises against these' },
+        note:'Pharmacist note:', needAccount:'Sign in to send this to a pharmacist.', queueMissing:'The pharmacist queue is not set up on the server yet.',
+        sentToast:'Sent for pharmacist verification.', sendFail:'Could not send:', addAnyway:'This review has points a pharmacist should check. Add these medicines anyway?',
+        footer:'This is a draft to help a pharmacist. It cannot tell what illness you have or why it happened — ask your doctor. It is not medical advice.' },
       ask:{ btn:'Ask PharmaSaathi', title:'What do you need?', prompt:'What do you need?', mic:'Tap and speak', listening:'Listening… tap when you are done', processing:'Processing…',
         typePh:'Or type here…', send:'Send',
         chips:['What medicine is next?','Did I take my medicines today?','List my medicines','Any safety warnings?','I took my medicine','Open scanner'],
@@ -3544,6 +3707,7 @@
         ['Who can see it','Only you. We do not sell your data or share it with advertisers. The people who run the service can technically access the database for maintenance and support, and use it for nothing else.'],
         ['Services we rely on','Supabase (secure database and sign-in), GitHub Pages (hosting this app), Google Fonts, and your device\'s built-in voice engine.'],
         ['Dose second opinion','For a medicine with no dose limit on file, the app may send only a generic medicine name, the amount per dose and doses per day to an AI service to ask whether the daily amount looks high. No name, ID or other medicines are sent. The answer can only add a warning; it never says a dose is safe.'],
+        ['AI prescription review','After a scan, the app can send only the medicine names, strengths, amounts, times per day, durations and the age group you choose to an AI service for a draft review. No name, ID, photo or other personal data is sent. If you tap "Send to a pharmacist", the medicines, age group and findings are saved in your account so a pharmacist can review them. The review is a draft to help a pharmacist — it is not medical advice.'],
         ['Deleting your data','You can erase all your health data at any time from Profile → Delete my health data. To remove your login as well, email support@pharmasaathi.example.'],
         ['Not medical advice','PharmaSaathi helps you organise and understand your medicines. Its safety checks cover only a limited set of medicines and can miss things. Always follow your doctor\'s and pharmacist\'s advice.'],
         ['Contact','Questions about your data: support@pharmasaathi.example']
@@ -3583,6 +3747,27 @@
         aiHead:'AI की दूसरी राय (असत्यापित) — {name}:', aiLikely:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा लगती है।', aiPossible:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा हो सकती है।',
         aiTypical:'बताई गई सामान्य वयस्क अधिकतम मात्रा: {max}।', aiNote:'यह केवल AI की चेतावनी है, किसी दवा के सुरक्षित होने की जाँच नहीं।',
         label:{ risk:'रोज़ की मात्रा बहुत अधिक', warn:'रोज़ की मात्रा जाँचें' } },
+      review:{ title:'🩺 प्रिस्क्रिप्शन समीक्षा (ड्राफ़्ट)', whoFor:'यह प्रिस्क्रिप्शन किसके लिए है? खुराक उम्र पर निर्भर करती है।', ageLabel:'यह प्रिस्क्रिप्शन इनके लिए है:',
+        ages:{ child:'बच्चा (12 से कम)', adult:'वयस्क', older:'बुज़ुर्ग (65+)' },
+        running:'AI दवाइयों की समीक्षा कर रहा है…', off:'AI समीक्षा बंद है: चालू करने के लिए साइन इन करें और AI से पढ़ने की अनुमति दें। PharmaSaathi की अपनी जाँच नीचे है।',
+        error:'AI समीक्षा अभी नहीं चल सकी। PharmaSaathi की अपनी जाँच नीचे है।', retry:'फिर जाँचें', stale:'आपने सूची बदली है — AI समीक्षा अपडेट करने के लिए फिर जाँचें।',
+        levelUrgent:'इन दवाइयों को लेने से पहले किसी फार्मासिस्ट या डॉक्टर को यह प्रिस्क्रिप्शन ज़रूर जाँचना चाहिए।',
+        levelVerify:'ये दवाइयाँ लेने से पहले कृपया नीचे लिखी बातें किसी फार्मासिस्ट से जँचवाएँ।',
+        levelNoneAi:'AI समीक्षा और PharmaSaathi की अपनी जाँच में कोई समस्या नहीं दिखी। यह सुरक्षा की गारंटी नहीं है — हमेशा अपने डॉक्टर और फार्मासिस्ट की सलाह मानें।',
+        levelNone:'PharmaSaathi की अपनी जाँच में कोई समस्या नहीं दिखी, पर AI समीक्षा नहीं चली। यह सुरक्षा की गारंटी नहीं है — अपने कागज़ से मिलाएँ।',
+        commonlyFor:'आम तौर पर इनके लिए इस्तेमाल होती हैं (सामान्य जानकारी, निदान नहीं):', medsTitle:'AI ने क्या पढ़ा, दवा-दर-दवा', likely:'शायद',
+        conf:{ high:'पक्का', medium:'काफ़ी हद तक पक्का', low:'पक्का नहीं' },
+        dose:{ above_usual:'⚠️ इस आयु-वर्ग की सामान्य सीमा से ऊपर', below_usual:'इस आयु-वर्ग की सामान्य सीमा से नीचे', within_usual:'खुराक में कोई चिंता नहीं दिखी', unclear:'खुराक का आकलन नहीं हो सका' },
+        sourceApp:'PharmaSaathi की जाँच', sourceAi:'AI ड्राफ़्ट — असत्यापित', questions:'फार्मासिस्ट से पूछने के सवाल:',
+        childNote:'बच्चों की खुराक वज़न और उम्र पर निर्भर करती है, जो यह ऐप नहीं जानता। हर खुराक किसी फार्मासिस्ट या डॉक्टर से पक्की करवाएँ।',
+        olderNote:'बुज़ुर्गों पर कुछ दवाइयों का असर ज़्यादा होता है। फार्मासिस्ट से दोबारा जँचवाएँ।',
+        nameDoubt:'नाम “{name}” गलत पढ़ा गया हो सकता है — कागज़ से मिलाएँ।',
+        dupSame:'“{a}” और “{b}” एक ही दवा दो बार लिखी हो सकती है।', dupActive:'“{a}” आपकी सूची की एक दवा ({b}) जैसी हो सकती है।',
+        call:'📞 फार्मासिस्ट को कॉल करें', send:'📨 जाँच के लिए फार्मासिस्ट को भेजें', sent:'फार्मासिस्ट को भेजा गया — स्थिति: {s}', check:'🔄 स्थिति देखें',
+        status:{ pending:'फार्मासिस्ट का इंतज़ार', verified:'फार्मासिस्ट ने सत्यापित किया', changed:'फार्मासिस्ट बदलाव सुझाते हैं', rejected:'फार्मासिस्ट इन्हें लेने की सलाह नहीं देते' },
+        note:'फार्मासिस्ट का नोट:', needAccount:'फार्मासिस्ट को भेजने के लिए साइन इन करें।', queueMissing:'फार्मासिस्ट कतार सर्वर पर अभी सेट नहीं है।',
+        sentToast:'फार्मासिस्ट की जाँच के लिए भेजा गया।', sendFail:'भेजा नहीं जा सका:', addAnyway:'इस समीक्षा में कुछ बातें हैं जो फार्मासिस्ट को जाँचनी चाहिए। फिर भी ये दवाइयाँ जोड़ें?',
+        footer:'यह फार्मासिस्ट की मदद के लिए एक ड्राफ़्ट है। यह नहीं बता सकता कि आपको कौन सी बीमारी है या क्यों हुई — अपने डॉक्टर से पूछें। यह चिकित्सीय सलाह नहीं है।' },
       ask:{ btn:'PharmaSaathi से पूछें', title:'आपको क्या चाहिए?', prompt:'आपको क्या चाहिए?', mic:'दबाएँ और बोलें', listening:'सुन रहा हूँ… बोल चुकें तो दबाएँ', processing:'प्रोसेस हो रहा है…',
         typePh:'या यहाँ लिखें…', send:'भेजें',
         chips:['अगली दवा कौन सी है?','आज मैंने कौन सी दवाइयाँ ली हैं?','मेरी दवाइयाँ दिखाओ','कोई सुरक्षा चेतावनी?','मैंने दवा ले ली','स्कैनर खोलो'],
@@ -3689,6 +3874,7 @@
         ['कौन देख सकता है','केवल आप। हम आपका डेटा बेचते नहीं और विज्ञापनदाताओं से साझा नहीं करते। सेवा चलाने वाले लोग रखरखाव व सहायता के लिए तकनीकी रूप से डेटाबेस तक पहुँच सकते हैं, और किसी अन्य काम में इसका उपयोग नहीं करते।'],
         ['जिन सेवाओं पर हम निर्भर हैं','Supabase (सुरक्षित डेटाबेस और साइन-इन), GitHub Pages (इस ऐप की होस्टिंग), Google Fonts, और आपके डिवाइस का अंतर्निहित वॉइस इंजन।'],
         ['खुराक की दूसरी राय','जिस दवा की खुराक-सीमा दर्ज नहीं है, उसके लिए ऐप केवल एक सामान्य दवा-नाम, एक बार की मात्रा और दिन में कितनी बार — यह AI सेवा को भेज सकता है, ताकि पूछा जा सके कि रोज़ की मात्रा ज़्यादा तो नहीं लगती। कोई नाम, पहचान या अन्य दवाइयाँ नहीं भेजी जातीं। जवाब केवल चेतावनी जोड़ सकता है; वह कभी नहीं कहता कि खुराक सुरक्षित है।'],
+        ['AI प्रिस्क्रिप्शन समीक्षा','स्कैन के बाद ऐप केवल दवाइयों के नाम, मात्रा, दिन में कितनी बार, अवधि और आपके चुने आयु-वर्ग को ड्राफ़्ट समीक्षा के लिए AI सेवा को भेज सकता है। कोई नाम, पहचान, फ़ोटो या अन्य निजी डेटा नहीं भेजा जाता। यदि आप "फार्मासिस्ट को भेजें" दबाते हैं, तो दवाइयाँ, आयु-वर्ग और निष्कर्ष आपके खाते में सहेजे जाते हैं ताकि फार्मासिस्ट उन्हें देख सकें। यह समीक्षा फार्मासिस्ट की मदद के लिए ड्राफ़्ट है — चिकित्सीय सलाह नहीं।'],
         ['अपना डेटा हटाना','आप कभी भी प्रोफ़ाइल → मेरा स्वास्थ्य डेटा हटाएँ से सारा स्वास्थ्य डेटा मिटा सकते हैं। लॉगिन भी हटवाने के लिए support@pharmasaathi.example पर ईमेल करें।'],
         ['यह चिकित्सीय सलाह नहीं है','PharmaSaathi आपको अपनी दवाइयाँ व्यवस्थित करने और समझने में मदद करता है। इसकी सुरक्षा जाँच केवल सीमित दवाइयों को कवर करती है और कुछ चूक सकती है। हमेशा अपने डॉक्टर और फार्मासिस्ट की सलाह मानें।'],
         ['संपर्क','अपने डेटा से जुड़े प्रश्न: support@pharmasaathi.example']
