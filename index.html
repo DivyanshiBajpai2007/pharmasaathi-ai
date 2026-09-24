@@ -2129,9 +2129,15 @@
       var raw = g[1], num = raw.replace(/[Ss]/g, '5').replace(/[Oo]/g, '0').replace(/[Il]/g, '1');
       if (!(parseFloat(num) > 0)) continue;
       var u = g[2].toLowerCase();
+      if (u === '%' && !/(?:cream|gel|oint|lotion|drops?|eye|solution|shampoo)/i.test(str)) continue;   // "21%" is usually a misread "BID"
       if (/^m[1i]$/.test(u)) u = 'ml';
       return num + ' ' + u;
     }
+    /* handwriting often drops or garbles the "g" of mg: "100m", or 10 “9 */
+    var f1 = str.match(/(?:^|\s)([0-9]{2,4})\s?m(?=\s*[-–—|]|\s|$)/);
+    if (f1 && parseFloat(f1[1]) > 0) return f1[1] + ' mg';
+    var f2 = str.match(/(?:^|\s)([0-9OoSsIl]{1,4})\s?[“”"'‘’]\s?9(?=\s*[-–—|]|\s)/);
+    if (f2){ var n2 = f2[1].replace(/[Ss]/g, '5').replace(/[Oo]/g, '0').replace(/[Il]/g, '1'); if (parseFloat(n2) > 0) return n2 + ' mg'; }
     return '';
   }
   /* "1 tab", "2 caps", "5 ml" -> how much to take each time */
