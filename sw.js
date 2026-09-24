@@ -2,7 +2,7 @@
 // and the last-seen copy of the app shell when offline.
 // It only ever touches same-origin requests, so API calls (Supabase) and CDN scripts
 // are never cached — nothing personal or health-related is stored by this worker.
-const CACHE = 'pharmasaathi-v29';
+const CACHE = 'pharmasaathi-v30';
 
 self.addEventListener('install', function(){ self.skipWaiting(); });
 

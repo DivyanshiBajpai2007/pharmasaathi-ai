@@ -214,6 +214,11 @@
   .btn.sm .ic-mic, .btn.sm .ic-stop{ width:15px; height:15px; display:inline-block; vertical-align:-3px; margin-right:4px; }
   .btn.sm .ic-stop{ display:none; }
   .btn.sm.speaking .ic-stop{ display:inline-block; }
+  .how-chips{ display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; }
+  .how-chip{ font-size:.68rem; font-weight:700; background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:2px 8px; white-space:nowrap; }
+  .rx-tag{ font:inherit; cursor:pointer; text-align:left; }
+  .hold-btn:disabled{ background:var(--surface-3); color:var(--text-muted); cursor:not-allowed; font-size:.72rem; font-weight:700; padding:6px 12px; }
+  .rx-del{ font:inherit; font-size:.74rem; color:var(--risk); background:none; border:none; text-decoration:underline; cursor:pointer; padding:2px 4px; align-self:flex-start; }
   .hold-btn{ position:relative; overflow:hidden; border:none; border-radius:12px; background:var(--accent); color:var(--accent-ink); font:inherit; font-weight:800; font-size:.8rem; padding:9px 14px; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:pan-y; }
   .hold-btn.wide{ width:100%; padding:14px; font-size:.95rem; }
   .hold-btn .hold-fill{ position:absolute; left:0; top:0; bottom:0; width:0; background:rgba(0,0,0,.25); }
@@ -1192,7 +1197,7 @@
       '</div>';
     el.innerHTML =
       '<div class="card"><div class="row"><span class="card-title" style="font-size:1.05rem">'+d.name+'</span><span class="badge '+badgeClass(medSafety(m))+'">'+badgeLabel(t,medSafety(m))+'</span></div>'+
-      '<p class="muted" style="margin-top:3px">'+d.use+'</p>' + sourceLine + statusHtml + '</div>' +
+      '<p class="muted" style="margin-top:3px">'+d.use+'</p>' + howChipsHtml(m) + sourceLine + statusHtml + '</div>' +
       timesCardHtml(m) +
       '<div class="detail-block card"><span class="h">'+t.dHeadDose+'</span>' +
       '<table class="dosetable"><tr><td>'+t.dAdult+'</td><td>'+d.adultDose+'</td></tr>' +
@@ -1215,7 +1220,7 @@
     var times = SCHEDULE.filter(function(s){ return s.medId === m.id; }).map(function(s){ return s.time; }).sort().join(' · ');
     document.getElementById('medDetail').innerHTML =
       '<div class="card"><div class="row"><span class="card-title" style="font-size:1.05rem">'+m[LANG].name+'</span><span class="badge warn">'+x.badgeUnknown+'</span></div>' +
-      '<p class="muted" style="margin-top:3px">'+doseTxt+'</p>' +
+      '<p class="muted" style="margin-top:3px">'+doseTxt+'</p>' + (medPurpose(m) ? '<p class="muted" style="margin-top:3px">💡 '+esc(medPurpose(m))+'</p>' : '') + howChipsHtml(m) +
       '<p class="muted" style="margin-top:3px">'+t.fromLabel+' '+doctorLabelFor(m.id)+(rx ? ' · '+rx.date : '')+'</p>' +
       (times ? '<p class="muted" style="margin-top:3px">⏰ '+times+'</p>' : '') +
       '<div class="row" style="margin-top:8px"><span class="badge '+(isStopped ? 'risk' : 'good')+'">'+(isStopped ? t.medStoppedBadge : t.medActiveBadge)+'</span>' +
@@ -1625,7 +1630,7 @@
   /* the release that ends a completed hold must not "click" whatever appears underneath the vanished button */
   var swallowUntil = 0;
   document.addEventListener('click', function(e){ if (Date.now() < swallowUntil){ e.stopPropagation(); e.preventDefault(); } }, true);
-  document.addEventListener('pointerdown', function(e){ swallowUntil = 0; if (e.pointerType === 'mouse' && e.button !== 0) return; var b = e.target.closest && e.target.closest('.hold-btn'); if (b) holdStart(b); });
+  document.addEventListener('pointerdown', function(e){ swallowUntil = 0; if (e.pointerType === 'mouse' && e.button !== 0) return; var b = e.target.closest && e.target.closest('.hold-btn'); if (b && !b.disabled) holdStart(b); });
   ['pointerup', 'pointercancel'].forEach(function(ev){ document.addEventListener(ev, holdCancel); });
   document.addEventListener('pointermove', function(e){
     if (!holdEl) return;
@@ -1633,7 +1638,7 @@
     if (!under || !holdEl.contains(under)) holdCancel();
   });
   document.addEventListener('contextmenu', function(e){ if (e.target.closest && e.target.closest('.hold-btn')) e.preventDefault(); });
-  document.addEventListener('keydown', function(e){ if ((e.key === 'Enter' || e.key === ' ') && !e.repeat){ var b = e.target.closest && e.target.closest('.hold-btn'); if (b){ e.preventDefault(); holdStart(b); } } });
+  document.addEventListener('keydown', function(e){ if ((e.key === 'Enter' || e.key === ' ') && !e.repeat){ var b = e.target.closest && e.target.closest('.hold-btn'); if (b && !b.disabled){ e.preventDefault(); holdStart(b); } } });
   document.addEventListener('keyup', function(e){ if (e.key === 'Enter' || e.key === ' ') holdCancel(); });
   function onHold(id, btn){
     swallowUntil = Date.now() + 2500;
@@ -1690,15 +1695,21 @@
     for (var i = 0; i < ordered.length; i++) if (ordered[i] === rx || String(ordered[i].id) === String(rx.id)) return i + 1;
     return 1;
   }
+  function rxParts(rx){
+    var full = String(rxDoctorName(rx) || ''), bits = full.split(' · ');
+    return { doctor:bits[0] || '', clinic:bits.slice(1).join(' · ') };
+  }
+  /* the doctor's name (or the clinic if that is all the paper shows); the date is added only if two prescriptions share a name */
   function rxTagText(rx){
-    var al = X().alm, who = rxDoctorName(rx);
-    return (PRESCRIPTIONS.length > 1 ? 'Rx ' + rxNumber(rx) + ' · ' : '') + who + (rx.diagnosis ? ' · ' + al.forLabel + ' ' + rx.diagnosis : '');
+    var pt = rxParts(rx), base = pt.doctor || pt.clinic || rxDoctorName(rx);
+    var clash = PRESCRIPTIONS.some(function(o){ var q = rxParts(o); return o !== rx && String(o.id) !== String(rx.id) && (q.doctor || q.clinic || rxDoctorName(o)) === base; });
+    return base + (clash ? ' · #' + rxNumber(rx) : '');
   }
   function rxTagHtml(medId){
     var rx = prescriptionOf(medId);
     if (!rx) return '<span class="muted" style="font-size:.68rem">' + (LANG === 'en' ? 'Self-reported' : 'स्व-रिपोर्टित') + '</span>';
     var hue = RX_HUES[(rxNumber(rx) - 1) % RX_HUES.length];
-    return '<span style="display:inline-block;font-size:.66rem;font-weight:700;padding:1px 8px;border-radius:999px;background:hsla(' + hue + ',70%,50%,.16);border:1px solid hsla(' + hue + ',60%,45%,.45)">' + esc(rxTagText(rx)) + '</span>';
+    return '<button type="button" class="rx-tag" data-rx="' + esc(rx.id) + '" style="display:inline-block;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:999px;color:inherit;background:hsla(' + hue + ',70%,50%,.16);border:1px solid hsla(' + hue + ',60%,45%,.45)">👨‍⚕️ ' + esc(rxTagText(rx)) + ' ›</button>';
   }
   function rxChipsHtml(){
     var used = PRESCRIPTIONS.filter(function(rx){ return rx.medIds.some(function(id){ return SCHEDULE.some(function(d){ return d.medId === id; }); }); });
@@ -1750,7 +1761,7 @@
   var PURPOSE_NAMES = {
     pain:'paracetamol acetaminophen dolo crocin calpol pcm tramadol ultracet',
     painswell:'ibuprofen brufen combiflam diclofenac voveran naproxen aceclofenac zerodol etoricoxib ketorolac mefenamic meftal nimesulide enzoflam piroxicam indomethacin celecoxib',
-    antibiotic:'amoxicillin amoxycillin augmentin mox novamox clavam moxikind ampicillin cloxacillin azithromycin azithral clarithromycin erythromycin cefixime taxim zifi cefpodoxime cefuroxime ceftriaxone monocef monocet cephalexin cefadroxil ciprofloxacin cipro ciplox levofloxacin ofloxacin oflox doxycycline metronidazole flagyl ornidazole tinidazole clindamycin nitrofurantoin cotrimoxazole linezolid',
+    antibiotic:'claritek claribid clarimac amoxicillin amoxycillin augmentin mox novamox clavam moxikind ampicillin cloxacillin azithromycin azithral clarithromycin erythromycin cefixime taxim zifi cefpodoxime cefuroxime ceftriaxone monocef monocet cephalexin cefadroxil ciprofloxacin cipro ciplox levofloxacin ofloxacin oflox doxycycline metronidazole flagyl ornidazole tinidazole clindamycin nitrofurantoin cotrimoxazole linezolid',
     acid:'pantoprazole pantop pantocid pan omeprazole omez esomeprazole nexpro rabeprazole lansoprazole ranitidine zinetac famotidine cimetidine sucralfate aciloc', antacid:'digene gelusil',
     nausea:'domperidone domstal ondansetron ondem emeset metoclopramide', digest:'unizyme pancreatin', cramps:'dicyclomine cyclopam drotaverine hyoscine mebeverine',
     constipation:'lactulose duphalac cremaffin bisacodyl', diarrhoea:'loperamide racecadotril', probiotic:'vizylac econorm',
@@ -1777,18 +1788,63 @@
       localStorage.setItem('ps_purpose_cache', JSON.stringify(c));
     } catch(e){}
   }
+  /* how a medicine is usually taken — general guidance by type of medicine; what the doctor WROTE on the paper wins */
+  var HOW_TOK = {
+    after:{ ic:'🍽️', en:'After food', hi:'खाने के बाद' }, 'with':{ ic:'🍽️', en:'With food', hi:'खाने के साथ' }, empty:{ ic:'🥣', en:'Empty stomach', hi:'खाली पेट' },
+    water:{ ic:'💧', en:'With a glass of water', hi:'पानी के साथ' }, course:{ ic:'✅', en:'Finish the full course', hi:'पूरा कोर्स पूरा करें' },
+    morning:{ ic:'🌅', en:'Best in the morning', hi:'सुबह लेना बेहतर' }, night:{ ic:'🌙', en:'Best at night', hi:'रात में लेना बेहतर' },
+    sameTime:{ ic:'🕐', en:'Same time every day', hi:'रोज़ एक ही समय पर' }, drowsy:{ ic:'😴', en:'May cause drowsiness', hi:'नींद आ सकती है' },
+    gel:{ ic:'🦷', en:'Apply on gums — do not swallow', hi:'मसूड़ों पर लगाएँ — निगलें नहीं' }
+  };
+  var HOW_CAT = { antibiotic:['water', 'course'], acid:['empty'], painswell:['after'], pain:['water'], diuretic:['morning', 'with'], diabetes:['with'], thyroid:['empty', 'morning'],
+    bp:['sameTime'], cholesterol:['night'], steroid:['after'], allergy:['drowsy'], nerve:['drowsy'], vitamin:['after'], iron:['water'], gum:['gel'], heart:['sameTime'], bloodthin:['sameTime'] };
+  function catOf(m){ var f = firstWordLower(m.en.name); return PURPOSE_INDEX[f] || PURPOSE_INDEX[BRAND_GENERIC[f]] || PURPOSE_INDEX[m.id] || ''; }
+  function doseTextOf(m){
+    var t = m.custom ? m.en.doseLine : (m.doseNote || m[LANG].doseLine || '');
+    t = String(t || '').trim();
+    return /^(as prescribed|निर्देशानुसार)$/i.test(t) ? '' : t;
+  }
+  function howTokens(m){
+    if (!m) return [];
+    var text = String(m.custom ? m.en.doseLine : (m.doseNote || '')), toks = (HOW_CAT[catOf(m)] || []).slice(), written = null;
+    if (/\bafter\s+(?:food|meals?)|khane ke baad/i.test(text)) written = 'after';
+    else if (/\bbefore\s+(?:food|meals?)|empty stomach|khali pet/i.test(text)) written = 'empty';
+    else if (/\bwith\s+(?:food|meals?)/i.test(text)) written = 'with';
+    if (written){ toks = toks.filter(function(k){ return ['after', 'with', 'empty'].indexOf(k) === -1; }); toks.unshift(written); }
+    return toks.slice(0, 3);
+  }
+  function howChipsHtml(m){
+    var toks = howTokens(m);
+    return toks.length ? '<div class="how-chips">' + toks.map(function(k){ return '<span class="how-chip">' + HOW_TOK[k].ic + ' ' + HOW_TOK[k][LANG] + '</span>'; }).join('') + '</div>' : '';
+  }
+  /* a medicine the built-in table does not know: ask the AI once what it is commonly used for (cached; general information only) */
+  var purposeBusy = false, purposeNextTry = 0;
+  function fillUnknownPurposes(){
+    if (purposeBusy || Date.now() < purposeNextTry || !isAccount() || aiConsent() !== 'yes' || aiDown || Date.now() < reviewDownUntil) return;
+    var tried = {}; try { tried = JSON.parse(localStorage.getItem('ps_purpose_tried') || '{}') || {}; } catch(e){}
+    var list = MEDS.filter(function(m){ return m.custom && medRxStatus(m) !== 'stopped' && !medPurpose(m) && !(tried[firstWordLower(m.en.name)] > Date.now() - 7 * 86400000); }).slice(0, 8);
+    if (!list.length) return;
+    purposeBusy = true;
+    callFn(REVIEW_FN, { ageGroup:ageGroup() || 'adult', medicines:list.map(function(m){ return { name:m.en.name, strength:'', amount:'', timesPerDay:null, duration:'' }; }) }).then(function(d){
+      var c = purposeCache();
+      (d && d.medicines || []).forEach(function(r, i){ if (list[i] && r && r.typical_use) c[firstWordLower(list[i].en.name)] = r.typical_use; });
+      list.forEach(function(m){ tried[firstWordLower(m.en.name)] = Date.now(); });
+      try { localStorage.setItem('ps_purpose_cache', JSON.stringify(c)); localStorage.setItem('ps_purpose_tried', JSON.stringify(tried)); } catch(e){}
+      renderHome();
+    }).catch(function(){ purposeNextTry = Date.now() + 30 * 60000; }).then(function(){ purposeBusy = false; });
+  }
   function medPurpose(m){
     if (!m) return '';
     if (!m.custom) return (m[LANG] && m[LANG].use) || '';
     var f = firstWordLower(m.en.name), cat = PURPOSE_INDEX[f] || PURPOSE_INDEX[BRAND_GENERIC[f]];
     if (cat) return PURPOSE_CATS[cat][LANG];
-    return LANG === 'en' ? (purposeCache()[f] || '') : '';
+    return purposeCache()[f] || '';                      // AI answers are kept in English
   }
 
   /* what the person sees under each dose: its stage and, only when confirming is allowed, a hold button */
   function doseActionHtml(d){
     var t = DS_T[LANG], stg = doseStage(d), info = takenInfo(d.id), id = esc(d.id), chip = function(c, txt){ return '<span class="st-chip ' + c + '">' + txt + '</span>'; };
-    if (stg === 'upcoming') return '<div class="dose-act">' + chip('up', '⏳ ' + t.upcoming) + '<span class="muted" style="font-size:.68rem">' + t.canFrom.replace('{time}', shiftHHMM(d.time, -EARLY_MIN)) + '</span></div>';
+    if (stg === 'upcoming') return '<div class="dose-act">' + chip('up', '⏳ ' + t.upcoming) + '<button type="button" class="hold-btn" disabled>🔒 ' + t.canFrom.replace('{time}', shiftHHMM(d.time, -EARLY_MIN)) + '</button></div>';
     if (stg === 'soon') return '<div class="dose-act">' + chip('soon', '🔔 ' + t.soon) + holdBtnHtml(d.id, t.hold) + '</div>';
     if (stg === 'due') return '<div class="dose-act">' + chip('due', '🔔 ' + t.due) + holdBtnHtml(d.id, t.hold) + '</div>';
     if (stg === 'late') return '<div class="dose-act">' + chip('late', '⚠ ' + t.late) + holdBtnHtml(d.id, t.hold) + '</div>';
@@ -1829,7 +1885,9 @@
           '<span class="time num" style="padding-top:2px">'+dose.time+'</span>' +
           '<span class="name">'+name+
             (pur ? '<br><span class="muted" style="font-size:.7rem;font-weight:500">💡 '+esc(pur)+'</span>' : '') +
-            '<br>'+tag+
+            (med && doseTextOf(med) ? '<br><span class="muted" style="font-size:.7rem;font-weight:500">💊 '+esc(doseTextOf(med))+'</span>' : '') +
+            (med ? howChipsHtml(med) : '') +
+            '<div style="margin-top:5px">'+tag+'</div>'+
             (ci ? ' <span class="muted" style="font-size:.66rem;font-weight:600">· '+al.dayOf.replace('{d}', Math.max(1, ci.day)).replace('{n}', ci.days)+'</span>' : '') +
             (st === 'na' ? ' <span class="muted" style="font-size:.66rem">· '+X().startsTomorrow+'</span>' : doseActionHtml(dose)) +
           '</span></div>';
@@ -1845,6 +1903,7 @@
     }
     el.innerHTML = html;
     lastStageSig = stageSig();
+    setTimeout(fillUnknownPurposes, 600);
     var takenCount = counted.filter(function(d){ return doseState(d) === 'taken'; }).length;
     badgeEl.textContent = LANG === 'en'
       ? takenCount+' of '+counted.length+' taken'
@@ -2088,7 +2147,7 @@
     hi:{ ask:'क्या आपने {name} ले ली?', at:'खुराक का समय {time}', early:'इस खुराक का समय अभी नहीं हुआ है।', yes:'हाँ, मैंने ले ली', no:'नहीं, अभी नहीं',
          undoAsk:'{name} ली हुई दर्ज है।', undoSub:'क्या इसे वापस करना चाहते हैं?', undo:'वापस करें — मैंने नहीं ली', keep:'ली हुई ही रहने दें', done:'ली हुई दर्ज हो गई ✓', undone:'नहीं ली — दर्ज कर दिया।' }
   };
-  var cfDoseId = null;
+  var cfDoseId = null, cfRxId = null;
   function askConfirmDose(id){
     var d = SCHEDULE.filter(function(x){ return String(x.id) === String(id); })[0];
     if (!d || doseState(d) === 'na' || !isTaken(d.id)) return;                 // only a recorded dose can be corrected here
@@ -2104,11 +2163,12 @@
     }
     document.getElementById('confirmOverlay').hidden = false;
   }
-  function closeConfirm(){ var o = document.getElementById('confirmOverlay'); if (o) o.hidden = true; cfDoseId = null; }
+  function closeConfirm(){ var o = document.getElementById('confirmOverlay'); if (o) o.hidden = true; cfDoseId = null; cfRxId = null; }
   document.getElementById('confirmCard').addEventListener('click', function(e){
     var b = e.target.closest('button[data-cf]'); if (!b) return;
-    var act = b.getAttribute('data-cf'), id = cfDoseId, t = CF_T[LANG];
+    var act = b.getAttribute('data-cf'), id = cfDoseId, rid = cfRxId, t = CF_T[LANG];
     closeConfirm();
+    if (act === 'delrx' && rid != null){ deletePrescription(rid); return; }
     if (act === 'undo' && id != null){ hideUndo(); unmarkTaken(id); logEvent(id, 'corrected_not_taken', 'fix'); renderHome(); toast(t.undone); }
   });
   window.askConfirmDose = askConfirmDose;
@@ -2469,16 +2529,39 @@
     return rx.selfLabel[LANG];
   }
 
+  /* the same brand read slightly differently by two scans ("Scrampa" / "Spiampa") counts as the same name */
+  function nearName(a, b){
+    if (!a || !b) return false;
+    if (a === b) return true;
+    if (a.length < 5 || b.length < 5 || Math.abs(a.length - b.length) > 2) return false;
+    var prev = [], cur, i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++){
+      cur = [i];
+      for (j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+      prev = cur;
+    }
+    return prev[b.length] <= 2;
+  }
+  var RXD_T = {
+    en:{ doctor:'Doctor', clinic:'Clinic / place', illness:'Illness / reason', date:'Date', notWritten:'not written on the paper', meds:'Medicines in this prescription', general:'General guidance only — always follow what your doctor and pharmacist tell you.',
+      del:'🗑 Delete this prescription', delShort:'🗑 Delete', delAsk:'Delete this prescription?', delBody:'This removes it with its {n} medicine(s), reminders and history. This cannot be undone.', delYes:'Yes, delete it', keep:'No, keep it', deleted:'Prescription deleted.',
+      dup:'This looks like a prescription you already added — {n} of {m} medicines are already on your list. Add it again anyway?' },
+    hi:{ doctor:'डॉक्टर', clinic:'क्लिनिक / जगह', illness:'बीमारी / कारण', date:'तारीख', notWritten:'कागज़ पर नहीं लिखा', meds:'इस प्रिस्क्रिप्शन की दवाइयाँ', general:'केवल सामान्य जानकारी — हमेशा वही मानें जो आपके डॉक्टर और फार्मासिस्ट बताएँ।',
+      del:'🗑 यह प्रिस्क्रिप्शन हटाएँ', delShort:'🗑 हटाएँ', delAsk:'यह प्रिस्क्रिप्शन हटाएँ?', delBody:'यह इसकी {n} दवा(ओं), रिमाइंडर और इतिहास के साथ हट जाएगा। इसे वापस नहीं किया जा सकता।', delYes:'हाँ, हटाएँ', keep:'नहीं, रहने दें', deleted:'प्रिस्क्रिप्शन हटा दिया गया।',
+      dup:'यह वही प्रिस्क्रिप्शन लग रहा है जो आप पहले जोड़ चुके हैं — {m} में से {n} दवाइयाँ पहले से आपकी सूची में हैं। फिर भी दोबारा जोड़ें?' }
+  };
   function renderRxList(){
     var el = document.getElementById('rxList');
     if (!el) return;
     if (!PRESCRIPTIONS.length){ el.innerHTML = '<p class="muted">'+X().empty.rx+'</p>'; return; }
+    var rd = RXD_T[LANG];
     el.innerHTML = PRESCRIPTIONS.map(function(rx){
       var count = rx.medIds.length;
       var countLabel = LANG === 'en' ? count + (count === 1 ? ' medicine' : ' medicines') : count + ' दवाइयाँ';
-      return '<button class="medcard" type="button" onclick="openRx(\''+rx.id+'\')">' +
-        '<span class="pill-ic">📄</span><span class="mid"><span class="mname">'+rxDoctorName(rx)+'</span><span class="mdose">'+rx.date+' · '+countLabel+'</span></span><span class="chev">›</span>' +
-      '</button>';
+      return '<div style="display:flex;flex-direction:column;gap:2px"><button class="medcard" type="button" onclick="openRx(\''+rx.id+'\')">' +
+        '<span class="pill-ic">📄</span><span class="mid"><span class="mname">'+esc(rxTagText(rx))+'</span><span class="mdose">'+rx.date+' · '+countLabel+'</span></span><span class="chev">›</span>' +
+      '</button><button type="button" class="rx-del" onclick="askDeleteRx(\''+rx.id+'\')">'+rd.delShort+'</button></div>';
     }).join('');
   }
 
@@ -2488,20 +2571,58 @@
 
   function renderRxDetail(){
     if (!openRxId) return;
-    var rx = PRESCRIPTIONS.filter(function(r){ return r.id === openRxId; })[0];
+    var rx = PRESCRIPTIONS.filter(function(r){ return String(r.id) === String(openRxId); })[0];
     if (!rx) return;
-    var t = T[LANG].rx;
+    var t = T[LANG].rx, rd = RXD_T[LANG], pt = rxParts(rx), nw = '<span class="muted">' + rd.notWritten + '</span>';
     var medsHtml = rx.medIds.map(function(id){
       var m = MEDS.filter(function(x){ return x.id === id; })[0];
-      var name = m ? m[LANG].name : id;
-      return '<div class="extract-field"><span>💊</span><span>'+name+'</span></div>';
+      if (!m) return '';
+      var pur = medPurpose(m), dose = doseTextOf(m), times = SCHEDULE.filter(function(s){ return s.medId === id; }).map(function(s){ return s.time; }).sort().join(' · ');
+      return '<div class="extract-field" style="flex-direction:column;align-items:flex-start;gap:2px"><span><strong>💊 ' + esc(m[LANG].name) + '</strong></span>' +
+        (pur ? '<span class="muted" style="font-size:.76rem">💡 ' + esc(pur) + '</span>' : '') +
+        (dose ? '<span class="muted" style="font-size:.76rem">' + esc(dose) + '</span>' : '') +
+        (times ? '<span class="muted" style="font-size:.76rem">⏰ ' + times + '</span>' : '') + howChipsHtml(m) + '</div>';
     }).join('');
     document.getElementById('rxDetailBody').innerHTML =
-      '<div class="card"><span class="card-title">'+rxDoctorName(rx)+'</span><p class="muted" style="margin-top:3px">'+rx.date+'</p></div>' +
-      '<div class="report-doc"><h3>'+t.medsTitle+'</h3>'+medsHtml+'</div>' +
+      '<div class="card"><span class="card-title">👨‍⚕️ ' + esc(pt.doctor || pt.clinic || rxDoctorName(rx)) + '</span>' +
+      '<p style="margin-top:8px;font-size:.84rem"><span class="muted">' + rd.doctor + ':</span> ' + (pt.doctor ? esc(pt.doctor) : nw) + '</p>' +
+      '<p style="margin-top:3px;font-size:.84rem"><span class="muted">🏥 ' + rd.clinic + ':</span> ' + (pt.clinic ? esc(pt.clinic) : nw) + '</p>' +
+      '<p style="margin-top:3px;font-size:.84rem"><span class="muted">🩺 ' + rd.illness + ':</span> ' + (rx.diagnosis ? esc(rx.diagnosis) : nw) + '</p>' +
+      '<p style="margin-top:3px;font-size:.84rem"><span class="muted">📅 ' + rd.date + ':</span> ' + esc(rx.date) + '</p></div>' +
+      '<div class="report-doc"><h3>' + rd.meds + '</h3>' + medsHtml + '<p class="muted" style="margin-top:8px;font-size:.72rem">' + rd.general + '</p></div>' +
       '<button class="btn primary" type="button" onclick="go(\'home\')">'+t.viewScheduleBtn+'</button>' +
-      '<button class="btn outline" type="button" onclick=\'runSafetyCheck('+JSON.stringify(rx.medIds)+')\'>'+t.safetyCheckBtn+'</button>';
+      '<button class="btn outline" type="button" onclick=\'runSafetyCheck('+JSON.stringify(rx.medIds)+')\'>'+t.safetyCheckBtn+'</button>' +
+      '<button class="btn danger" type="button" onclick="askDeleteRx(\'' + rx.id + '\')">' + rd.del + '</button>';
   }
+
+  /* ---- delete a prescription (asks first; its medicines, reminders and history go with it) ---- */
+  function askDeleteRx(id){
+    var rx = PRESCRIPTIONS.filter(function(r){ return String(r.id) === String(id); })[0]; if (!rx) return;
+    var rd = RXD_T[LANG], card = document.getElementById('confirmCard');
+    cfRxId = rx.id; cfDoseId = null;
+    card.innerHTML = '<h3>' + rd.delAsk + '</h3><p class="muted" style="margin:0"><strong>' + esc(rxTagText(rx)) + '</strong> · ' + esc(rx.date) + '<br>' + rd.delBody.replace('{n}', rx.medIds.length) + '</p>' +
+      '<button class="btn danger" type="button" data-cf="delrx">' + rd.delYes + '</button><button class="btn primary" type="button" data-cf="no">' + rd.keep + '</button>';
+    document.getElementById('confirmOverlay').hidden = false;
+  }
+  async function deletePrescription(id){
+    var rx = PRESCRIPTIONS.filter(function(r){ return String(r.id) === String(id); })[0]; if (!rx) return;
+    try {
+      if (isAccount()){
+        var r = await SB.from('prescriptions').delete().eq('id', id);
+        if (r.error) throw r.error;
+        await loadAccountData();
+      } else {
+        var keep = {}; PRESCRIPTIONS.forEach(function(p){ if (p !== rx) p.medIds.forEach(function(mid){ keep[mid] = 1; }); });
+        var gone = rx.medIds.filter(function(mid){ return !keep[mid]; });
+        PRESCRIPTIONS = PRESCRIPTIONS.filter(function(p){ return p !== rx; });
+        MEDS = MEDS.filter(function(m){ return gone.indexOf(m.id) === -1; });
+        SCHEDULE = SCHEDULE.filter(function(s){ return gone.indexOf(s.medId) === -1; });
+      }
+      rxFilter = 'all'; openRxId = null;
+      renderEverything(); go('medicines'); toast(RXD_T[LANG].deleted);
+    } catch(e){ dbFail(e); }
+  }
+  window.askDeleteRx = askDeleteRx; window.deletePrescription = deletePrescription;
 
   /* auto-schedule: turn a dose-frequency line into sensible default clock times */
   function scheduleTimesFor(doseLine){
@@ -3383,7 +3504,7 @@
       var sn = parseFloat(strength); if (sn > 0) wr = wr.replace(new RegExp('(^|[^0-9.])' + String(sn).replace('.', '\.') + '(?![0-9.])', 'g'), '$1 ');
       var qtyAssumed = !!qty && !/\d|\bone\b|\btwo\b|\bthree\b|\bhalf\b|½|tsp|teaspoon|spoon|\bml\b/i.test(wr);
       return { raw:clean(m.written || m.name), name:name, medId:!low && hit ? hit.med.id : null, dose:strength, qty:qty, qtyAssumed:qtyAssumed,
-               duration:clean(m.duration), times:times, conf:conf, aiLow:low, include:!low, doseCheck:!!strength && !parseDose(strength), freqCheck:false };
+               duration:clean(m.duration), food:clean(m.food_note), times:times, conf:conf, aiLow:low, include:!low, doseCheck:!!strength && !parseDose(strength), freqCheck:false };
     });
   }
   /* name of the Supabase function that reads prescription photos (this project deployed it as "photokey") */
@@ -3611,11 +3732,16 @@
       if (!medId && (!name || MEDS.some(function(m){ return m.custom && m.en.name.toLowerCase() === name.toLowerCase(); }))){ skipped++; return; }
       var cm = medId ? catalogMed(medId) : null;
       var times = it.times ? it.times : (cm ? scheduleTimesFor(cm.en.doseLine) : ['08:00']);
-      var note = [it.dose, it.qty, it.duration ? 'for ' + it.duration : ''].filter(Boolean).join(' · ');
+      var note = [it.dose, it.qty, it.food, it.duration ? 'for ' + it.duration : ''].filter(Boolean).join(' · ');
       items.push({ medId:medId, customName:name, customDose:note, times:times });
     });
     if (!items.length){ toast(skipped ? X().manual.already : X().scanX.nothing); return; }
     if (ageGroup() && reviewOutcome().level !== 'none' && !window.confirm(X().review.addAnyway)) return;
+    var dupN = items.filter(function(x){
+      var f = firstWordLower(x.customName || (x.medId && catalogMed(x.medId) ? catalogMed(x.medId).en.name : ''));
+      return f && activeMeds().some(function(m){ return nearName(firstWordLower(m.en.name), f); });
+    }).length;
+    if (dupN && dupN / items.length >= 0.6 && !window.confirm(RXD_T[LANG].dup.replace('{n}', dupN).replace('{m}', items.length))) return;
     scanBusy = true;
     try {
       var ids = await persistPrescription({ doctorName:scanRxMeta.doctor, diagnosis:scanRxMeta.diagnosis, source:'scanned', items:items });
@@ -3977,7 +4103,9 @@
     var fx = e.target.closest('[data-fix]');
     if (fx){ askConfirmDose(fx.getAttribute('data-fix')); return; }
     var rc = e.target.closest('[data-rc]');
-    if (rc){ rcAnswer(rc.getAttribute('data-id'), rc.getAttribute('data-rc') === 'yes'); renderHome(); }
+    if (rc){ rcAnswer(rc.getAttribute('data-id'), rc.getAttribute('data-rc') === 'yes'); renderHome(); return; }
+    var tg = e.target.closest('[data-rx]');
+    if (tg) openRx(tg.getAttribute('data-rx'));
   });
 
   var rpBtn = document.getElementById('rp_enableBtn');
