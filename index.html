@@ -2669,7 +2669,8 @@
   window.scanRetryAi = scanRetryAi;
   function aiNoteHtml(){
     if (scanUsedAi || !scanAiNote) return '';
-    var sx = X().scanX, txt = sx.noAi[scanAiNote] || sx.noAi.other;
+    var sx = X().scanX, code = /^u\d+$/.test(scanAiNote) ? +scanAiNote.slice(1) : 0;
+    var txt = sx.noAi[scanAiNote] || (code === 400 || code === 401 || code === 403 ? sx.noAi.keyBad : (code === 429 ? sx.noAi.f429 : (code >= 500 ? sx.noAi.busy : sx.noAi.other)));
     return '<div class="callout warn"><span>🤖</span><div style="flex:1"><div>' + txt + '</div>' +
       (isAccount() && lastScanFile ? '<button class="btn primary sm" style="margin-top:8px" type="button" onclick="scanRetryAi()">' + sx.retryAi + '</button>' : '') + '</div></div>';
   }
@@ -2734,6 +2735,10 @@
   var PRESCRIPTION_FN = 'photokey';
   /* A temporary failure on Google's side (503/500, timeouts) is retried once. Only a real refusal or a
      second failure pauses AI reading, and only for two minutes — not for the rest of the session. */
+  /* the function's own JSON error ({ error, code, upstream }) — never contains secrets */
+  async function fnErrorInfo(err){
+    try { return (err && err.context && typeof err.context.json === 'function') ? ((await err.context.json()) || {}) : {}; } catch(e){ return {}; }
+  }
   async function runAiRead(file){
     var lastErr = null;
     try {
@@ -2749,7 +2754,8 @@
     } catch(e){ lastErr = e; }
     console.warn('AI reading unavailable, using on-device reading', lastErr);
     var status = lastErr && lastErr.context && lastErr.context.status;
-    scanAiNote = 'f' + (status || 0);
+    var info = await fnErrorInfo(lastErr);
+    scanAiNote = info.upstream ? 'u' + info.upstream : 'f' + (status || 0);
     aiDownUntil = Date.now() + (status === 404 || status === 503 ? 600000 : 120000);      // not deployed / no key: leave alone longer
     toast(X().scanX.aiDown);
     return null;
@@ -3580,6 +3586,15 @@
         aiHead:'AI second opinion (unverified) — {name}:', aiLikely:'about {total} mg a day looks higher than the usual adult amount.', aiPossible:'about {total} mg a day may be higher than the usual adult amount.',
         aiTypical:'Reported usual adult maximum: {max}.', aiNote:'This is only a warning from an AI, not a check that any medicine is safe.',
         label:{ risk:'daily dose too high', warn:'check daily dose' } },
+      diag:{ title:'🔧 Check AI connection', intro:'Tests photo reading, dose check and prescription review, and tells you in plain words what is wrong. Uses a few AI requests.', run:'Check now', running:'Checking…',
+        fnPhoto:'Reading prescription photos', fnDose:'Dose second opinion', fnReview:'Prescription review',
+        ok:'Working.', s401:'Your sign-in was not accepted. Sign out, sign in again, then check again.',
+        s404:'This function is not deployed in Supabase (or its name is different). Deploy it in Edge Functions.',
+        s503:'The function is deployed but has NO API key. Add the key in Edge Functions → Secrets (PhotoKey / dosecheck, or GEMINI_API_KEY).',
+        s429:'The AI service limit was reached. Wait and try again.',
+        keyBad:'The AI service REJECTED the API key (error {c}). The key may be wrong, expired, or not allowed. Create a new key and update the secret.',
+        busy:'The AI service is busy or down right now (error {c}). Try again in a minute.', other:'Unexpected problem (code {c}). Open the function\'s Logs in Supabase.',
+        timeout:'It took too long to answer. Try again.', net:'Could not reach the server. Check your internet.' },
       review:{ title:'🩺 Prescription review (draft)', whoFor:'Who is this prescription for? Doses depend on age.', ageLabel:'This prescription is for:',
         ages:{ child:'Child (under 12)', adult:'Adult', older:'Older adult (65+)' },
         running:'AI is reviewing the medicines…', off:'The AI review is off: sign in and allow AI reading to switch it on. PharmaSaathi’s own checks are shown below.',
@@ -3635,6 +3650,8 @@
           f503:'AI reading was not used: the reading service has no API key set on the server.',
           f502:'AI reading was not used: the AI service had a problem with this photo just now (it may be busy, or the key may be invalid). Try again in a minute.',
           f429:'AI reading was not used: the AI service limit was reached. Try again later.',
+          keyBad:'AI reading was not used: the AI service REJECTED the API key (it may be wrong, expired, or not allowed for this model). Check the key in Supabase → Edge Functions → Secrets, then use Profile → Check AI connection.',
+          busy:'AI reading was not used: the AI service is busy or having a problem right now. Try again in a minute.',
           other:'AI reading was not used because of a temporary problem. Compare the result with your paper.' },
         consentTitle:'Read handwriting with AI?',
         consentBody:'Handwriting is very hard to read on a phone alone. With your OK, this photo is sent securely to an AI service (Anthropic or Google) that reads it, and is not stored by PharmaSaathi. Please do not photograph anything except the prescription. You can always check and correct the result before anything is saved.',
@@ -3747,6 +3764,15 @@
         aiHead:'AI की दूसरी राय (असत्यापित) — {name}:', aiLikely:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा लगती है।', aiPossible:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा हो सकती है।',
         aiTypical:'बताई गई सामान्य वयस्क अधिकतम मात्रा: {max}।', aiNote:'यह केवल AI की चेतावनी है, किसी दवा के सुरक्षित होने की जाँच नहीं।',
         label:{ risk:'रोज़ की मात्रा बहुत अधिक', warn:'रोज़ की मात्रा जाँचें' } },
+      diag:{ title:'🔧 AI कनेक्शन जाँचें', intro:'फ़ोटो पढ़ना, खुराक जाँच और प्रिस्क्रिप्शन समीक्षा को टेस्ट करता है और सरल शब्दों में बताता है कि क्या गड़बड़ है। कुछ AI अनुरोध लगते हैं।', run:'अभी जाँचें', running:'जाँच हो रही है…',
+        fnPhoto:'प्रिस्क्रिप्शन फ़ोटो पढ़ना', fnDose:'खुराक की दूसरी राय', fnReview:'प्रिस्क्रिप्शन समीक्षा',
+        ok:'ठीक चल रहा है।', s401:'आपका साइन-इन स्वीकार नहीं हुआ। साइन आउट करके फिर साइन इन करें, फिर जाँचें।',
+        s404:'यह फ़ंक्शन Supabase में डिप्लॉय नहीं है (या नाम अलग है)। Edge Functions में डिप्लॉय करें।',
+        s503:'फ़ंक्शन डिप्लॉय है पर उसमें API कुंजी नहीं है। Edge Functions → Secrets में कुंजी जोड़ें।',
+        s429:'AI सेवा की सीमा पूरी हो गई। रुककर फिर कोशिश करें।',
+        keyBad:'AI सेवा ने API कुंजी अस्वीकार कर दी (त्रुटि {c})। कुंजी गलत, पुरानी या अनुमति-रहित हो सकती है। नई कुंजी बनाकर सीक्रेट बदलें।',
+        busy:'AI सेवा अभी व्यस्त या बंद है (त्रुटि {c})। एक मिनट बाद कोशिश करें।', other:'अनपेक्षित समस्या (कोड {c})। Supabase में फ़ंक्शन के Logs देखें।',
+        timeout:'जवाब देने में बहुत देर लगी। फिर कोशिश करें।', net:'सर्वर तक नहीं पहुँच सका। इंटरनेट जाँचें।' },
       review:{ title:'🩺 प्रिस्क्रिप्शन समीक्षा (ड्राफ़्ट)', whoFor:'यह प्रिस्क्रिप्शन किसके लिए है? खुराक उम्र पर निर्भर करती है।', ageLabel:'यह प्रिस्क्रिप्शन इनके लिए है:',
         ages:{ child:'बच्चा (12 से कम)', adult:'वयस्क', older:'बुज़ुर्ग (65+)' },
         running:'AI दवाइयों की समीक्षा कर रहा है…', off:'AI समीक्षा बंद है: चालू करने के लिए साइन इन करें और AI से पढ़ने की अनुमति दें। PharmaSaathi की अपनी जाँच नीचे है।',
@@ -3802,6 +3828,8 @@
           f503:'AI से पढ़ना इस्तेमाल नहीं हुआ: सर्वर पर रीडिंग सेवा की API कुंजी नहीं है।',
           f502:'AI से पढ़ना इस्तेमाल नहीं हुआ: AI सेवा को अभी इस फ़ोटो में समस्या आई (शायद व्यस्त है, या कुंजी गलत है)। एक मिनट बाद फिर कोशिश करें।',
           f429:'AI से पढ़ना इस्तेमाल नहीं हुआ: AI सेवा की सीमा पूरी हो गई। बाद में कोशिश करें।',
+          keyBad:'AI से पढ़ना इस्तेमाल नहीं हुआ: AI सेवा ने API कुंजी अस्वीकार कर दी (गलत, पुरानी, या इस मॉडल के लिए अनुमति नहीं)। Supabase → Edge Functions → Secrets में कुंजी जाँचें, फिर प्रोफ़ाइल → "AI कनेक्शन जाँचें" चलाएँ।',
+          busy:'AI से पढ़ना इस्तेमाल नहीं हुआ: AI सेवा अभी व्यस्त है या उसमें समस्या है। एक मिनट बाद कोशिश करें।',
           other:'AI से पढ़ना एक अस्थायी समस्या के कारण इस्तेमाल नहीं हुआ। नतीजा अपने कागज़ से मिलाएँ।' },
         consentTitle:'हाथ की लिखावट AI से पढ़वाएँ?',
         consentBody:'केवल फ़ोन से हस्तलिखित पर्चा पढ़ना बहुत कठिन है। आपकी अनुमति से यह फ़ोटो सुरक्षित रूप से एक AI सेवा (Anthropic या Google) को भेजी जाती है जो इसे पढ़ती है; PharmaSaathi इसे सहेजता नहीं है। कृपया प्रिस्क्रिप्शन के अलावा कुछ और फ़ोटो में न रखें। कुछ भी सहेजने से पहले आप नतीजा जाँचकर सुधार सकते हैं।',
@@ -4318,6 +4346,52 @@
   window.cgSet = cgSet; window.saveCaregiver = saveCaregiver;
 
   /* ---------- profile: account card, sign-out, delete data ---------- */
+  /* ---------- "Check AI connection": tests each AI function and explains the result in plain words ---------- */
+  var aiDiag = { running:false, rows:null };
+  function diagImage(){
+    var c = document.createElement('canvas'); c.width = 320; c.height = 120;
+    var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, 320, 120); g.fillStyle = '#000'; g.font = '28px sans-serif'; g.fillText('Tab Paracetamol 500mg BD', 8, 70);
+    return c.toDataURL('image/jpeg', 0.8).split(',')[1];
+  }
+  function diagExplain(status, info){
+    var t = X().diag, up = info && info.upstream;
+    if (status === 200) return { ok:true, text:t.ok };
+    if (status === 401) return { ok:false, text:t.s401 };
+    if (status === 404) return { ok:false, text:t.s404 };
+    if (status === 503) return { ok:false, text:t.s503 };
+    if (status === 429) return { ok:false, text:t.s429 };
+    if (up === 400 || up === 401 || up === 403) return { ok:false, text:t.keyBad.replace('{c}', up) };
+    if (up === 429) return { ok:false, text:t.s429 };
+    if (up >= 500) return { ok:false, text:t.busy.replace('{c}', up) };
+    return { ok:false, text:t.other.replace('{c}', (status || '?') + (up ? '/' + up : '')) };
+  }
+  async function runAiDiagnostics(){
+    if (aiDiag.running || !SB || !isAccount()) return;
+    aiDiag.running = true; aiDiag.rows = null; renderAccountCard();
+    var t = X().diag, tests = [
+      { label:t.fnPhoto, name:PRESCRIPTION_FN, body:{ image:diagImage(), mediaType:'image/jpeg' } },
+      { label:t.fnDose, name:'dose-check', body:{ name:'paracetamol', perDoseMg:500, dosesPerDay:2 } },
+      { label:t.fnReview, name:REVIEW_FN, body:{ ageGroup:'adult', medicines:[{ name:'Paracetamol', strength:'500 mg', amount:'1 tablet', timesPerDay:2, duration:'' }] } }
+    ], rows = [];
+    for (var i = 0; i < tests.length; i++){
+      var res;
+      try {
+        var r = await withTimeout(SB.functions.invoke(tests[i].name, { body:tests[i].body }), 30000);
+        if (!r.error) res = diagExplain(200, {});
+        else res = diagExplain(r.error.context && r.error.context.status, await fnErrorInfo(r.error));
+      } catch(e){ res = { ok:false, text:(e && e.code === 'timeout') ? t.timeout : t.net }; }
+      rows.push({ label:tests[i].label, name:tests[i].name, ok:res.ok, text:res.text });
+    }
+    aiDiag.running = false; aiDiag.rows = rows; renderAccountCard();
+  }
+  window.runAiDiagnostics = runAiDiagnostics;
+  function diagHtml(){
+    var t = X().diag;
+    return '<div class="card" style="margin-top:12px"><span class="card-title">' + t.title + '</span><p class="muted" style="margin-top:4px">' + t.intro + '</p>' +
+      '<button class="btn outline sm" type="button" style="margin-top:8px" onclick="runAiDiagnostics()"' + (aiDiag.running ? ' disabled' : '') + '>' + (aiDiag.running ? t.running : t.run) + '</button>' +
+      (aiDiag.rows ? aiDiag.rows.map(function(r){
+        return '<div class="callout ' + (r.ok ? 'good' : 'warn') + '" style="margin-top:8px"><span>' + (r.ok ? '✅' : '⚠️') + '</span><div style="flex:1"><strong>' + esc(r.label) + '</strong> <span class="muted" style="font-size:.72rem">(' + esc(r.name) + ')</span><div>' + r.text + '</div></div></div>'; }).join('') : '') + '</div>';
+  }
   function renderAccountCard(){
     var el = document.getElementById('accountBody');
     if (!el) return;
@@ -4329,7 +4403,7 @@
         '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">' +
         '<button class="btn outline" type="button" onclick="signOut()">'+a.signOut+'</button>' +
         '<button class="btn danger" type="button" onclick="deleteMyData()">'+a.del+'</button>' +
-        '<button class="link-btn" type="button" onclick="resetDevice()">'+a.resetDevice+'</button></div></div>';
+        '<button class="link-btn" type="button" onclick="resetDevice()">'+a.resetDevice+'</button></div></div>' + diagHtml();
     } else {
       el.innerHTML = '<div class="callout warn"><span>ℹ️</span><span><strong>'+a.demoTitle+'</strong><br>'+a.demoBody+'</span></div>' +
         '<button class="btn primary" type="button" onclick="leaveDemo()">'+a.demoCta+'</button>' +
