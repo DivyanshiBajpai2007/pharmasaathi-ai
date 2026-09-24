@@ -165,6 +165,7 @@
   .medcard{ display:flex; align-items:center; gap:12px; text-align:left; width:100%; border:1px solid var(--border); background:var(--surface); border-radius:16px; padding:12px 14px; cursor:pointer; box-shadow:var(--shadow-sm); }
   .medcard .pill-ic{ flex:0 0 auto; width:42px; height:42px; border-radius:12px; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; font-size:1.25rem; }
   .medcard .mid{ flex:1 1 auto; min-width:0; }
+  .medcard .mname, .medcard .mdose{ display:block; }
   .medcard .mname{ font-weight:700; font-size:.94rem; }
   .medcard .mdose{ font-size:.78rem; color:var(--text-muted); margin-top:2px; }
   .medcard .chev{ color:var(--text-muted); font-size:1.1rem; }
@@ -582,7 +583,7 @@
       <!-- PROFILE -->
       <section class="screen" id="screen-future" hidden>
         <div id="accountBody" style="display:flex;flex-direction:column;gap:14px"></div>
-        <div class="card" id="alarmPrefCard" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div id="alarmPrefCard" style="display:flex;flex-direction:column;gap:8px"></div>
         <button class="medcard" type="button" onclick="go('rewards')">
           <span class="pill-ic">🌟</span>
           <span class="mid"><span class="mname" id="pr_rewardsName">Adherence rewards</span><span class="mdose" id="pr_rewardsSub">0 coins · 0-day streak</span></span>
@@ -2139,7 +2140,12 @@
   function renderAlarmPrefs(){
     var el = document.getElementById('alarmPrefCard'); if (!el) return;
     var t = AP_T[LANG];
-    el.innerHTML = '<span class="card-title">' + t.title + '</span>' +
+    var sub = TONES[ALP.tone][LANG] + ' · ' + ALP.vol + '%' + (ALP.vib ? ' · ' + (LANG === 'en' ? 'vibration on' : 'कंपन चालू') : '');
+    var head = '<button class="medcard" type="button" data-ap-toggle="1" aria-expanded="' + (apOpen ? 'true' : 'false') + '">' +
+      '<span class="pill-ic">🔔</span><span class="mid"><span class="mname">' + t.title.replace('🔔 ', '') + '</span><span class="mdose">' + sub + '</span></span>' +
+      '<span class="chev" style="' + (apOpen ? 'transform:rotate(90deg)' : '') + '">›</span></button>';
+    if (!apOpen){ el.innerHTML = head; return; }
+    el.innerHTML = head + '<div class="card" style="display:flex;flex-direction:column;gap:10px">' +
       '<label class="muted" style="font-size:.78rem;font-weight:700">' + t.vol + ': <span id="apVolVal">' + ALP.vol + '</span>%</label>' +
       '<input class="ap-range" id="apVol" type="range" min="10" max="100" step="5" value="' + ALP.vol + '" aria-label="' + t.vol + '">' +
       '<span class="muted" style="font-size:.78rem;font-weight:700">' + t.tone + '</span>' +
@@ -2147,8 +2153,9 @@
       '<label style="display:flex;gap:8px;align-items:center;font-size:.84rem"><input type="checkbox" id="apVib"' + (ALP.vib ? ' checked' : '') + ' style="accent-color:var(--accent);width:18px;height:18px"> ' + t.vib + '</label>' +
       '<button class="btn outline sm" type="button" id="apPlay">' + t.play + '</button>' +
       (SCHEDULE.length ? '<button class="btn outline sm" type="button" id="apTest">' + t.test + '</button>' : '') +
-      '<p class="muted" style="margin:0;font-size:.72rem">' + t.note + '</p>';
+      '<p class="muted" style="margin:0;font-size:.72rem">' + t.note + '</p></div>';
   }
+  var apOpen = false;
   (function(){
     var el = document.getElementById('alarmPrefCard'); if (!el) return;
     el.addEventListener('input', function(e){
@@ -2159,6 +2166,7 @@
       if (e.target.id === 'apVib'){ ALP.vib = !!e.target.checked; saveAlp(); if (ALP.vib){ try { if (navigator.vibrate) navigator.vibrate(300); } catch(x){} } }
     });
     el.addEventListener('click', function(e){
+      if (e.target.closest('[data-ap-toggle]')){ apOpen = !apOpen; renderAlarmPrefs(); return; }
       var c = e.target.closest('[data-tone]');
       if (c){ ALP.tone = c.getAttribute('data-tone'); saveAlp(); renderAlarmPrefs(); playTone(ALP.tone, ALP.vol); return; }
       if (e.target.closest('#apPlay')) playTone(ALP.tone, ALP.vol);
