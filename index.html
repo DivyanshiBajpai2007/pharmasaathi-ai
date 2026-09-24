@@ -955,6 +955,7 @@
       priv:{ sections:[
         ['What we store','If you create an account: your email, the medicines and prescriptions you add, your dose schedule and taken/missed history, appointments, side-effect reports, coins and streak, and an optional caregiver contact. This is kept in a secured database and is visible only to you. If you just browse the sample data, nothing is saved.'],
         ['Prescription photos','By default, photos you scan are read on your own device and are not uploaded. If you are signed in and choose "Read with AI", that one photo is sent securely to an AI service (Anthropic or Google) to read the handwriting; PharmaSaathi does not store it. Only the medicine names you confirm are saved.'],
+        ['Voice assistant','Voice is optional. If you are signed in and agree to online voice, your microphone recording is sent securely to a speech-to-text service to turn it into text, and short assistant replies may be sent to a text-to-speech service to be read aloud. PharmaSaathi does not store recordings, and your medical record is never sent with them — only the recording or the short reply text. If you decline, or in sample-data mode, your browser’s own voice tools are used, which may also use an online service. Typing and buttons always work.'],
         ['Third-party services','The app uses Supabase for sign-in and storage, loads fonts from Google Fonts and its text-reading engine from a public CDN, and may use your browser’s built-in voice engine for speech. If you speak a question to the assistant, your browser may send that audio to its own online speech-recognition service to turn it into text. Your data is not sold or used for advertising.'],
         ['Deleting your data','You can delete all your stored data from the Profile tab at any time. "Clear app data on this device" also removes everything saved in this browser.'],
         ['Not medical advice','The safety checks cover only a limited set of medicines and are informational. They do not replace your doctor or pharmacist — always confirm with them before changing any medicine.'],
@@ -1058,6 +1059,7 @@
       priv:{ sections:[
         ['हम क्या संग्रहीत करते हैं','खाता बनाने पर: आपका ईमेल, आपकी जोड़ी गई दवाइयाँ और प्रिस्क्रिप्शन, खुराक समय-सारणी व ली/छूटी खुराक का इतिहास, अपॉइंटमेंट, साइड-इफ़ेक्ट रिपोर्ट, कॉइन्स व स्ट्रीक, और वैकल्पिक देखभालकर्ता संपर्क। यह सुरक्षित डेटाबेस में रहता है और केवल आपको दिखता है। यदि आप सिर्फ़ नमूना डेटा देखते हैं, तो कुछ भी सहेजा नहीं जाता।'],
         ['प्रिस्क्रिप्शन फ़ोटो','सामान्यतः आपके स्कैन किए फ़ोटो आपके अपने डिवाइस पर पढ़े जाते हैं और अपलोड नहीं होते। यदि आप साइन इन हैं और "AI से पढ़ें" चुनते हैं, तो केवल वही फ़ोटो हस्तलिखित पढ़ने हेतु सुरक्षित रूप से एक AI सेवा (Anthropic या Google) को भेजी जाती है; PharmaSaathi उसे सहेजता नहीं है। केवल वे दवाइयों के नाम सहेजे जाते हैं जिन्हें आप पुष्टि करते हैं।'],
+        ['आवाज़ सहायक','आवाज़ वैकल्पिक है। यदि आप साइन इन हैं और ऑनलाइन आवाज़ की अनुमति देते हैं, तो आपकी माइक्रोफ़ोन रिकॉर्डिंग टेक्स्ट में बदलने के लिए सुरक्षित रूप से स्पीच-टू-टेक्स्ट सेवा को भेजी जाती है, और सुनाने के लिए सहायक के छोटे जवाब टेक्स्ट-टू-स्पीच सेवा को भेजे जा सकते हैं। PharmaSaathi रिकॉर्डिंग सहेजता नहीं है, और आपका मेडिकल रिकॉर्ड उसके साथ कभी नहीं भेजा जाता — केवल रिकॉर्डिंग या जवाब का छोटा टेक्स्ट। मना करने पर, या नमूना-डेटा मोड में, आपके ब्राउज़र के अपने आवाज़ टूल इस्तेमाल होते हैं, जो ऑनलाइन सेवा भी ले सकते हैं। लिखना और बटन हमेशा काम करते हैं।'],
         ['थर्ड-पार्टी सेवाएँ','ऐप साइन-इन और स्टोरेज हेतु Supabase का उपयोग करता है, Google Fonts से फ़ॉन्ट और सार्वजनिक CDN से टेक्स्ट-रीडिंग इंजन लोड करता है, और आवाज़ हेतु आपके ब्राउज़र का वॉइस इंजन उपयोग कर सकता है। यदि आप सहायक से बोलकर सवाल पूछते हैं, तो आपका ब्राउज़र उस आवाज़ को टेक्स्ट में बदलने के लिए अपनी ऑनलाइन स्पीच-रिकग्निशन सेवा को भेज सकता है। आपका डेटा बेचा या विज्ञापन हेतु उपयोग नहीं किया जाता।'],
         ['अपना डेटा हटाना','आप प्रोफ़ाइल टैब से कभी भी अपना सारा संग्रहीत डेटा हटा सकते हैं। "इस डिवाइस का ऐप डेटा साफ़ करें" इस ब्राउज़र में सहेजा सब कुछ भी हटा देता है।'],
         ['यह चिकित्सीय सलाह नहीं है','सुरक्षा जाँच केवल सीमित दवाइयों को कवर करती है और केवल जानकारी हेतु है। यह आपके डॉक्टर या फार्मासिस्ट का विकल्प नहीं है — कोई भी दवा बदलने से पहले उनसे पुष्टि करें।'],
@@ -3045,6 +3047,9 @@
     await voicesReady();
     var lang = langOverride || LANG, text = lang === 'hi' ? hiText : enText;
     if (lang === 'hi' && !pickVoice('hi')){
+      if (cloudTtsOn()){
+        try { if (await cloudSpeak(text, 'hi')) return true; } catch(e){ /* fall back to the browser voice below */ }
+      }
       if (!pickVoice('en') && !cachedVoices.length){
         toast('यह डिवाइस आवाज़ नहीं दे रहा — सेटिंग्स में टेक्स्ट-टू-स्पीच आवाज़ इंस्टॉल करें।');
         return false;
@@ -3276,13 +3281,19 @@
         gap:'Some doses are less than {h} hours apart.',
         ask:'Please check with your doctor or pharmacist before continuing.',
         label:{ risk:'daily dose too high', warn:'check daily dose' } },
-      ask:{ btn:'Ask PharmaSaathi', title:'What do you need?', prompt:'What do you need?', mic:'Tap and speak', listening:'Listening… speak now', typePh:'Or type here…', send:'Send',
-        chips:['What is next?','Did I take my medicines?','My medicines','Any warnings?','I took my medicine'],
-        noMic:"This browser can't listen to your voice — please type your question or tap a button.",
-        micBlocked:'The microphone is blocked. Allow microphone access for this site in your browser, or type your question.',
-        noSpeech:"I didn't hear anything. Tap the microphone and try again.", netErr:'Voice recognition needs an internet connection. You can type instead.',
-        noDevice:'No microphone was found on this device.', generic:"Sorry, I couldn't listen just now. You can type instead.",
-        privacy:"Your browser may use an online service to turn speech into text.", close:'Close' },
+      ask:{ btn:'Ask PharmaSaathi', title:'What do you need?', prompt:'What do you need?', mic:'Tap and speak', listening:'Listening… tap when you are done', processing:'Processing…',
+        typePh:'Or type here…', send:'Send',
+        chips:['What medicine is next?','Did I take my medicines today?','List my medicines','Any safety warnings?','I took my medicine','Open scanner'],
+        voiceOff:"Voice input isn't available. You can type your request or use the buttons.",
+        oops:'Sorry, something went wrong. You can type your request or use the buttons.',
+        noSpeech:"I didn't catch that. Tap the microphone and try again, or type your request.",
+        cloudFallback:"The online voice service isn't available right now. Tap the microphone to use your browser's voice instead, or type your request.",
+        rate:'Too many voice requests just now. Please wait a minute, or type your request.', netErr:'Voice recognition needs an internet connection. You can type instead.',
+        consentTitle:'Use online voice?',
+        consentBody:'To understand your voice in English, Hindi or mixed Hindi-English, your recording is sent securely to a speech-to-text service, and short replies may be sent to a text-to-speech service to be read aloud. Recordings are not stored by PharmaSaathi, and your medical record is never sent — only the recording or the short reply. If you say no, your browser’s own voice tools are used (they may also use an online service), and typing always works.',
+        consentYes:'Yes, use online voice', consentNo:'No, use my browser’s voice',
+        confirmYes:'Yes, mark as taken', confirmNo:'No', confirmCancel:'Cancel',
+        privacy:'Voice is optional. Typing and the buttons always work.', close:'Close' },
       scanX:{
         tipsTitle:'For the best reading',
         tips:['Use good light and hold the phone directly above the paper.','Fill the frame with the prescription and keep it flat and in focus.','Printed or typed text reads best — handwriting is often misread, so check every name.'],
@@ -3396,13 +3407,19 @@
         gap:'कुछ खुराकों के बीच {h} घंटे से कम का अंतर है।',
         ask:'आगे लेने से पहले कृपया अपने डॉक्टर या फार्मासिस्ट से पूछें।',
         label:{ risk:'रोज़ की मात्रा बहुत अधिक', warn:'रोज़ की मात्रा जाँचें' } },
-      ask:{ btn:'PharmaSaathi से पूछें', title:'आपको क्या चाहिए?', prompt:'आपको क्या चाहिए?', mic:'दबाएँ और बोलें', listening:'सुन रहा हूँ… अब बोलें', typePh:'या यहाँ लिखें…', send:'भेजें',
-        chips:['अगली दवा कब है?','क्या मैंने आज की दवाइयाँ ली?','मेरी दवाइयाँ','कोई चेतावनी?','मैंने दवा ले ली'],
-        noMic:'यह ब्राउज़र आपकी आवाज़ नहीं सुन सकता — कृपया सवाल लिखें या किसी बटन को दबाएँ।',
-        micBlocked:'माइक्रोफ़ोन बंद है। ब्राउज़र में इस साइट के लिए माइक्रोफ़ोन की अनुमति दें, या सवाल लिखें।',
-        noSpeech:'मुझे कुछ सुनाई नहीं दिया। माइक्रोफ़ोन दबाकर फिर से बोलें।', netErr:'आवाज़ पहचानने के लिए इंटरनेट चाहिए। आप लिखकर भी पूछ सकते हैं।',
-        noDevice:'इस डिवाइस पर माइक्रोफ़ोन नहीं मिला।', generic:'माफ़ कीजिए, अभी सुन नहीं पाया। आप लिखकर पूछ सकते हैं।',
-        privacy:'आपका ब्राउज़र बोली को टेक्स्ट में बदलने के लिए ऑनलाइन सेवा का उपयोग कर सकता है।', close:'बंद करें' },
+      ask:{ btn:'PharmaSaathi से पूछें', title:'आपको क्या चाहिए?', prompt:'आपको क्या चाहिए?', mic:'दबाएँ और बोलें', listening:'सुन रहा हूँ… बोल चुकें तो दबाएँ', processing:'प्रोसेस हो रहा है…',
+        typePh:'या यहाँ लिखें…', send:'भेजें',
+        chips:['अगली दवा कौन सी है?','आज मैंने कौन सी दवाइयाँ ली हैं?','मेरी दवाइयाँ दिखाओ','कोई सुरक्षा चेतावनी?','मैंने दवा ले ली','स्कैनर खोलो'],
+        voiceOff:'आवाज़ से पूछना अभी उपलब्ध नहीं है। आप अपना सवाल लिख सकते हैं या बटन दबा सकते हैं।',
+        oops:'माफ़ कीजिए, कुछ गड़बड़ हो गई। आप सवाल लिख सकते हैं या बटन दबा सकते हैं।',
+        noSpeech:'मैं समझ नहीं पाया। माइक्रोफ़ोन दबाकर फिर बोलें, या सवाल लिखें।',
+        cloudFallback:'ऑनलाइन आवाज़ सेवा अभी उपलब्ध नहीं है। अपने ब्राउज़र की आवाज़ के लिए माइक्रोफ़ोन फिर दबाएँ, या सवाल लिखें।',
+        rate:'अभी बहुत ज़्यादा आवाज़ अनुरोध हुए। कृपया एक मिनट रुकें, या सवाल लिखें।', netErr:'आवाज़ पहचानने के लिए इंटरनेट चाहिए। आप लिखकर भी पूछ सकते हैं।',
+        consentTitle:'ऑनलाइन आवाज़ इस्तेमाल करें?',
+        consentBody:'अंग्रेज़ी, हिंदी या मिली-जुली भाषा में आपकी आवाज़ समझने के लिए आपकी रिकॉर्डिंग सुरक्षित रूप से स्पीच-टू-टेक्स्ट सेवा को भेजी जाती है, और छोटे जवाब सुनाने के लिए टेक्स्ट-टू-स्पीच सेवा को भेजे जा सकते हैं। PharmaSaathi रिकॉर्डिंग सहेजता नहीं है, और आपका मेडिकल रिकॉर्ड कभी नहीं भेजा जाता — केवल रिकॉर्डिंग या छोटा जवाब। "नहीं" कहने पर आपके ब्राउज़र के अपने आवाज़ टूल इस्तेमाल होंगे (वे भी ऑनलाइन सेवा ले सकते हैं), और लिखना हमेशा चलता है।',
+        consentYes:'हाँ, ऑनलाइन आवाज़ इस्तेमाल करें', consentNo:'नहीं, ब्राउज़र की आवाज़ इस्तेमाल करें',
+        confirmYes:'हाँ, ली हुई दर्ज करें', confirmNo:'नहीं', confirmCancel:'रद्द करें',
+        privacy:'आवाज़ वैकल्पिक है। लिखना और बटन हमेशा काम करते हैं।', close:'बंद करें' },
       scanX:{
         tipsTitle:'बेहतर पढ़ाई के लिए',
         tips:['अच्छी रोशनी में फ़ोन को कागज़ के ठीक ऊपर पकड़ें।','प्रिस्क्रिप्शन को फ़्रेम में भरें, कागज़ सपाट और फ़ोकस में रखें।','छपा या टाइप किया टेक्स्ट सबसे अच्छा पढ़ा जाता है — हाथ की लिखावट अक्सर गलत पढ़ी जाती है, इसलिए हर नाम जाँचें।'],
@@ -4133,161 +4150,544 @@
   }
   window.enterDemo = enterDemo;
 
-  /* ---------- "Ask PharmaSaathi": a small voice + text assistant ----------
-     It answers from the patient's own data (no AI service): what's next, what was taken, the
-     medicine list, safety warnings, medicine info, and it can mark a dose as taken. */
-  var ASK = { log:[], listening:false, rec:null, draft:'' };
+  /* ---------- "Ask PharmaSaathi": a small, rule-based voice + text assistant ----------
+     Pipeline:  voice/text -> speech-to-text -> intent + medicine extraction -> fixed rules ->
+     the patient's own confirmed data -> (confirmation if unsure) -> reply -> text-to-speech.
+     It is NOT a chatbot: nothing is generated by an AI model, and it never diagnoses, prescribes,
+     changes a dose or says a medicine is "safe". Anything else gets a safe "ask a professional" reply.
+     Voice services (all optional, all with fallbacks):
+       input : cloud STT (Supabase function "voice-stt") -> browser SpeechRecognition -> typing/buttons
+       output: cloud TTS (Supabase function "voice-tts") -> browser voices -> text on screen        */
+  var VOICE_CFG = { sttFn:'voice-stt', ttsFn:'voice-tts', maxRecordMs:15000, silenceMs:1600, minSpeechMs:600, callTimeoutMs:20000, downMs:60000 };
+  var ASK = { log:[], state:'idle', draft:'', pending:null, consent:false, voiceNo:false, sttDownUntil:0, ttsDownUntil:0,
+              browserRec:null, stopRec:null, audio:null, cache:{}, cacheKeys:[], lastL:'en' };
+
+  /* ---- which voice services may be used ---- */
+  function voiceConsent(){ try { return localStorage.getItem('ps_voice_consent'); } catch(e){ return null; } }
+  function cloudVoiceOn(){ return !!(SB && SB.functions && isAccount() && voiceConsent() === 'yes' && !ASK.voiceNo); }
+  function cloudSttOn(){ return cloudVoiceOn() && Date.now() > ASK.sttDownUntil; }
+  function cloudTtsOn(){ return cloudVoiceOn() && Date.now() > ASK.ttsDownUntil; }
   function askSupported(){ return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
-  function tt(en, hi){ return LANG === 'hi' ? hi : en; }
-  function askName(m){ return m[LANG].name; }
-  function askNorm(t){ return String(t).toLowerCase().replace(/[?!.,।]/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+  function withTimeout(p, ms){
+    return Promise.race([p, new Promise(function(_, rej){ setTimeout(function(){ rej({ code:'timeout' }); }, ms); })]);
+  }
+  /* call one of our Supabase functions; errors carry code: 'rate' | 'timeout' | 'fail' */
+  async function callFn(name, body){
+    var r;
+    try { r = await withTimeout(SB.functions.invoke(name, { body:body }), VOICE_CFG.callTimeoutMs); }
+    catch(e){ var er = new Error('call failed'); er.code = (e && e.code) === 'timeout' ? 'timeout' : 'fail'; throw er; }
+    if (r.error){
+      var st = r.error.context && r.error.context.status, er2 = new Error(r.error.message || 'function error');
+      er2.code = st === 429 ? 'rate' : 'fail'; throw er2;
+    }
+    return r.data;
+  }
+  function blobToB64(blob){
+    return new Promise(function(res, rej){
+      var fr = new FileReader();
+      fr.onload = function(){ res(String(fr.result).split(',')[1] || ''); };
+      fr.onerror = rej; fr.readAsDataURL(blob);
+    });
+  }
+
+  /* ---- language: answer in the language the person used ---- */
+  var HINGLISH = {};
+  ('kab kaun kaunsi kaunsa kya kitni kitna kaise leni lena lene liya maine mera meri mere dawai dawaiyan dawa dikhao dikha batao bata kholo khol agla agli aaj ' +
+   'raat subah shaam hai hain nahi nahin haan mujhe chahiye khaya khayi kiya karo khatra surakshit suraksha chhut bhool doosri dobara saath ek hi').split(' ')
+    .forEach(function(w){ HINGLISH[w] = 1; });
+  function askNorm(t){
+    return String(t).normalize('NFD').toLowerCase()
+      .replace(/ँ/g, 'ं').replace(/़/g, '')
+      .replace(/[?!.,;:।"“”()]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function askLangOf(text){
+    if (/[ऀ-ॿ]/.test(text)) return 'hi';
+    return askNorm(text).split(' ').some(function(w){ return HINGLISH[w]; }) ? 'hg' : 'en';
+  }
+  function T3(L, en, hi, hg){ return L === 'hi' ? hi : (L === 'hg' ? (hg != null ? hg : en) : en); }
+
+  /* ---- medicine names spoken in English, Roman-Hindi or Devanagari ---- */
+  var DEV_ALIASES = {
+    metformin:['मेटफॉर्मिन','मेटफार्मिन','मेटफोर्मिन','ग्लाइकोमेट','ग्लूकोफेज'],
+    amoxicillin:['अमोक्सिसिलिन','एमोक्सिसिलिन','अमोक्सीसिलिन','एमोक्सीसिलिन'],
+    levothyroxine:['लेवोथायरॉक्सिन','लिवोथायरोक्सिन','लेवोथायरोक्सिन','थायरोनॉर्म','एल्थ्रोक्सिन'],
+    paracetamol:['पैरासिटामोल','पेरासिटामोल','पारासिटामोल','पैरासिटामॉल','पैरासीटामॉल','डोलो','क्रोसिन'],
+    ibuprofen:['आइबुप्रोफेन','इबुप्रोफेन','आयबुप्रोफेन','ब्रूफेन'],
+    omeprazole:['ओमेप्राजोल','ओमेप्राज़ोल','ओमेज़','ओमेज'],
+    azithromycin:['एज़िथ्रोमाइसिन','एजिथ्रोमाइसिन','अजिथ्रोमाइसिन','एज़िथ्रोमायसिन'],
+    cetirizine:['सेटिरिज़िन','सेटिरिजिन','सिटिरिजिन','सेट्रिजिन','सेटीरिजिन','सिट्रिजिन']
+  };
+  Object.keys(DEV_ALIASES).forEach(function(k){ DEV_ALIASES[k] = DEV_ALIASES[k].map(askNorm); });
+  var BRAND_GENERIC = { dolo:'paracetamol', crocin:'paracetamol', calpol:'paracetamol', pcm:'paracetamol', acetaminophen:'paracetamol', brufen:'ibuprofen', combiflam:'ibuprofen',
+    glycomet:'metformin', glucophage:'metformin', augmentin:'amoxicillin', mox:'amoxicillin', omez:'omeprazole', thyronorm:'levothyroxine', eltroxin:'levothyroxine', cetzine:'cetirizine', azithral:'azithromycin' };
+  var DEV_MAP = { 'क':'k','ख':'k','ग':'g','घ':'g','ङ':'n','च':'k','छ':'k','ज':'j','झ':'j','ञ':'n','ट':'t','ठ':'t','ड':'d','ढ':'d','ण':'n','त':'t','थ':'t','द':'d','ध':'d','न':'n',
+    'प':'p','फ':'f','ब':'b','भ':'b','म':'m','र':'r','ल':'l','व':'v','श':'s','ष':'s','स':'s','ं':'n' };
+  function collapse(s){ return s.replace(/(.)\1+/g, '$1'); }
+  /* consonant "skeleton" of a Devanagari word / a Latin word, so "मेटफॉर्मिन" and "metformin" both become "mtfrmn" */
+  function devSkeleton(w){ var o = ''; for (var i = 0; i < w.length; i++) o += DEV_MAP[w.charAt(i)] || ''; return collapse(o); }
+  function latSkeleton(w){
+    var s = String(w).toLowerCase().replace(/[^a-z]/g, '').replace(/ph/g, 'f').replace(/ck/g, 'k').replace(/c(?=[eiy])/g, 's').replace(/c/g, 'k')
+      .replace(/x/g, 'ks').replace(/z/g, 'j').replace(/q/g, 'k').replace(/w/g, 'v').replace(/th/g, 't').replace(/dh/g, 'd').replace(/kh/g, 'k').replace(/gh/g, 'g').replace(/sh/g, 's')
+      .replace(/[aeiouyh]/g, '');
+    return collapse(s);
+  }
   function activeMeds(){ return MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; }); }
-  function findMedIn(text){
-    var norm = askNorm(text), toks = tokensOf(norm), best = null;
-    activeMeds().forEach(function(m){
-      var first = String(m.en.name).split(' ')[0].toLowerCase(), hit = false;
-      if (first.length >= 4 && norm.indexOf(first) !== -1) hit = true;
-      else if (String(m.hi.name).split(' ')[0].length >= 3 && norm.indexOf(String(m.hi.name).split(' ')[0].toLowerCase()) !== -1) hit = true;
-      else if (!m.custom) hit = !!bestTermHit(toks, catalogTerms(m));
-      else hit = toks.some(function(t){ return t.length >= 4 && editDistance(t, first, 1) <= 1; });
-      if (hit && (!best || first.length > best.len)) best = { med:m, len:first.length };
+  function isActiveMed(id){ return activeMeds().some(function(m){ return m.id === id; }); }
+  function medTermsFor(m){ return m.custom ? [String(m.en.name).split(' ')[0].toLowerCase()] : catalogTerms(m); }
+  /* every medicine mentioned, in order: [{ med, exact, active }] — the person's own medicines first, then the catalog */
+  function findMedsIn(text){
+    var words = askNorm(text).split(' '), list = [];
+    var pool = activeMeds().concat(fullCatalog().filter(function(c){ return !isActiveMed(c.id); }));
+    pool.forEach(function(m){
+      var terms = medTermsFor(m), best = null;
+      words.forEach(function(w, idx){
+        if (w.length < 3) return;
+        var kind = null;
+        if (/[ऀ-ॿ]/.test(w)){
+          var al = DEV_ALIASES[m.id];
+          if (al && al.indexOf(w) !== -1) kind = 'exact';
+          else {
+            var sk = devSkeleton(w);
+            if (sk.length >= 3) terms.forEach(function(t){
+              var ts = latSkeleton(t);
+              if (ts.length >= 3){ var d = editDistance(sk, ts, 1); if (d === 0) kind = 'exact'; else if (d <= 1 && !kind) kind = 'fuzzy'; }
+            });
+          }
+        } else {
+          var tk = tokensOf(w)[0];
+          if (!tk) return;
+          terms.forEach(function(t){
+            if (tk === t) kind = 'exact';
+            else if (t.length >= 6 && !kind){ var mx = allowedErrors(t.length); if (Math.abs(tk.length - t.length) <= mx && editDistance(tk, t, mx) <= mx) kind = 'fuzzy'; }
+          });
+        }
+        if (kind && (!best || (kind === 'exact' && best.kind !== 'exact'))) best = { kind:kind, idx:idx };
+      });
+      if (best) list.push({ med:m, exact:best.kind === 'exact', idx:best.idx, active:isActiveMed(m.id) });
     });
-    return best ? best.med : null;
+    return list.sort(function(a, b){ return a.idx - b.idx; });
   }
+
+  /* ---- what is being asked ---- */
+  var RX = {
+    q:      /\b(did|have|has|do i|should|when|what|which|how|can|kya|kab|kaun|kaunsi|kaunsa|kitni|kitna|kaise)\b|क्या|कब|कौन|कितनी|\?/,
+    take:   /\b(took|taken|had|ate|swallowed|done|finished|le li|le liya|kha li|kha liya|khaya|khayi|li|liya)\b|खा ली|खा लिया|खाई|खाया|ले ली|ले लिया|ली है|लिया है|(?:^|\s)(?:ली|लिया)(?:\s|$)/,
+    missed: /\b(missed|miss|skipped|forgot|forgotten|not taken|left out|chhut|chut|bhool|bhul|nahi li|nahi liya)\b|छूट|भूल|नहीं ली|नहीं लिया|मिस/,
+    dup:    /\b(duplicate|duplicates|same medicine|repeated|dobara|ek hi dawai)\b|डुप्लिकेट|दोहरी|एक ही दवा/,
+    advice: /\b(should i|increase|decrease|double|reduce|how much|skip|stop taking|change my dose|more than|kam karu|badhau|badha)\b|बढ़ा|घटा|कम कर|ज़्यादा ले|ज्यादा ले|छोड़ दूँ|छोड़ दूं|कितनी लूँ|कितनी लूं/,
+    inter:  /\b(interact|interaction|interactions|together|with|along with|mix|combine|combination|saath)\b|इंटरैक्शन|साथ|मिला/,
+    safety: /\b(safe|safety|risk|danger|dangerous|warning|warnings|overdose|side effect|khatra|khatara|surakshit|suraksha|chetavni)\b|सुरक्षा|सुरक्षित|खतरा|जोखिम|चेतावनी|ओवरडोज/,
+    info:   /\b(what|why|use|used|for|about|tell|explain|info|information|batao|bata)\b|क्या|किस|लिए|बारे|समझा/,
+    scan:   /\b(scan|scanner|photo)\b|स्कैन|पर्चा|प्रिस्क्रिप्शन/,
+    care:   /\b(care|caregiver|emergency|call)\b|देखभाल|इमरजेंसी|कॉल|केयर/,
+    next:   /\b(next|upcoming|when|what time|kab|agla|agli)\b|कब|अगली|अगला|समय/,
+    today:  /\b(taken|today|did i|have i|status|remaining|left|aaj|li|liya)\b|आज|(?:^|\s)(?:ली|लिया)(?:\s|$)/,
+    list:   /\b(list|show|medicines|medicine|medication|medications|tablets|pills|meds|all|dikhao|dikha|dawai|dawaiyan|meri)\b|दवा|दिखाओ|सूची|सारी/,
+    whatis: /\b(what is|what's|explain|tell me about|medicine called)\b|क्या है|kya hai/,
+    greet:  /^(hi|hello|hey|namaste|namaskar|नमस्ते|नमस्कार)$/
+  };
   function askIntent(text){
-    var raw = String(text), n = askNorm(raw);
-    var isQ = /\b(did|have|has|do i|should|when|what|which|how)\b|क्या|कब|कौन|कितनी|\?/.test(raw.toLowerCase());
-    var takeVerb = /\b(took|taken|had|ate|swallowed|mark|done)\b|खा ली|खा लिया|खाई|ले ली|ले लिया|ली है|लिया है|\bली\b|\bलिया\b/.test(n);
-    var med = findMedIn(n);
-    if (takeVerb && !isQ) return { type:'mark', med:med };
-    if (/\b(safe|safety|risk|danger|dangerous|interaction|interactions|warning|warnings|overdose|side effect)\b|सुरक्षा|सुरक्षित|खतरा|जोखिम|चेतावनी|इंटरैक्शन|ओवरडोज़/.test(n)) return { type:'safety' };
-    if (med && /\b(what|why|use|used|for|about|tell|info|information)\b|क्या|किस|लिए|बारे/.test(n)) return { type:'info', med:med };
-    if (/\b(next|upcoming|when|what time)\b|कब|अगली|अगला|समय/.test(n)) return { type:'next' };
-    if (/\b(taken|missed|miss|status|remaining|left|today|did i|have i)\b|छूट|बाकी|आज|\bली\b|\bलिया\b/.test(n)) return { type:'status' };
-    if (/\b(list|medicines|medicine|medication|medications|tablets|pills|all)\b|दवाइयाँ|दवाइयां|दवा|सूची|सारी/.test(n)) return med ? { type:'info', med:med } : { type:'list' };
-    if (/\b(scan|photo|prescription)\b|पर्चा|प्रिस्क्रिप्शन|स्कैन/.test(n)) return { type:'scan' };
-    if (/\b(call|caregiver|emergency|doctor|pharmacist|help me)\b|कॉल|देखभाल|इमरजेंसी|डॉक्टर|फार्मासिस्ट/.test(n)) return { type:'care' };
-    return { type:'help' };
+    var n = askNorm(text), raw = String(text).toLowerCase();
+    var isQ = RX.q.test(raw) || RX.q.test(n);
+    var meds = findMedsIn(n), med = meds[0] || null;
+    var byId = function(id){ return meds.filter(function(x){ return x.med.id === id; })[0]; };
+    if (RX.greet.test(n)) return { type:'greet' };
+    if (RX.advice.test(n)) return { type:'unsupported' };          // dosing advice is never given — always "ask a professional"
+    if (RX.take.test(n) && !isQ && !RX.missed.test(n)) return { type:'mark', meds:meds };
+    if (RX.missed.test(n)) return { type:'missed' };
+    if (RX.dup.test(n)) return { type:'duplicate' };
+    if (RX.inter.test(n) && meds.length) return { type:'interaction', meds:meds };
+    if (RX.safety.test(n)) return { type:'safety' };
+    if (med && RX.info.test(n) && !RX.next.test(n) && !RX.take.test(n)) return { type:'info', med:med.med, meds:meds };
+    if (RX.scan.test(n)) return { type:'scan' };
+    if (RX.care.test(n)) return { type:'care' };
+    if (RX.next.test(n)) return { type:'next', med:med && med.active ? med.med : null, medAny:med };
+    if (RX.today.test(n)) return { type:'today', med:med && med.active ? med.med : null, medAny:med };
+    if (RX.list.test(n)) return med ? { type:'info', med:med.med, meds:meds } : { type:'list' };
+    if (RX.whatis.test(n)) return { type:'noinfo' };
+    return { type:'unsupported' };
   }
-  function doseNameOf(d){ var m = medById(d.medId); return m ? askName(m) : ''; }
-  function doseDesc(d){ return doseNameOf(d) + ' ' + tt('at ', '') + fmt12(d.time) + tt('', ' बजे'); }
-  function markAsked(intent){
-    var counted = dosesToday().filter(function(d){ return !isTaken(d.id); });
-    var pool = counted;
-    if (intent.med) pool = counted.filter(function(d){ return d.medId === intent.med.id; });
-    else pool = counted.filter(function(d){ return Math.abs(minutesOf(d.time) - minutesNow()) <= 120; });
-    if (!pool.length) return { done:null, reason:intent.med ? 'alldone' : 'none' };
-    pool.sort(function(a, b){ return Math.abs(minutesOf(a.time) - minutesNow()) - Math.abs(minutesOf(b.time) - minutesNow()); });
-    if (!intent.med && pool.length > 1) return { done:null, reason:'which', options:pool };
-    markTaken(pool[0].id);
-    renderHome();
-    return { done:pool[0] };
+  function askYesNo(text){
+    var n = askNorm(text);
+    if (/^(yes|yeah|yep|ok|okay|sure|correct|haan|han|ha|ji|ji haan|हाँ|हां|जी|जी हां|सही)$/.test(n)) return 'yes';
+    if (/^(no|nope|nahi|nahin|na|cancel|नहीं|ना|रद्द)$/.test(n)) return 'no';
+    return null;
   }
-  function askReply(intent, lang, markRes){
-    return inLang(lang, function(){
-      var counted = dosesToday(), taken = counted.filter(function(d){ return doseState(d) === 'taken'; });
-      var pending = counted.filter(function(d){ return doseState(d) === 'pending'; }).sort(function(a, b){ return minutesOf(a.time) - minutesOf(b.time); });
-      var missed = counted.filter(function(d){ return doseState(d) === 'missed'; });
-      if (!activeMeds().length && intent.type !== 'help' && intent.type !== 'scan' && intent.type !== 'care') return X().empty.speech;
+
+  /* ---- doses ---- */
+  function doseMed(d){ return medById(d.medId); }
+  function doseName(d){ var m = doseMed(d); return m ? m.en.name : ''; }
+  function doseDesc(d, L){
+    return doseName(d) + T3(L, ' at ' + fmt12(d.time), ' ' + fmt12(d.time) + ' बजे', ' ' + fmt12(d.time) + ' baje');
+  }
+  function todayCounts(){
+    var counted = dosesToday(), taken = counted.filter(function(d){ return doseState(d) === 'taken'; });
+    return { counted:counted, taken:taken,
+      pending:counted.filter(function(d){ return doseState(d) === 'pending'; }).sort(function(a, b){ return minutesOf(a.time) - minutesOf(b.time); }),
+      missed:counted.filter(function(d){ return doseState(d) === 'missed'; }) };
+  }
+  /* Decide what "I took X" should do. It marks a dose ONLY when both the medicine and the dose are
+     clear; otherwise it asks. Returns { kind: done | confirm | which | none | alldone | notmine } */
+  function markPlan(intent, opts){
+    var untaken = dosesToday().filter(function(d){ return !isTaken(d.id); });
+    var meds = intent.meds || [];
+    if (meds.length > 1){
+      var opts2 = [];
+      meds.forEach(function(x){
+        var pool = untaken.filter(function(d){ return d.medId === x.med.id; }).sort(function(a, b){ return Math.abs(minutesOf(a.time) - minutesNow()) - Math.abs(minutesOf(b.time) - minutesNow()); });
+        if (pool[0]) opts2.push(pool[0]);
+      });
+      return opts2.length ? { kind:'which', options:opts2 } : { kind:'none' };
+    }
+    if (meds.length === 1){
+      var x = meds[0], m = x.med;
+      if (!isActiveMed(m.id)) return { kind:'notmine', med:m };
+      var pool2 = untaken.filter(function(d){ return d.medId === m.id; })
+        .sort(function(a, b){ return Math.abs(minutesOf(a.time) - minutesNow()) - Math.abs(minutesOf(b.time) - minutesNow()); });
+      if (!pool2.length) return { kind:'alldone', med:m };
+      var best = pool2[0], near = Math.abs(minutesOf(best.time) - minutesNow()) <= 90;
+      var otherNear = pool2[1] && Math.abs(minutesOf(pool2[1].time) - minutesNow()) <= 90;
+      var ahead = minutesOf(best.time) - minutesNow();
+      var sure = x.exact && !opts.uncertain && ((near && !otherNear) || (pool2.length === 1 && ahead <= 90));
+      if (sure){ markTaken(best.id); renderHome(); return { kind:'done', dose:best }; }
+      return { kind:'confirm', dose:best };
+    }
+    var soon = untaken.filter(function(d){ return Math.abs(minutesOf(d.time) - minutesNow()) <= 120; });
+    if (soon.length === 1) return { kind:'confirm', dose:soon[0] };
+    if (soon.length > 1) return { kind:'which', options:soon };
+    return { kind:'none' };
+  }
+  function pairInteraction(a, b){
+    return INTERACTIONS.filter(function(x){ return x.pair.indexOf(a) !== -1 && x.pair.indexOf(b) !== -1 && a !== b; })[0] || null;
+  }
+  function genericOf(m){ if (!m.custom) return m.id; var f = String(m.en.name).split(' ')[0].toLowerCase(); return BRAND_GENERIC[f] || f; }
+  function duplicateGroups(){
+    var g = {};
+    activeMeds().forEach(function(m){ var k = genericOf(m); (g[k] = g[k] || []).push(m); });
+    return Object.keys(g).filter(function(k){ return g[k].length > 1; }).map(function(k){ return g[k]; });
+  }
+
+  function notMine(m, L){
+    var n = m.en.name;
+    return T3(L, n + ' is not in your current medicines.', n + ' आपकी मौजूदा दवाइयों में नहीं है।', n + ' aapki maujooda dawaiyon mein nahi hai.');
+  }
+  /* ---- replies (English / Hindi / Hinglish); "hg" falls back to English for detailed safety content ---- */
+  var ASK_CORE = { next:1, today:1, missed:1, list:1, mark:1, duplicate:1, greet:1, unsupported:1, noinfo:1 };
+  function askBuild(intent, plan, L){
+    var dl = L === 'hi' ? 'hi' : 'en';
+    return inLang(dl, function(){
+      var c = todayCounts(), name = function(m){ return m.en.name; }, dot = T3(L, '.', '।', '.');
+      var act = activeMeds();
+      if (!act.length && ['scan','care','greet','unsupported','noinfo','info','mark','interaction'].indexOf(intent.type) === -1) return X().empty.speech;
       switch (intent.type){
-        case 'mark':
-          if (markRes.done) return tt('Done. I marked ', 'ठीक है। मैंने ') + doseDesc(markRes.done) + tt(' as taken.', ' की खुराक ली हुई दर्ज कर दी।');
-          if (markRes.reason === 'alldone') return tt('All of today’s doses of ' + askName(intent.med) + ' are already marked as taken.', 'आज की ' + askName(intent.med) + ' की सारी खुराकें पहले से ली हुई दर्ज हैं।');
-          if (markRes.reason === 'which') return tt('Which one did you take? ', 'कौन सी दवा ली? ') + markRes.options.map(doseDesc).join(tt('; ', '; ')) + tt('. Say for example “I took ' + doseNameOf(markRes.options[0]) + '”.', '। जैसे बोलें “मैंने ' + doseNameOf(markRes.options[0]) + ' ले ली”।');
-          return tt('I could not find a dose due right now. Tell me the medicine name, for example “I took Metformin”.', 'अभी कोई खुराक बाकी नहीं मिली। दवा का नाम बताइए, जैसे “मैंने Metformin ले ली”।');
+        case 'greet': return X().ask.prompt;
+        case 'unsupported': return T3(L,
+          'I can help with your medicines, doses, prescriptions and safety information. For other medical questions, please consult a doctor or pharmacist.',
+          'मैं आपकी दवाइयों, खुराक, प्रिस्क्रिप्शन और सुरक्षा जानकारी में मदद कर सकता हूँ। अन्य चिकित्सीय सवालों के लिए कृपया डॉक्टर या फार्मासिस्ट से पूछें।',
+          'Main aapki dawaiyon, doses, prescriptions aur safety information mein madad kar sakta hoon. Doosre medical sawaalon ke liye kripya doctor ya pharmacist se poochhein.');
+        case 'noinfo': return T3(L,
+          "I don't have verified information for this medicine. Please confirm with your doctor or pharmacist.",
+          'इस दवा के लिए मेरे पास सत्यापित जानकारी नहीं है। कृपया अपने डॉक्टर या फार्मासिस्ट से पूछें।',
+          'Is dawai ke liye mere paas verified jaankari nahi hai. Kripya apne doctor ya pharmacist se poochhein.');
         case 'next':
-          if (!pending.length) return missed.length
-            ? tt('No more doses are coming up today. You still have not taken: ', 'आज और कोई खुराक बाकी नहीं है। अब तक नहीं ली गई: ') + missed.map(doseDesc).join('; ') + tt('.', '।')
-            : tt('You have finished all of today’s doses. Well done!', 'आज की सारी खुराकें पूरी हो गईं। शाबाश!');
-          return tt('Your next medicine is ', 'आपकी अगली दवा है ') + doseDesc(pending[0]) + tt('.', '।') + (pending.length > 1 ? tt(' After that: ', ' उसके बाद: ') + pending.slice(1, 3).map(doseDesc).join('; ') + tt('.', '।') : '');
-        case 'status':
-          if (!counted.length) return tt('You have no doses scheduled today.', 'आज आपकी कोई खुराक तय नहीं है।');
-          return tt('You have taken ' + taken.length + ' of ' + counted.length + ' doses today.', 'आपने आज ' + counted.length + ' में से ' + taken.length + ' खुराक ली हैं।') +
-            (missed.length ? tt(' Not taken yet: ', ' अभी तक नहीं ली: ') + missed.map(doseDesc).join('; ') + tt('.', '।') : '') +
-            (pending.length ? tt(' Still to come: ', ' आगे बाकी: ') + pending.map(doseDesc).join('; ') + tt('.', '।') : '');
+          var pend = intent.med ? c.pending.filter(function(d){ return d.medId === intent.med.id; }) : c.pending;
+          if (intent.medAny && !intent.med) return notMine(intent.medAny.med, L);
+          if (!pend.length){
+            if (intent.med) return T3(L, 'There are no more ' + name(intent.med) + ' doses coming up today.', 'आज ' + name(intent.med) + ' की और कोई खुराक बाकी नहीं है।', 'Aaj ' + name(intent.med) + ' ki aur koi dose baaki nahi hai.');
+            return c.missed.length
+              ? T3(L, 'No more doses are coming up today. Not taken yet: ', 'आज और कोई खुराक बाकी नहीं है। अब तक नहीं ली: ', 'Aaj aur koi dose baaki nahi hai. Abhi tak nahi li: ') + c.missed.map(function(d){ return doseDesc(d, L); }).join('; ') + dot
+              : T3(L, 'You have finished all of today’s doses. Well done!', 'आज की सारी खुराकें पूरी हो गईं। शाबाश!', 'Aaj ki saari doses ho gayi hain. Shabash!');
+          }
+          if (intent.med) return T3(L, 'Your next ' + name(intent.med) + ' dose is at ' + fmt12(pend[0].time) + '.', 'आपकी अगली ' + name(intent.med) + ' खुराक ' + fmt12(pend[0].time) + ' बजे है।', 'Aapki agli ' + name(intent.med) + ' dose ' + fmt12(pend[0].time) + ' baje hai.') +
+            (pend.length > 1 ? T3(L, ' After that: ', ' उसके बाद: ', ' Uske baad: ') + pend.slice(1, 3).map(function(d){ return fmt12(d.time); }).join('; ') + dot : '');
+          return T3(L, 'Your next medicine is ' + doseDesc(pend[0], L) + '.', 'आपकी अगली दवा ' + doseDesc(pend[0], L) + ' है।', 'Aapki agli dawai ' + doseDesc(pend[0], L) + ' hai.') +
+            (pend.length > 1 ? T3(L, ' After that: ', ' उसके बाद: ', ' Uske baad: ') + pend.slice(1, 3).map(function(d){ return doseDesc(d, L); }).join('; ') + dot : '');
+        case 'today':
+          var cc = c, list = cc.counted;
+          if (intent.medAny && !intent.med) return notMine(intent.medAny.med, L);
+          if (intent.med){
+            list = list.filter(function(d){ return d.medId === intent.med.id; });
+            var tk = list.filter(function(d){ return doseState(d) === 'taken'; }).length;
+            return list.length ? T3(L, 'You have taken ' + tk + ' of ' + list.length + ' ' + name(intent.med) + ' doses today.', 'आपने आज ' + name(intent.med) + ' की ' + list.length + ' में से ' + tk + ' खुराक ली हैं।', 'Aapne aaj ' + name(intent.med) + ' ki ' + list.length + ' me se ' + tk + ' dose li hain.')
+                               : T3(L, 'No ' + name(intent.med) + ' doses are scheduled today.', 'आज ' + name(intent.med) + ' की कोई खुराक तय नहीं है।', 'Aaj ' + name(intent.med) + ' ki koi dose tay nahi hai.');
+          }
+          if (!c.counted.length) return T3(L, 'You have no doses scheduled today.', 'आज आपकी कोई खुराक तय नहीं है।', 'Aaj aapki koi dose tay nahi hai.');
+          return T3(L, 'You have taken ' + c.taken.length + ' of ' + c.counted.length + ' doses today.', 'आपने आज ' + c.counted.length + ' में से ' + c.taken.length + ' खुराक ली हैं।', 'Aapne aaj ' + c.counted.length + ' me se ' + c.taken.length + ' dose li hain.') +
+            (c.taken.length ? T3(L, ' Taken: ', ' ली हुई: ', ' Li hui: ') + c.taken.map(function(d){ return doseDesc(d, L); }).join('; ') + dot : '') +
+            (c.missed.length ? T3(L, ' Not taken yet: ', ' अभी नहीं ली: ', ' Abhi nahi li: ') + c.missed.map(function(d){ return doseDesc(d, L); }).join('; ') + dot : '') +
+            (c.pending.length ? T3(L, ' Still to come: ', ' आगे बाकी: ', ' Aage baaki: ') + c.pending.map(function(d){ return doseDesc(d, L); }).join('; ') + dot : '');
+        case 'missed':
+          return c.missed.length
+            ? T3(L, 'Doses not taken yet today: ', 'आज अब तक नहीं ली गई खुराकें: ', 'Aaj abhi tak nahi li gayi doses: ') + c.missed.map(function(d){ return doseDesc(d, L); }).join('; ') + dot
+            : T3(L, 'You have not missed any dose today.', 'आज आपकी कोई खुराक नहीं छूटी।', 'Aaj aapki koi dose nahi chhooti.');
         case 'list':
-          return tt('You are taking ' + activeMeds().length + ' medicines: ', 'आप ' + activeMeds().length + ' दवाइयाँ ले रहे हैं: ') +
-            activeMeds().map(function(m){
-              var c = SCHEDULE.filter(function(d){ return d.medId === m.id; }).length;
-              return askName(m) + (c ? ' (' + c + tt(' a day)', ' बार रोज़)') : '');
-            }).join('; ') + tt('.', '।');
+          return T3(L, 'You are taking ' + act.length + ' medicines: ', 'आप ' + act.length + ' दवाइयाँ ले रहे हैं: ', 'Aap ' + act.length + ' dawaiyan le rahe hain: ') +
+            act.map(function(m){
+              var n = SCHEDULE.filter(function(d){ return d.medId === m.id; }).length;
+              return name(m) + (n ? ' (' + n + T3(L, ' a day)', ' बार रोज़)', ' baar roz)') : '');
+            }).join('; ') + dot;
+        case 'mark':
+          if (!plan) return X().empty.speech;
+          if (plan.kind === 'done'){
+            var cn = todayCounts();
+            return T3(L, 'Done. I marked ' + doseDesc(plan.dose, 'en') + ' as taken. You have now taken ' + cn.taken.length + ' of ' + cn.counted.length + ' doses today.',
+                      'ठीक है। मैंने ' + doseDesc(plan.dose, 'hi') + ' की खुराक ली हुई दर्ज कर दी। अब आपने आज ' + cn.counted.length + ' में से ' + cn.taken.length + ' खुराक ली हैं।',
+                      'Theek hai. Maine ' + doseDesc(plan.dose, 'hg') + ' ki dose li hui mark kar di. Ab aapne aaj ' + cn.counted.length + ' me se ' + cn.taken.length + ' dose li hain.');
+          }
+          if (plan.kind === 'confirm') return T3(L, 'I found ' + doseDesc(plan.dose, 'en') + '. Did you take this dose?', 'मुझे ' + doseDesc(plan.dose, 'hi') + ' मिली। क्या आपने यह खुराक ली?', 'Mujhe ' + doseDesc(plan.dose, 'hg') + ' mili. Kya aapne yeh dose li?');
+          if (plan.kind === 'which') return T3(L, 'Which one did you take? Tap a button below.', 'कौन सी खुराक ली? नीचे बटन दबाएँ।', 'Kaun si dose li? Neeche button dabayein.');
+          if (plan.kind === 'alldone') return T3(L, 'All of today’s doses of ' + name(plan.med) + ' are already marked as taken.', 'आज की ' + name(plan.med) + ' की सारी खुराकें पहले से ली हुई दर्ज हैं।', 'Aaj ki ' + name(plan.med) + ' ki saari doses pehle se li hui hain.');
+          if (plan.kind === 'notmine') return T3(L, name(plan.med) + ' is not in your current medicines, so I did not mark anything.', name(plan.med) + ' आपकी मौजूदा दवाइयों में नहीं है, इसलिए मैंने कुछ दर्ज नहीं किया।', name(plan.med) + ' aapki maujooda dawaiyon mein nahi hai, isliye maine kuch mark nahi kiya.');
+          return T3(L, 'I could not tell which dose you took. Say the medicine name, for example “I took Metformin”.', 'मैं समझ नहीं पाया कि कौन सी खुराक ली। दवा का नाम बोलें, जैसे “मैंने Metformin ले ली”।', 'Main samajh nahi paya kaun si dose li. Dawai ka naam bolein, jaise “Maine Metformin le li”.');
+        case 'duplicate':
+          var dg = duplicateGroups();
+          if (!dg.length) return T3(L, 'I found no duplicate medicines among your current medicines.', 'आपकी मौजूदा दवाइयों में मुझे कोई दोहराई हुई दवा नहीं मिली।', 'Aapki maujooda dawaiyon mein mujhe koi duplicate dawai nahi mili.');
+          return T3(L, 'These may be the same medicine listed more than once: ', 'ये एक ही दवा कई बार दर्ज हो सकती हैं: ', 'Yeh ek hi dawai kai baar likhi ho sakti hai: ') +
+            dg.map(function(g){ return g.map(function(m){ return name(m) + ' (' + doctorLabelFor(m.id) + ')'; }).join(' + '); }).join('; ') + T3(L, '. Please check with your pharmacist.', '। कृपया अपने फार्मासिस्ट से पूछें।', '. Kripya apne pharmacist se poochhein.');
         case 'safety':
-          var pairs = attentionPairs(), unchecked = activeMeds().filter(function(m){ return m.custom; });
-          var out = pairs.length ? attentionSummary(pairs) : tt('No interactions or high doses found among your medicines.', 'आपकी दवाइयों में कोई इंटरैक्शन या ज़्यादा मात्रा नहीं मिली।');
+          var pairs = attentionPairs(), unchecked = act.filter(function(m){ return m.custom; });
+          var out = pairs.length ? attentionSummary(pairs) : (dl === 'hi' ? 'आपकी दवाइयों में कोई इंटरैक्शन या ज़्यादा मात्रा नहीं मिली।' : 'No interactions or high doses found among your medicines.');
           if (unchecked.length) out += ' ' + X().uncheckedHome.replace('{n}', unchecked.length);
-          return out;
+          return out + (dl === 'hi' ? ' यह सीमित डेटाबेस पर आधारित है; अंतिम निर्णय डॉक्टर या फार्मासिस्ट का है।' : ' This is based on a limited database; your doctor or pharmacist decides.');
+        case 'interaction':
+          var ms = intent.meds.map(function(x){ return x.med; }).filter(function(m){ return !m.custom; });
+          var noData = dl === 'hi' ? 'इसके लिए मेरे पास सत्यापित इंटरैक्शन जानकारी नहीं है। इसका मतलब यह नहीं कि यह सुरक्षित है — कृपया अपने फार्मासिस्ट से पूछें।'
+                                  : 'I do not have verified interaction information for this. That does not mean it is safe — please ask your pharmacist.';
+          if (ms.length >= 2){ var it = pairInteraction(ms[0].id, ms[1].id); return it ? it[dl] : noData; }
+          if (ms.length === 1){
+            var mine = INTERACTIONS.filter(function(x){ return x.pair.indexOf(ms[0].id) !== -1 && isActiveMed(x.pair[0]) && isActiveMed(x.pair[1]); });
+            return mine.length ? mine.map(function(x){ return x[dl]; }).join(' ') : noData;
+          }
+          return noData;
         case 'info':
-          var m = intent.med, times = SCHEDULE.filter(function(d){ return d.medId === m.id; }).map(function(d){ return d.time; });
-          return medSpeech(m, lang);
-        case 'scan':
-          return tt('Opening the prescription scanner.', 'प्रिस्क्रिप्शन स्कैनर खोल रहा हूँ।');
-        case 'care':
-          return tt('Opening the Care tab, where you can reach your caregiver. For an emergency, call your local emergency number.', 'देखभाल टैब खोल रहा हूँ, जहाँ आप अपने देखभालकर्ता से संपर्क कर सकते हैं। आपात स्थिति में अपना स्थानीय आपातकालीन नंबर मिलाएँ।');
-        default:
-          return tt('I can tell you what is next, whether you have taken today’s medicines, list your medicines, check for safety warnings, or mark a dose as taken. Try “What is next?”', 'मैं बता सकता हूँ कि अगली दवा कौन सी है, आज की दवाइयाँ ली या नहीं, आपकी दवाइयों की सूची, सुरक्षा चेतावनियाँ, या खुराक ली हुई दर्ज कर सकता हूँ। बोलकर देखें “अगली दवा कब है?”');
+          var im = intent.med, cm = im.custom ? null : catalogMed(im.id);
+          if (!cm) return askBuild({ type:'noinfo' }, plan, L);
+          return cm[dl].name + '. ' + String(cm[dl].use).replace(/[.।]?\s*$/, dl === 'hi' ? '।' : '.') + (cm[dl].adultDose ? (dl === 'hi' ? ' सामान्य वयस्क खुराक: ' : ' Usual adult dose: ') + cm[dl].adultDose + '.' : '') +
+            (dl === 'hi' ? ' यह PharmaSaathi के दवा-डेटाबेस की सामान्य जानकारी है — कृपया अपने फार्मासिस्ट से पुष्टि करें।' : ' This is general information from PharmaSaathi’s medicine database — please confirm with your pharmacist.');
+        case 'scan': return T3(L, 'Opening the prescription scanner.', 'प्रिस्क्रिप्शन स्कैनर खोल रहा हूँ।', 'Prescription scanner khol raha hoon.');
+        case 'care': return T3(L, 'Opening the Care tab, where you can reach your caregiver. In an emergency, call your local emergency number.', 'देखभाल टैब खोल रहा हूँ, जहाँ आप अपने देखभालकर्ता से संपर्क कर सकते हैं। आपात स्थिति में अपना स्थानीय आपातकालीन नंबर मिलाएँ।', 'Care tab khol raha hoon, jahan aap apne caregiver se baat kar sakte hain. Emergency mein apna local emergency number milayein.');
       }
+      return '';
     });
   }
-  function handleAsk(text){
+
+  /* ---- conversation ---- */
+  function addBot(text){ ASK.log.push({ who:'bot', text:text }); renderAsk(); }
+  function handleAsk(text, opts){
+    try { handleAskInner(text, opts); }
+    catch(e){ console.error(e); ASK.state = 'idle'; ASK.log.push({ who:'bot', text:X().ask.oops }); renderAsk(); }
+  }
+  function handleAskInner(text, opts){
     text = clean(text);
     if (!text) return;
+    opts = opts || {};
     ASK.log.push({ who:'me', text:text }); ASK.draft = '';
-    var intent = askIntent(text), markRes = intent.type === 'mark' ? markAsked(intent) : null;
-    var en = askReply(intent, 'en', markRes), hi = askReply(intent, 'hi', markRes);
-    var spoken = /[ऀ-ॿ]/.test(text) ? 'hi' : LANG;      // answer in the language the person spoke
-    ASK.log.push({ who:'bot', text: spoken === 'hi' ? hi : en });
-    renderAsk();
-    if (intent.type === 'scan'){ closeAsk(); startScan(); return; }
-    if (intent.type === 'care'){ speakBoth(en, hi, null, spoken); setTimeout(function(){ closeAsk(); go('caregiver'); }, 400); return; }
-    speakBoth(en, hi, null, spoken);
+    var L = askLangOf(text);
+    ASK.lastL = L;
+    if (ASK.pending){
+      var yn = askYesNo(text);
+      if (yn){ return yn === 'yes' && ASK.pending.dose ? askPick(ASK.pending.dose.id) : askCancel(); }
+      ASK.pending = null;
+    }
+    var intent = askIntent(text), plan = null;
+    if (intent.type === 'mark'){
+      plan = markPlan(intent, { uncertain:!!opts.voice && intent.meds.some(function(x){ return !x.exact; }) });
+      if (plan.kind === 'confirm') ASK.pending = { dose:plan.dose };
+      else if (plan.kind === 'which') ASK.pending = { options:plan.options };
+    }
+    deliver(intent, plan, L);
   }
-  function askVoice(){
-    var SR = window.SpeechRecognition || window.webkitSpeechRecognition, a = X().ask;
-    if (!SR){ ASK.log.push({ who:'bot', text:a.noMic }); renderAsk(); return; }
-    if (ASK.listening && ASK.rec){ try { ASK.rec.stop(); } catch(e){} return; }
+  function deliver(intent, plan, L){
+    var en = askBuild(intent, plan, 'en'), hi = askBuild(intent, plan, 'hi'), hg = L === 'hg' ? askBuild(intent, plan, 'hg') : '';
+    var core = !!ASK_CORE[intent.type] || intent.type === 'mark';
+    var display = L === 'hg' ? (core ? hg : en) : (L === 'hi' ? hi : en);
+    var speakL = L === 'hi' || (L === 'hg' && core) ? 'hi' : 'en';
+    ASK.log.push({ who:'bot', text:display });
+    renderAsk();
+    if (intent.type === 'scan'){ speakReply(en, hi, speakL); closeAsk(false); startScan(); return; }
+    if (intent.type === 'care'){ speakReply(en, hi, speakL); setTimeout(function(){ closeAsk(false); go('caregiver'); }, 500); return; }
+    speakReply(en, hi, speakL);
+  }
+  function askPick(doseId){
+    var d = SCHEDULE.filter(function(x){ return String(x.id) === String(doseId); })[0], L = ASK.lastL;
+    ASK.pending = null;
+    if (!d){ addBot(T3(L, 'I could not find that dose any more.', 'वह खुराक अब नहीं मिली।', 'Woh dose ab nahi mili.')); return; }
+    markTaken(d.id); renderHome();
+    deliver({ type:'mark' }, { kind:'done', dose:d }, L);
+  }
+  function askCancel(){
+    var L = ASK.lastL; ASK.pending = null;
+    addBot(T3(L, 'Okay, I did not mark anything.', 'ठीक है, मैंने कुछ दर्ज नहीं किया।', 'Theek hai, maine kuch mark nahi kiya.'));
+  }
+  window.askPick = askPick; window.askCancel = askCancel;
+
+  /* ---- voice output: cloud audio -> browser voice -> text stays on screen ---- */
+  function stopSpeaking(){
+    try { if (ASK.audio){ ASK.audio.pause(); ASK.audio = null; } } catch(e){}
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopSpeakAnim();
+  }
+  async function cloudSpeak(text, lang){
+    var key = lang + '|' + text, url = ASK.cache[key];
+    if (!url){
+      var d;
+      try { d = await callFn(VOICE_CFG.ttsFn, { text:text.slice(0, 700), lang:lang }); }
+      catch(e){ ASK.ttsDownUntil = Date.now() + (e.code === 'rate' ? VOICE_CFG.downMs * 2 : VOICE_CFG.downMs); throw e; }
+      if (!d || !d.audio) throw new Error('empty audio');
+      url = 'data:' + (d.mimeType || 'audio/mpeg') + ';base64,' + d.audio;
+      ASK.cache[key] = url; ASK.cacheKeys.push(key);
+      if (ASK.cacheKeys.length > 20) delete ASK.cache[ASK.cacheKeys.shift()];
+    }
+    stopSpeaking();
+    var a = new Audio(url); ASK.audio = a;
+    a.onended = a.onerror = stopSpeakAnim;
+    await a.play();                       // may be refused by the browser's autoplay rules -> caller falls back
+    return true;
+  }
+  async function speakReply(enText, hiText, L){
+    var text = L === 'hi' ? hiText : enText;
+    if (cloudTtsOn()){
+      try { if (await cloudSpeak(text, L === 'hi' ? 'hi' : 'en')) return; } catch(e){ /* fall through to the browser voice */ }
+    }
+    try { await speakBoth(enText, hiText, null, L); } catch(e){ /* the text is already on screen */ }
+  }
+
+  /* ---- voice input ---- */
+  function recordAudio(){
+    return new Promise(function(resolve, reject){
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') return reject({ name:'Unsupported' });
+      navigator.mediaDevices.getUserMedia({ audio:true }).then(function(stream){
+        var mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'].filter(function(m){ return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m); })[0] || '';
+        var rec;
+        try { rec = mime ? new MediaRecorder(stream, { mimeType:mime }) : new MediaRecorder(stream); }
+        catch(e){ stream.getTracks().forEach(function(t){ t.stop(); }); return reject(e); }
+        var chunks = [], started = Date.now(), done = false, vadOk = false, heard = false, lastLoud = Date.now(), ac = null, timer = null, cap = null;
+        function cleanup(){
+          if (done) return; done = true; clearInterval(timer); clearTimeout(cap);
+          try { if (ac) ac.close(); } catch(e){}
+          stream.getTracks().forEach(function(t){ t.stop(); }); ASK.stopRec = null;
+        }
+        function stopNow(){ if (rec.state !== 'inactive'){ try { rec.stop(); } catch(e){} } }
+        rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
+        rec.onerror = function(e){ cleanup(); reject(e.error || e); };
+        rec.onstop = function(){
+          cleanup();
+          resolve({ blob:new Blob(chunks, { type:rec.mimeType || mime || 'audio/webm' }), ms:Date.now() - started, heard:vadOk ? heard : true });
+        };
+        try {                                     // stop by itself shortly after the person stops talking
+          var AC = window.AudioContext || window.webkitAudioContext; ac = new AC();
+          var src = ac.createMediaStreamSource(stream), an = ac.createAnalyser(); an.fftSize = 1024; src.connect(an);
+          var buf = new Uint8Array(an.fftSize); vadOk = true;
+          timer = setInterval(function(){
+            an.getByteTimeDomainData(buf);
+            var peak = 0; for (var i = 0; i < buf.length; i++){ var v = Math.abs(buf[i] - 128); if (v > peak) peak = v; }
+            if (peak > 14){ heard = true; lastLoud = Date.now(); }
+            else if (heard && Date.now() - lastLoud > VOICE_CFG.silenceMs && Date.now() - started > VOICE_CFG.minSpeechMs) stopNow();
+          }, 100);
+        } catch(e){ vadOk = false; }
+        cap = setTimeout(stopNow, VOICE_CFG.maxRecordMs);
+        ASK.stopRec = stopNow;
+        rec.start();
+      }).catch(reject);
+    });
+  }
+  async function askCloudVoice(){
+    var a = X().ask;
+    ASK.state = 'listening'; renderAsk();
+    var rec;
+    try { rec = await recordAudio(); }
+    catch(e){ ASK.state = 'idle'; addBot(a.voiceOff); return; }         // denied / no microphone / unsupported
+    if (!rec || !rec.blob || rec.blob.size < 1200 || rec.ms < VOICE_CFG.minSpeechMs || !rec.heard){ ASK.state = 'idle'; addBot(a.noSpeech); return; }
+    ASK.state = 'processing'; renderAsk();
+    var text = '';
+    try {
+      var d = await callFn(VOICE_CFG.sttFn, { audio:await blobToB64(rec.blob), mimeType:rec.blob.type || 'audio/webm', lang:'auto' });
+      text = d && d.text ? String(d.text).trim() : '';
+    } catch(e){                               // only a real speech-service failure switches to the fallback
+      ASK.state = 'idle';
+      ASK.sttDownUntil = Date.now() + (e.code === 'rate' ? VOICE_CFG.downMs * 2 : VOICE_CFG.downMs);
+      addBot(e.code === 'rate' ? a.rate : (askSupported() ? a.cloudFallback : a.voiceOff));
+      return;
+    }
+    ASK.state = 'idle';
+    if (!text){ addBot(a.noSpeech); return; }
+    try { handleAsk(text, { voice:true }); }
+    catch(e){ console.error(e); addBot(a.oops); }      // never crash the page
+  }
+  function askBrowserVoice(){
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition, a = X().ask;
+    if (!SR){ addBot(a.voiceOff); return; }
     var r = new SR(), heard = false;
     r.lang = LANG === 'hi' ? 'hi-IN' : 'en-IN'; r.interimResults = false; r.maxAlternatives = 1; r.continuous = false;
-    r.onstart = function(){ ASK.listening = true; renderAsk(); };
-    r.onresult = function(e){ heard = true; handleAsk(e.results[0][0].transcript); };
+    r.onstart = function(){ ASK.state = 'listening'; renderAsk(); };
+    r.onresult = function(e){ heard = true; ASK.state = 'idle'; handleAsk(e.results[0][0].transcript, { voice:true }); };
     r.onerror = function(e){
-      ASK.listening = false;
-      var msg = { 'not-allowed':a.micBlocked, 'service-not-allowed':a.micBlocked, 'no-speech':a.noSpeech, 'network':a.netErr, 'audio-capture':a.noDevice }[e.error] || a.generic;
-      if (e.error !== 'aborted'){ ASK.log.push({ who:'bot', text:msg }); }
-      renderAsk();
+      ASK.state = 'idle';
+      if (e.error === 'aborted') { renderAsk(); return; }
+      var msg = { 'not-allowed':a.voiceOff, 'service-not-allowed':a.voiceOff, 'audio-capture':a.voiceOff, 'no-speech':a.noSpeech, 'network':a.netErr }[e.error] || a.voiceOff;
+      addBot(msg);
     };
-    r.onend = function(){ ASK.listening = false; if (!heard) renderAsk(); };
-    ASK.rec = r;
-    try { r.start(); } catch(e){ ASK.log.push({ who:'bot', text:a.generic }); renderAsk(); }
+    r.onend = function(){ if (ASK.state === 'listening') ASK.state = 'idle'; if (!heard) renderAsk(); };
+    ASK.browserRec = r;
+    try { r.start(); } catch(e){ ASK.state = 'idle'; addBot(a.voiceOff); }
   }
+  function askVoice(){
+    if (ASK.state === 'listening'){ if (ASK.stopRec) ASK.stopRec(); else if (ASK.browserRec){ try { ASK.browserRec.stop(); } catch(e){} } return; }
+    if (ASK.state === 'processing') return;
+    stopSpeaking();
+    if (SB && isAccount() && voiceConsent() === null && !ASK.voiceNo){ ASK.consent = true; renderAsk(); return; }
+    if (cloudSttOn()) askCloudVoice(); else askBrowserVoice();
+  }
+  function askConsent(yes){
+    ASK.consent = false;
+    if (yes){ try { localStorage.setItem('ps_voice_consent', 'yes'); } catch(e){} } else { ASK.voiceNo = true; }
+    renderAsk(); askVoice();
+  }
+  window.askConsent = askConsent;
+
+  /* ---- screen ---- */
   function renderAsk(){
     var a = X().ask, el = document.getElementById('askCard');
     if (!el) return;
+    var L = ASK.lastL, dose = function(d){ return doseDesc(d, L === 'hg' ? 'hg' : (L === 'hi' ? 'hi' : 'en')); };
     var log = ASK.log.map(function(m){ return '<div class="ask-msg '+m.who+'">'+esc(m.text)+'</div>'; }).join('');
+    var pending = '';
+    if (ASK.pending && ASK.pending.dose){
+      pending = '<div class="ask-chips"><button type="button" onclick="askPick(\''+ASK.pending.dose.id+'\')">'+a.confirmYes+'</button>' +
+        '<button type="button" onclick="askCancel()">'+a.confirmNo+'</button><button type="button" onclick="askCancel()">'+a.confirmCancel+'</button></div>';
+    } else if (ASK.pending && ASK.pending.options){
+      pending = '<div class="ask-chips">' + ASK.pending.options.map(function(d){ return '<button type="button" onclick="askPick(\''+d.id+'\')">'+esc(dose(d))+'</button>'; }).join('') +
+        '<button type="button" onclick="askCancel()">'+a.confirmCancel+'</button></div>';
+    }
+    var status = ASK.state === 'listening' ? a.listening : (ASK.state === 'processing' ? a.processing : a.mic);
+    var micIcon = ASK.state === 'processing' ? '<span class="spinner" style="width:22px;height:22px"></span>' : (ASK.state === 'listening' ? '⏹' : '🎙');
     el.innerHTML =
       '<div class="row"><span class="card-title">'+a.title+'</span><button class="btn outline sm" type="button" onclick="closeAsk()" aria-label="'+esc(a.close)+'">✕</button></div>' +
-      '<div class="ask-log" id="askLog">'+log+'</div>' +
-      '<div class="ask-chips">'+a.chips.map(function(c, i){ return '<button type="button" onclick="askChip('+i+')">'+esc(c)+'</button>'; }).join('')+'</div>' +
-      (askSupported()
-        ? '<button class="ask-mic'+(ASK.listening ? ' on' : '')+'" type="button" onclick="askVoice()" aria-label="'+esc(a.mic)+'">🎙</button>' +
-          '<p class="muted" style="text-align:center;font-size:.78rem">'+(ASK.listening ? a.listening : a.mic)+'</p>'
-        : '<p class="muted" style="text-align:center;font-size:.78rem">'+a.noMic+'</p>') +
+      '<div class="ask-log" id="askLog">'+log+'</div>' + pending +
+      (ASK.consent
+        ? '<div class="card flat" style="background:var(--surface-2)"><span class="card-title">'+a.consentTitle+'</span><p class="muted" style="margin-top:6px;font-size:.8rem;line-height:1.5">'+a.consentBody+'</p>' +
+          '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><button class="btn primary" type="button" onclick="askConsent(true)">'+a.consentYes+'</button>' +
+          '<button class="btn ghost" type="button" onclick="askConsent(false)">'+a.consentNo+'</button></div></div>'
+        : '<div class="ask-chips">'+a.chips.map(function(c, i){ return '<button type="button" onclick="askChip('+i+')">'+esc(c)+'</button>'; }).join('')+'</div>' +
+          '<button class="ask-mic'+(ASK.state === 'listening' ? ' on' : '')+'" type="button" onclick="askVoice()" aria-label="'+esc(a.mic)+'"'+(ASK.state === 'processing' ? ' disabled' : '')+'>'+micIcon+'</button>' +
+          '<p class="muted" style="text-align:center;font-size:.78rem" aria-live="polite">'+status+'</p>') +
       '<form class="ask-input" onsubmit="askSend();return false;"><div class="field" style="flex:1"><input id="askText" type="text" maxlength="120" autocomplete="off" placeholder="'+esc(a.typePh)+'" value="'+esc(ASK.draft)+'" oninput="askDraft(this.value)"></div>' +
       '<button class="btn primary sm" type="submit">'+a.send+'</button></form>' +
-      (askSupported() ? '<p class="muted" style="text-align:center;font-size:.68rem">'+a.privacy+'</p>' : '');
+      '<p class="muted" style="text-align:center;font-size:.68rem">'+a.privacy+'</p>';
     var lg = document.getElementById('askLog'); if (lg) lg.scrollTop = lg.scrollHeight;
   }
   function openAsk(){
-    ASK.log = [{ who:'bot', text:X().ask.prompt }]; ASK.draft = ''; ASK.listening = false;
+    ASK.log = [{ who:'bot', text:X().ask.prompt }]; ASK.draft = ''; ASK.pending = null; ASK.consent = false; ASK.state = 'idle'; ASK.lastL = LANG;
     renderAsk();
     document.getElementById('askOverlay').hidden = false;
-    speakBoth(T2.en.ask.prompt, T2.hi.ask.prompt);
+    speakReply(T2.en.ask.prompt, T2.hi.ask.prompt, LANG === 'hi' ? 'hi' : 'en');
   }
   function closeAsk(){
-    try { if (ASK.rec) ASK.rec.abort(); } catch(e){}
-    ASK.listening = false;
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    stopSpeakAnim();
+    try { if (ASK.browserRec) ASK.browserRec.abort(); } catch(e){}
+    try { if (ASK.stopRec) ASK.stopRec(); } catch(e){}
+    ASK.state = 'idle'; ASK.pending = null;
+    stopSpeaking();
     document.getElementById('askOverlay').hidden = true;
   }
   function askChip(i){ handleAsk(X().ask.chips[i]); }
