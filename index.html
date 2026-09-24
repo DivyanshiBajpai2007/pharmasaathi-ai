@@ -2490,9 +2490,9 @@
   window.scanToggle = scanToggle; window.scanEdit = scanEdit;
 
   /* AI reading (handwriting) is available to signed-in users, after they agree to send the photo */
-  var aiDown = false, pendingScanFile = null, scanUsedAi = false;
+  var aiDown = false, aiDownUntil = 0, pendingScanFile = null, scanUsedAi = false;   // aiDown: person chose "this device only"; aiDownUntil: short pause after a failure
   function aiConsent(){ try { return localStorage.getItem('ps_ai_consent'); } catch(e){ return null; } }
-  function aiAvailable(){ return !!(SB && isAccount() && !aiDown); }
+  function aiAvailable(){ return !!(SB && isAccount() && !aiDown && Date.now() > aiDownUntil); }
   function handleScanFile(file){
     if (!file) return;
     var reader = new FileReader();
@@ -2543,18 +2543,26 @@
   }
   /* name of the Supabase function that reads prescription photos (this project deployed it as "photokey") */
   var PRESCRIPTION_FN = 'photokey';
+  /* A temporary failure on Google's side (503/500, timeouts) is retried once. Only a real refusal or a
+     second failure pauses AI reading, and only for two minutes — not for the rest of the session. */
   async function runAiRead(file){
+    var lastErr = null;
     try {
       var b64 = await imageToBase64(file);
-      var r = await SB.functions.invoke(PRESCRIPTION_FN, { body:{ image:b64, mediaType:'image/jpeg' } });
-      if (r.error || !r.data || !Array.isArray(r.data.medicines)) throw (r.error || new Error('no data'));
-      return r.data;
-    } catch(e){
-      console.warn('AI reading unavailable, using on-device reading', e);
-      aiDown = true;
-      toast(X().scanX.aiDown);
-      return null;
-    }
+      for (var attempt = 0; attempt < 2; attempt++){
+        var r = await SB.functions.invoke(PRESCRIPTION_FN, { body:{ image:b64, mediaType:'image/jpeg' } });
+        if (!r.error && r.data && Array.isArray(r.data.medicines)) return r.data;
+        lastErr = r.error || new Error('no data');
+        var st = lastErr.context && lastErr.context.status;
+        if (st === 401 || st === 403 || st === 404 || st === 429 || st === 503) break;   // sign-in / not deployed / no key / quota: retrying will not help
+        if (attempt === 0) await new Promise(function(res){ setTimeout(res, 2500); });
+      }
+    } catch(e){ lastErr = e; }
+    console.warn('AI reading unavailable, using on-device reading', lastErr);
+    var status = lastErr && lastErr.context && lastErr.context.status;
+    aiDownUntil = Date.now() + (status === 404 || status === 503 ? 600000 : 120000);      // not deployed / no key: leave alone longer
+    toast(X().scanX.aiDown);
+    return null;
   }
 
   /* ---- image clean-up: phone photos have shadows, glare and low contrast ---- */
