@@ -959,6 +959,7 @@
         ['Prescription photos','By default, photos you scan are read on your own device and are not uploaded. If you are signed in and choose "Read with AI", that one photo is sent securely to an AI service (Anthropic or Google) to read the handwriting; PharmaSaathi does not store it. Only the medicine names you confirm are saved.'],
         ['Voice assistant','Voice is optional. If you are signed in and agree to online voice, your microphone recording is sent securely to a speech-to-text service to turn it into text, and short assistant replies may be sent to a text-to-speech service to be read aloud. PharmaSaathi does not store recordings, and your medical record is never sent with them — only the recording or the short reply text. If you decline, or in sample-data mode, your browser’s own voice tools are used, which may also use an online service. Typing and buttons always work.'],
         ['Third-party services','The app uses Supabase for sign-in and storage, loads fonts from Google Fonts and its text-reading engine from a public CDN, and may use your browser’s built-in voice engine for speech. If you speak a question to the assistant, your browser may send that audio to its own online speech-recognition service to turn it into text. Your data is not sold or used for advertising.'],
+        ['Dose second opinion','For a medicine with no dose limit on file, the app may send only a generic medicine name, the amount per dose and doses per day to an AI service to ask whether the daily amount looks high. No name, ID or other medicines are sent. The answer can only add a warning; it never says a dose is safe.'],
         ['Deleting your data','You can delete all your stored data from the Profile tab at any time. "Clear app data on this device" also removes everything saved in this browser.'],
         ['Not medical advice','The safety checks cover only a limited set of medicines and are informational. They do not replace your doctor or pharmacist — always confirm with them before changing any medicine.'],
         ['Contact','Questions about privacy: support@pharmasaathi.example']
@@ -1063,6 +1064,7 @@
         ['प्रिस्क्रिप्शन फ़ोटो','सामान्यतः आपके स्कैन किए फ़ोटो आपके अपने डिवाइस पर पढ़े जाते हैं और अपलोड नहीं होते। यदि आप साइन इन हैं और "AI से पढ़ें" चुनते हैं, तो केवल वही फ़ोटो हस्तलिखित पढ़ने हेतु सुरक्षित रूप से एक AI सेवा (Anthropic या Google) को भेजी जाती है; PharmaSaathi उसे सहेजता नहीं है। केवल वे दवाइयों के नाम सहेजे जाते हैं जिन्हें आप पुष्टि करते हैं।'],
         ['आवाज़ सहायक','आवाज़ वैकल्पिक है। यदि आप साइन इन हैं और ऑनलाइन आवाज़ की अनुमति देते हैं, तो आपकी माइक्रोफ़ोन रिकॉर्डिंग टेक्स्ट में बदलने के लिए सुरक्षित रूप से स्पीच-टू-टेक्स्ट सेवा को भेजी जाती है, और सुनाने के लिए सहायक के छोटे जवाब टेक्स्ट-टू-स्पीच सेवा को भेजे जा सकते हैं। PharmaSaathi रिकॉर्डिंग सहेजता नहीं है, और आपका मेडिकल रिकॉर्ड उसके साथ कभी नहीं भेजा जाता — केवल रिकॉर्डिंग या जवाब का छोटा टेक्स्ट। मना करने पर, या नमूना-डेटा मोड में, आपके ब्राउज़र के अपने आवाज़ टूल इस्तेमाल होते हैं, जो ऑनलाइन सेवा भी ले सकते हैं। लिखना और बटन हमेशा काम करते हैं।'],
         ['थर्ड-पार्टी सेवाएँ','ऐप साइन-इन और स्टोरेज हेतु Supabase का उपयोग करता है, Google Fonts से फ़ॉन्ट और सार्वजनिक CDN से टेक्स्ट-रीडिंग इंजन लोड करता है, और आवाज़ हेतु आपके ब्राउज़र का वॉइस इंजन उपयोग कर सकता है। यदि आप सहायक से बोलकर सवाल पूछते हैं, तो आपका ब्राउज़र उस आवाज़ को टेक्स्ट में बदलने के लिए अपनी ऑनलाइन स्पीच-रिकग्निशन सेवा को भेज सकता है। आपका डेटा बेचा या विज्ञापन हेतु उपयोग नहीं किया जाता।'],
+        ['खुराक की दूसरी राय','जिस दवा की खुराक-सीमा दर्ज नहीं है, उसके लिए ऐप केवल एक सामान्य दवा-नाम, एक बार की मात्रा और दिन में कितनी बार — यह AI सेवा को भेज सकता है, ताकि पूछा जा सके कि रोज़ की मात्रा ज़्यादा तो नहीं लगती। कोई नाम, पहचान या अन्य दवाइयाँ नहीं भेजी जातीं। जवाब केवल चेतावनी जोड़ सकता है; वह कभी नहीं कहता कि खुराक सुरक्षित है।'],
         ['अपना डेटा हटाना','आप प्रोफ़ाइल टैब से कभी भी अपना सारा संग्रहीत डेटा हटा सकते हैं। "इस डिवाइस का ऐप डेटा साफ़ करें" इस ब्राउज़र में सहेजा सब कुछ भी हटा देता है।'],
         ['यह चिकित्सीय सलाह नहीं है','सुरक्षा जाँच केवल सीमित दवाइयों को कवर करती है और केवल जानकारी हेतु है। यह आपके डॉक्टर या फार्मासिस्ट का विकल्प नहीं है — कोई भी दवा बदलने से पहले उनसे पुष्टि करें।'],
         ['संपर्क','गोपनीयता संबंधी प्रश्न: support@pharmasaathi.example']
@@ -1318,11 +1320,16 @@
     if (!m || medRxStatus(m) === 'stopped') return null;
     var times = SCHEDULE.filter(function(d){ return d.medId === m.id; }).map(function(d){ return d.time; });
     var al = m.custom ? evalDose(limitKeyFor(m.en.name), m.en.doseLine, times, '') : evalDose(m.id, m.doseNote || '', times, m.en.name);
+    if (!al) al = aiDoseAlertFor(m);                 // only when no built-in check flagged it; the AI can add a warning, never remove one
     if (al) al.name = m[LANG].name.split(' ')[0];
     return al;
   }
   function doseAlertText(al, lang){
     var d = T2[lang || LANG].dose, n = function(v){ return String(Math.round(v * 10) / 10); };
+    if (al.kind === 'ai'){
+      return d.aiHead.replace('{name}', al.name) + ' ' + (al.concern === 'likely' ? d.aiLikely : d.aiPossible).replace('{total}', n(al.total)) +
+        (al.typical ? ' ' + d.aiTypical.replace('{max}', al.typical) : '') + (al.reason ? ' ' + al.reason : '') + ' ' + d.aiNote + ' ' + d.ask;
+    }
     if (al.kind === 'sanity'){
       return al.name + ': ' + al.reasons.map(function(r){ return d[r].replace('{total}', n(al.total)).replace('{per}', n(al.per)); }).join(' ') + ' ' + d.noLimit + ' ' + d.ask;
     }
@@ -2730,6 +2737,7 @@
       var ids = await persistPrescription({ doctorName:'', source:'scanned', items:items });
       clearScanDraft(); scanState = 'idle'; scanItems = []; scanImageUrl = null; scanRawText = '';
       renderMedList(); renderRxList(); renderHome();
+      requestAiDoseChecks();
       openMergeCheck(ids);
     } catch(e){ dbFail(e); }
     finally { scanBusy = false; }
@@ -2856,6 +2864,7 @@
     document.getElementById('h_scheduleTitle').innerHTML = t.scheduleTitle;
     document.getElementById('h_listenLabel').textContent = t.listenLabel;
     document.getElementById('h_askBtn').innerHTML = '🎙&nbsp; ' + X().ask.btn;
+    if (Date.now() - lastAiDoseRun > 600000){ lastAiDoseRun = Date.now(); setTimeout(requestAiDoseChecks, 0); }
     var draftEl = document.getElementById('h_scanDraft');
     if (draftEl){
       var hasDraft = (scanState === 'done' && scanItems.length) || scanState === 'analyzing', sxd = X().scanX;
@@ -3360,6 +3369,8 @@
         big1:'A single dose of about {per} mg is unusually large.', big:'About {total} mg a day is unusually large.', many:'More than 6 doses a day is unusual.', tabs:'More than 4 tablets in one dose is unusual.',
         noLimit:'PharmaSaathi has no dose limit on file for this medicine, so it can only flag unusually large amounts.',
         noUnit:'Add the strength with its unit (for example 500 mg) so I can check the daily amount.',
+        aiHead:'AI second opinion (unverified) — {name}:', aiLikely:'about {total} mg a day looks higher than the usual adult amount.', aiPossible:'about {total} mg a day may be higher than the usual adult amount.',
+        aiTypical:'Reported usual adult maximum: {max}.', aiNote:'This is only a warning from an AI, not a check that any medicine is safe.',
         label:{ risk:'daily dose too high', warn:'check daily dose' } },
       ask:{ btn:'Ask PharmaSaathi', title:'What do you need?', prompt:'What do you need?', mic:'Tap and speak', listening:'Listening… tap when you are done', processing:'Processing…',
         typePh:'Or type here…', send:'Send',
@@ -3455,6 +3466,7 @@
         ['Prescription photos','When you scan a prescription, the photo is read on your own device by an OCR engine running in your browser. The photo itself is not uploaded or stored — only the medicines you choose to add are saved.'],
         ['Who can see it','Only you. We do not sell your data or share it with advertisers. The people who run the service can technically access the database for maintenance and support, and use it for nothing else.'],
         ['Services we rely on','Supabase (secure database and sign-in), GitHub Pages (hosting this app), Google Fonts, and your device\'s built-in voice engine.'],
+        ['Dose second opinion','For a medicine with no dose limit on file, the app may send only a generic medicine name, the amount per dose and doses per day to an AI service to ask whether the daily amount looks high. No name, ID or other medicines are sent. The answer can only add a warning; it never says a dose is safe.'],
         ['Deleting your data','You can erase all your health data at any time from Profile → Delete my health data. To remove your login as well, email support@pharmasaathi.example.'],
         ['Not medical advice','PharmaSaathi helps you organise and understand your medicines. Its safety checks cover only a limited set of medicines and can miss things. Always follow your doctor\'s and pharmacist\'s advice.'],
         ['Contact','Questions about your data: support@pharmasaathi.example']
@@ -3491,6 +3503,8 @@
         big1:'एक बार में लगभग {per} mg की खुराक असामान्य रूप से बड़ी है।', big:'रोज़ लगभग {total} mg असामान्य रूप से अधिक है।', many:'दिन में 6 से ज़्यादा खुराकें असामान्य हैं।', tabs:'एक बार में 4 से ज़्यादा गोलियाँ असामान्य हैं।',
         noLimit:'इस दवा की खुराक-सीमा PharmaSaathi में दर्ज नहीं है, इसलिए यह केवल असामान्य रूप से बड़ी मात्रा ही पकड़ सकता है।',
         noUnit:'मात्रा इकाई के साथ लिखें (जैसे 500 mg) ताकि मैं रोज़ की मात्रा जाँच सकूँ।',
+        aiHead:'AI की दूसरी राय (असत्यापित) — {name}:', aiLikely:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा लगती है।', aiPossible:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा हो सकती है।',
+        aiTypical:'बताई गई सामान्य वयस्क अधिकतम मात्रा: {max}।', aiNote:'यह केवल AI की चेतावनी है, किसी दवा के सुरक्षित होने की जाँच नहीं।',
         label:{ risk:'रोज़ की मात्रा बहुत अधिक', warn:'रोज़ की मात्रा जाँचें' } },
       ask:{ btn:'PharmaSaathi से पूछें', title:'आपको क्या चाहिए?', prompt:'आपको क्या चाहिए?', mic:'दबाएँ और बोलें', listening:'सुन रहा हूँ… बोल चुकें तो दबाएँ', processing:'प्रोसेस हो रहा है…',
         typePh:'या यहाँ लिखें…', send:'भेजें',
@@ -3586,6 +3600,7 @@
         ['प्रिस्क्रिप्शन की फ़ोटो','प्रिस्क्रिप्शन स्कैन करने पर फ़ोटो आपके अपने डिवाइस पर, आपके ब्राउज़र में चल रहे OCR इंजन द्वारा पढ़ी जाती है। फ़ोटो अपलोड या सहेजी नहीं जाती — केवल वही दवाइयाँ सहेजी जाती हैं जो आप जोड़ते हैं।'],
         ['कौन देख सकता है','केवल आप। हम आपका डेटा बेचते नहीं और विज्ञापनदाताओं से साझा नहीं करते। सेवा चलाने वाले लोग रखरखाव व सहायता के लिए तकनीकी रूप से डेटाबेस तक पहुँच सकते हैं, और किसी अन्य काम में इसका उपयोग नहीं करते।'],
         ['जिन सेवाओं पर हम निर्भर हैं','Supabase (सुरक्षित डेटाबेस और साइन-इन), GitHub Pages (इस ऐप की होस्टिंग), Google Fonts, और आपके डिवाइस का अंतर्निहित वॉइस इंजन।'],
+        ['खुराक की दूसरी राय','जिस दवा की खुराक-सीमा दर्ज नहीं है, उसके लिए ऐप केवल एक सामान्य दवा-नाम, एक बार की मात्रा और दिन में कितनी बार — यह AI सेवा को भेज सकता है, ताकि पूछा जा सके कि रोज़ की मात्रा ज़्यादा तो नहीं लगती। कोई नाम, पहचान या अन्य दवाइयाँ नहीं भेजी जातीं। जवाब केवल चेतावनी जोड़ सकता है; वह कभी नहीं कहता कि खुराक सुरक्षित है।'],
         ['अपना डेटा हटाना','आप कभी भी प्रोफ़ाइल → मेरा स्वास्थ्य डेटा हटाएँ से सारा स्वास्थ्य डेटा मिटा सकते हैं। लॉगिन भी हटवाने के लिए support@pharmasaathi.example पर ईमेल करें।'],
         ['यह चिकित्सीय सलाह नहीं है','PharmaSaathi आपको अपनी दवाइयाँ व्यवस्थित करने और समझने में मदद करता है। इसकी सुरक्षा जाँच केवल सीमित दवाइयों को कवर करती है और कुछ चूक सकती है। हमेशा अपने डॉक्टर और फार्मासिस्ट की सलाह मानें।'],
         ['संपर्क','अपने डेटा से जुड़े प्रश्न: support@pharmasaathi.example']
@@ -3883,6 +3898,7 @@
       var ids = await persistPrescription({ doctorName:clean(manualForm.doctor), source:'manual',
         items:[{ medId:medId, customName:name, customDose:clean(manualForm.dose), times:manualForm.times.slice() }] });
       renderMedList(); renderRxList(); renderHome();
+      requestAiDoseChecks();
       manualForm = null;
       toast(m.added);
       openMergeCheck(ids);
@@ -4793,6 +4809,50 @@
   function askDraft(v){ ASK.draft = v; }
   function askSend(){ handleAsk(ASK.draft); }
   window.openAsk = openAsk; window.closeAsk = closeAsk; window.askChip = askChip; window.askVoice = askVoice; window.askDraft = askDraft; window.askSend = askSend;
+
+  /* ---------- AI second opinion on daily dose (WARNINGS ONLY) ----------
+     For medicines with no limit on file, the "dose-check" function is asked whether the total daily
+     amount looks high. Only "possible" / "likely" is ever shown, as a warning. "none" or "unknown"
+     shows NOTHING — it is never presented as a safety confirmation. Only a generic medicine name, the
+     amount per dose and doses per day are sent: no patient details, no other medicines. */
+  var AIDOSE_KEY = 'ps_aidose_cache_v1', aiDoseBusy = false, aiDoseDownUntil = 0, aiDoseCalls = 0, lastAiDoseRun = 0;
+  var aiDoseCache = (function(){ try { return JSON.parse(localStorage.getItem(AIDOSE_KEY) || '{}') || {}; } catch(e){ return {}; } })();
+  function saveAiDoseCache(){ try { localStorage.setItem(AIDOSE_KEY, JSON.stringify(aiDoseCache)); } catch(e){} }
+  function aiDoseInputs(m){
+    if (!m || medRxStatus(m) === 'stopped') return null;
+    var times = SCHEDULE.filter(function(d){ return d.medId === m.id; }).map(function(d){ return d.time; });
+    if (!times.length) return null;
+    var lk = m.custom ? limitKeyFor(m.en.name) : m.id;
+    if (lk && DOSE_LIMITS[lk]) return null;                       // a built-in limit already covers this medicine
+    var text = m.custom ? m.en.doseLine : (m.doseNote || '');
+    var per = (doseToMg(text) || (m.custom ? 0 : doseToMg(m.en.name))) * qtyNumber(text);
+    var name = String(m.en.name).split(' ')[0].toLowerCase().replace(/[^a-z0-9\-]/g, '').slice(0, 40);
+    if (!(per > 0) || name.length < 3) return null;
+    return { name:name, perDose:per, count:times.length, total:per * times.length, key:name + '|' + per + '|' + times.length };
+  }
+  function aiDoseAlertFor(m){
+    var inp = aiDoseInputs(m);
+    if (!inp) return null;
+    var c = aiDoseCache[inp.key];
+    if (!c || (c.concern !== 'possible' && c.concern !== 'likely')) return null;
+    return { kind:'ai', level:'warn', total:inp.total, per:inp.perDose, count:inp.count, concern:c.concern, reason:c.reason, typical:c.typical, lim:{ risk:Infinity, warn:Infinity } };
+  }
+  async function requestAiDoseChecks(){
+    if (aiDoseBusy || !SB || !SB.functions || !isAccount() || Date.now() < aiDoseDownUntil) return;
+    aiDoseBusy = true;
+    try {
+      var todo = activeMeds().map(aiDoseInputs).filter(function(x){ return x && !aiDoseCache[x.key]; }).slice(0, 4);
+      for (var i = 0; i < todo.length && aiDoseCalls < 25; i++){
+        aiDoseCalls++;
+        var d = await callFn('dose-check', { name:todo[i].name, perDoseMg:todo[i].perDose, dosesPerDay:todo[i].count });
+        var concern = d && ['likely', 'possible', 'none', 'unknown'].indexOf(d.concern) !== -1 ? d.concern : 'unknown';
+        aiDoseCache[todo[i].key] = { concern:concern, reason:clean((d && d.reason) || '').slice(0, 200), typical:clean((d && d.typical_max_daily) || '').slice(0, 30), at:Date.now() };
+      }
+      if (todo.length){ saveAiDoseCache(); renderHome(); renderMedList(); }
+    } catch(e){ aiDoseDownUntil = Date.now() + pauseFor(e); }      // not deployed / failing: stay quiet, the built-in checks still work
+    finally { aiDoseBusy = false; }
+  }
+  window.requestAiDoseChecks = requestAiDoseChecks;
 
   /* ---------- local storage hygiene ---------- */
   var STORAGE_VERSION = '4';
