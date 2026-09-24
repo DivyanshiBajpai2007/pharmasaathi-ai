@@ -213,6 +213,12 @@
   .btn.sm .ic-mic, .btn.sm .ic-stop{ width:15px; height:15px; display:inline-block; vertical-align:-3px; margin-right:4px; }
   .btn.sm .ic-stop{ display:none; }
   .btn.sm.speaking .ic-stop{ display:inline-block; }
+  .confirm-overlay{ position:absolute; inset:0; z-index:65; background:rgba(10,8,4,.6); display:flex; align-items:center; justify-content:center; padding:22px; }
+  .confirm-card{ background:var(--surface); border-radius:22px; padding:22px 18px; width:100%; max-width:340px; display:flex; flex-direction:column; gap:10px; box-shadow:var(--shadow); text-align:center; }
+  .confirm-card h3{ margin:0; font-size:1.05rem; }
+  .snooze-card{ background:var(--warn-soft); border-radius:16px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+  .snooze-row{ display:flex; align-items:center; gap:10px; justify-content:space-between; }
+  .ap-range{ width:100%; accent-color:var(--accent); }
   .sos-btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:10px; background:var(--risk); color:#fff; border:none; border-radius:14px; padding:13px 14px; font:inherit; font-weight:800; font-size:.98rem; letter-spacing:.02em; cursor:pointer; box-shadow:0 10px 20px -12px rgba(196,72,60,.7); }
   .sos-btn .sos-tag{ background:#fff; color:var(--risk); border-radius:8px; padding:2px 8px; font-weight:900; }
   .sos-overlay{ position:absolute; inset:0; z-index:70; background:rgba(10,8,4,.62); display:flex; align-items:center; justify-content:center; padding:16px; }
@@ -420,6 +426,8 @@
           </div>
         </div>
 
+        <div class="snooze-card" id="snoozeCard" hidden></div>
+
         <div class="card flat" id="reminderPermCard" style="background:var(--surface-2)" hidden>
           <span class="card-title" id="rp_title">🔔 Turn on dose reminders</span>
           <p class="muted" style="margin-top:4px" id="rp_desc"></p>
@@ -433,6 +441,7 @@
           </div>
           <div id="scheduleList"></div>
           <button class="btn outline sm" type="button" id="testAlarmBtn" style="margin-top:10px;width:100%"></button>
+          <button class="btn ghost sm" type="button" id="alarmPrefLink" style="margin-top:6px;width:100%"></button>
         </div>
 
         <div class="listenbtn">
@@ -559,6 +568,7 @@
       <!-- PROFILE -->
       <section class="screen" id="screen-future" hidden>
         <div id="accountBody" style="display:flex;flex-direction:column;gap:14px"></div>
+        <div class="card" id="alarmPrefCard" style="display:flex;flex-direction:column;gap:10px"></div>
         <button class="medcard" type="button" onclick="go('rewards')">
           <span class="pill-ic">🌟</span>
           <span class="mid"><span class="mname" id="pr_rewardsName">Adherence rewards</span><span class="mdose" id="pr_rewardsSub">0 coins · 0-day streak</span></span>
@@ -634,6 +644,10 @@
 
     <div class="sos-overlay" id="sosOverlay" hidden>
       <div class="sos-card" id="sosCard" role="dialog" aria-modal="true"></div>
+    </div>
+
+    <div class="confirm-overlay" id="confirmOverlay" hidden>
+      <div class="confirm-card" id="confirmCard" role="dialog" aria-modal="true"></div>
     </div>
 
     <div class="ask-overlay" id="askOverlay" hidden>
@@ -1627,6 +1641,7 @@
     badgeEl.textContent = LANG === 'en'
       ? takenCount+' of '+counted.length+' taken'
       : counted.length+' में से '+takenCount+' ली गईं';
+    renderSnoozed();
 
     var missed = firstMissedDose();
     var notif = document.getElementById('missedDoseNotif');
@@ -1637,7 +1652,7 @@
       document.getElementById('h_notifDesc').textContent = LANG === 'en'
         ? mname+' · '+missed.time+' dose not marked taken'
         : mname+' · '+missed.time+' की खुराक अभी दर्ज नहीं है';
-      document.getElementById('markTakenBtn').onclick = function(){ markTaken(missed.id); renderHome(); };
+      document.getElementById('markTakenBtn').onclick = function(){ askConfirmDose(missed.id); };
       var who = patientLabel();
       var smsBody = LANG === 'en'
         ? 'Reminder from PharmaSaathi: '+who+' has not marked '+mname+' ('+missed.time+') as taken today.'
@@ -1694,13 +1709,52 @@
       })();
     } catch(e){}
   }
+  /* ---- alarm sound: volume, ringtone and vibration are chosen by the person and kept on this device ---- */
+  var TONES = {
+    beep:{ en:'Classic beep', hi:'क्लासिक बीप' }, chime:{ en:'Soft chime', hi:'हल्की घंटी' }, bell:{ en:'Bell', hi:'घंटा' },
+    melody:{ en:'Melody', hi:'धुन' }, loud:{ en:'Loud alarm', hi:'तेज़ अलार्म' }
+  };
+  function loadAlp(){
+    var d = { vol:80, tone:'beep', vib:true };
+    try {
+      var o = JSON.parse(localStorage.getItem('ps_alarm_pref') || '{}') || {};
+      if (typeof o.vol === 'number' && o.vol >= 5 && o.vol <= 100) d.vol = o.vol;
+      if (o.tone && TONES[o.tone]) d.tone = o.tone;
+      if (o.vib === false) d.vib = false;
+    } catch(e){}
+    return d;
+  }
+  var ALP = loadAlp();
+  function saveAlp(){ try { localStorage.setItem('ps_alarm_pref', JSON.stringify(ALP)); } catch(e){} }
+  function playTone(kind, vol){
+    try {
+      unlockAudio();
+      var ctx = audioCtx; if (!ctx) return;
+      var peak = Math.max(0.03, Math.min(1, (vol == null ? ALP.vol : vol) / 100));
+      function note(freq, at, dur, type, k){
+        var o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime + at, pk = peak * (k || 1);
+        o.type = type || 'sine'; o.frequency.value = freq;
+        o.connect(g); g.connect(ctx.destination);
+        g.gain.setValueAtTime(0.0001, t0);
+        g.gain.exponentialRampToValueAtTime(Math.max(0.0002, pk), t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.start(t0); o.stop(t0 + dur + 0.03);
+      }
+      var i;
+      if (kind === 'chime'){ [784, 988, 1175].forEach(function(f, n){ note(f, n * 0.38, 0.95, 'sine', 0.8); }); }
+      else if (kind === 'bell'){ [0, 1.3].forEach(function(at){ note(1046, at, 1.4, 'sine', 0.8); note(2093, at, 0.9, 'sine', 0.3); note(1568, at, 1.1, 'sine', 0.3); }); }
+      else if (kind === 'melody'){ [523, 659, 784, 659, 523, 784].forEach(function(f, n){ note(f, n * 0.32, 0.34, 'triangle', 0.9); }); }
+      else if (kind === 'loud'){ for (i = 0; i < 8; i++) note(i % 2 ? 988 : 740, i * 0.22, 0.2, 'square', 0.5); }
+      else { for (i = 0; i < 3; i++) note(880, i * 0.48, 0.4, 'sine', 1); }
+    } catch(e){}
+  }
   function startRing(){
     stopRing();
     ringUntil = Date.now() + AL.ringMs;
     var once = function(){
       if (Date.now() > ringUntil){ stopRing(); return; }
-      beep(3);
-      try { if (navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]); } catch(e){}
+      playTone(ALP.tone, ALP.vol);
+      try { if (ALP.vib && navigator.vibrate) navigator.vibrate([400, 200, 400, 200, 400]); } catch(e){}
     };
     once();
     ringTimer = setInterval(once, 5000);
@@ -1741,7 +1795,7 @@
       var m = medById(d.medId), pur = m ? medPurpose(m) : '';
       return '<div class="alarm-row"><div style="flex:1;min-width:0"><strong>' + esc(doseMedName(d)) + '</strong> <span class="muted">' + esc(d.time) + '</span>' +
         (pur ? '<div class="muted" style="font-size:.72rem">💡 ' + esc(pur) + '</div>' : '') + '</div>' +
-        '<button class="btn outline sm" type="button" data-act="take" data-id="' + esc(d.id) + '">✓</button></div>';
+        '<button class="btn outline sm" type="button" data-act="take" data-id="' + esc(d.id) + '">' + t.tookShort + '</button></div>';
     }).join('');
     card.innerHTML =
       '<span class="bell">⏰</span><h3>' + (alarmCurrent.length > 1 ? t.titleMany : t.title) + '</h3>' +
@@ -1787,13 +1841,13 @@
         alarmCurrent.forEach(function(d){ var st = mem[d.id] || (mem[d.id] = { fires:1, nextAt:0, skipped:false }); st.nextAt = now + AL.snoozeMs; });
         saveAlarmMem(mem);
       }
-      closeAlarm(); toast(X().alm.snoozed);
+      closeAlarm(); renderHome(); toast(X().alm.snoozed);
     } else {
       if (!alarmIsTest){
         alarmCurrent.forEach(function(d){ var st = mem[d.id] || (mem[d.id] = { fires:1, nextAt:0, skipped:false }); st.skipped = true; });
         saveAlarmMem(mem);
       }
-      closeAlarm();
+      closeAlarm(); renderHome();
     }
   });
   function checkAlarms(){
@@ -1814,6 +1868,100 @@
   setInterval(checkAlarms, 15000);
   document.addEventListener('visibilitychange', function(){ if (!document.hidden) checkAlarms(); });
 
+
+  /* ---------- ask before marking a dose (a stray tap on the schedule must not count) ---------- */
+  var CF_T = {
+    en:{ ask:'Did you take {name}?', at:'Dose time {time}', early:'It is not time for this dose yet.', yes:'Yes, I took it', no:'No, not yet',
+         undoAsk:'{name} is marked as taken.', undoSub:'Do you want to undo that?', undo:'Undo — I did not take it', keep:'Keep as taken', done:'Marked as taken ✓', undone:'Marked as not taken.' },
+    hi:{ ask:'क्या आपने {name} ले ली?', at:'खुराक का समय {time}', early:'इस खुराक का समय अभी नहीं हुआ है।', yes:'हाँ, मैंने ले ली', no:'नहीं, अभी नहीं',
+         undoAsk:'{name} ली हुई दर्ज है।', undoSub:'क्या इसे वापस करना चाहते हैं?', undo:'वापस करें — मैंने नहीं ली', keep:'ली हुई ही रहने दें', done:'ली हुई दर्ज हो गई ✓', undone:'नहीं ली — दर्ज कर दिया।' }
+  };
+  var cfDoseId = null;
+  function askConfirmDose(id){
+    var d = SCHEDULE.filter(function(x){ return String(x.id) === String(id); })[0];
+    if (!d || doseState(d) === 'na') return;
+    var t = CF_T[LANG], name = esc(doseMedName(d)), taken = isTaken(d.id), card = document.getElementById('confirmCard');
+    cfDoseId = d.id;
+    if (taken){
+      card.innerHTML = '<h3>' + t.undoAsk.replace('{name}', name) + '</h3><p class="muted" style="margin:0">' + t.undoSub + '</p>' +
+        '<button class="btn outline" type="button" data-cf="undo">' + t.undo + '</button><button class="btn primary" type="button" data-cf="no">' + t.keep + '</button>';
+    } else {
+      var early = minutesNow() < minutesOf(d.time) - 30;
+      card.innerHTML = '<h3>' + t.ask.replace('{name}', name) + '</h3><p class="muted" style="margin:0">' + t.at.replace('{time}', esc(d.time)) + (early ? '<br><strong style="color:var(--warn)">' + t.early + '</strong>' : '') + '</p>' +
+        '<button class="btn primary" type="button" data-cf="yes">' + t.yes + '</button><button class="btn ghost" type="button" data-cf="no">' + t.no + '</button>';
+    }
+    document.getElementById('confirmOverlay').hidden = false;
+  }
+  function closeConfirm(){ var o = document.getElementById('confirmOverlay'); if (o) o.hidden = true; cfDoseId = null; }
+  document.getElementById('confirmCard').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-cf]'); if (!b) return;
+    var act = b.getAttribute('data-cf'), id = cfDoseId, t = CF_T[LANG];
+    closeConfirm();
+    if (act === 'yes' && id != null){ markTaken(id); renderHome(); toast(t.done); }
+    else if (act === 'undo' && id != null){ unmarkTaken(id); renderHome(); toast(t.undone); }
+  });
+  window.askConfirmDose = askConfirmDose;
+
+  /* ---------- snoozed doses on Home: one clear button to say "I have taken it" ---------- */
+  function renderSnoozed(){
+    var el = document.getElementById('snoozeCard'); if (!el) return;
+    var mem = alarmMem(), now = Date.now();
+    var list = alarmOpen() ? [] : SCHEDULE.filter(function(d){
+      var st = mem[d.id];
+      return !isTaken(d.id) && courseActive(d.medId) && doseState(d) !== 'na' && st && !st.skipped && st.fires > 0 && st.nextAt > now;
+    });
+    if (!list.length){ el.hidden = true; el.innerHTML = ''; return; }
+    var hi = LANG === 'hi';
+    var at = new Date(Math.min.apply(null, list.map(function(d){ return mem[d.id].nextAt; })));
+    var hhmm = String(at.getHours()).padStart(2, '0') + ':' + String(at.getMinutes()).padStart(2, '0');
+    el.innerHTML = '<strong>⏳ ' + (hi ? 'याद दिलाना टाला गया — ' + hhmm + ' बजे फिर बजेगा' : 'Reminder snoozed — rings again at ' + hhmm) + '</strong>' +
+      list.map(function(d){
+        return '<div class="snooze-row"><span>' + esc(doseMedName(d)) + ' <span class="muted">' + esc(d.time) + '</span></span>' +
+          '<button class="btn primary sm" type="button" data-snz="' + esc(d.id) + '" style="width:auto">' + (hi ? '✓ हाँ, मैंने ले ली' : '✓ Yes, I have taken it') + '</button></div>';
+      }).join('');
+    el.hidden = false;
+  }
+  document.getElementById('snoozeCard').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-snz]'); if (!b) return;
+    markTaken(b.getAttribute('data-snz')); renderHome(); toast(CF_T[LANG].done);
+  });
+
+  /* ---------- Profile: alarm sound settings ---------- */
+  var AP_T = {
+    en:{ title:'🔔 Alarm sound', vol:'Volume', tone:'Ringtone', vib:'Vibrate when the alarm rings', play:'▶ Play sample', note:'Your phone’s own volume also matters — turn it up so you can hear the alarm. Settings are kept on this phone.' },
+    hi:{ title:'🔔 अलार्म की आवाज़', vol:'वॉल्यूम', tone:'रिंगटोन', vib:'अलार्म बजने पर कंपन करें', play:'▶ नमूना सुनें', note:'आपके फ़ोन का अपना वॉल्यूम भी मायने रखता है — अलार्म सुनने के लिए उसे बढ़ाएँ। ये सेटिंग्स इसी फ़ोन में रहती हैं।' }
+  };
+  function renderAlarmPrefs(){
+    var el = document.getElementById('alarmPrefCard'); if (!el) return;
+    var t = AP_T[LANG];
+    el.innerHTML = '<span class="card-title">' + t.title + '</span>' +
+      '<label class="muted" style="font-size:.78rem;font-weight:700">' + t.vol + ': <span id="apVolVal">' + ALP.vol + '</span>%</label>' +
+      '<input class="ap-range" id="apVol" type="range" min="10" max="100" step="5" value="' + ALP.vol + '" aria-label="' + t.vol + '">' +
+      '<span class="muted" style="font-size:.78rem;font-weight:700">' + t.tone + '</span>' +
+      '<div class="rx-chips">' + Object.keys(TONES).map(function(k){ return '<button type="button" class="chip' + (ALP.tone === k ? ' on' : '') + '" data-tone="' + k + '">' + TONES[k][LANG] + '</button>'; }).join('') + '</div>' +
+      '<label style="display:flex;gap:8px;align-items:center;font-size:.84rem"><input type="checkbox" id="apVib"' + (ALP.vib ? ' checked' : '') + ' style="accent-color:var(--accent);width:18px;height:18px"> ' + t.vib + '</label>' +
+      '<button class="btn outline sm" type="button" id="apPlay">' + t.play + '</button>' +
+      '<p class="muted" style="margin:0;font-size:.72rem">' + t.note + '</p>';
+  }
+  (function(){
+    var el = document.getElementById('alarmPrefCard'); if (!el) return;
+    el.addEventListener('input', function(e){
+      if (e.target.id === 'apVol'){ ALP.vol = parseInt(e.target.value, 10) || 80; var v = document.getElementById('apVolVal'); if (v) v.textContent = ALP.vol; saveAlp(); }
+    });
+    el.addEventListener('change', function(e){
+      if (e.target.id === 'apVol') playTone(ALP.tone, ALP.vol);
+      if (e.target.id === 'apVib'){ ALP.vib = !!e.target.checked; saveAlp(); if (ALP.vib){ try { if (navigator.vibrate) navigator.vibrate(300); } catch(x){} } }
+    });
+    el.addEventListener('click', function(e){
+      var c = e.target.closest('[data-tone]');
+      if (c){ ALP.tone = c.getAttribute('data-tone'); saveAlp(); renderAlarmPrefs(); playTone(ALP.tone, ALP.vol); return; }
+      if (e.target.closest('#apPlay')) playTone(ALP.tone, ALP.vol);
+    });
+  })();
+  document.getElementById('alarmPrefLink').addEventListener('click', function(){
+    go('future');
+    setTimeout(function(){ var c = document.getElementById('alarmPrefCard'); if (c && c.scrollIntoView) c.scrollIntoView({ block:'center' }); }, 60);
+  });
 
   /* =====================================================================
      SOS — one tap to the dialer. The app never dials or sends anything by itself:
@@ -2308,6 +2456,7 @@
     document.getElementById('pr_rewardsName').textContent = T[LANG].rw.homeLabel;
     document.getElementById('pr_rewardsSub').textContent = T[LANG].rw.homeSubFmt.replace('{coins}', getCoins()).replace('{streak}', getStreak());
     renderAccountCard();
+    renderAlarmPrefs();
   }
 
   /* ================= SCAN PRESCRIPTION ================= */
@@ -3411,6 +3560,7 @@
     document.getElementById('h_scanBtn').innerHTML = t.scanBtn;
     document.getElementById('h_safetyTitle').textContent = t.safetyTitle;
     document.getElementById('testAlarmBtn').textContent = LANG === 'en' ? '🔔 Test a reminder alarm now' : '🔔 अभी अलार्म टेस्ट करें';
+    document.getElementById('alarmPrefLink').textContent = LANG === 'en' ? '🔊 Alarm sound & volume' : '🔊 अलार्म की आवाज़ और वॉल्यूम';
     document.getElementById('rp_title').textContent = LANG === 'en' ? '🔔 Turn on dose reminders' : '🔔 खुराक रिमाइंडर चालू करें';
     document.getElementById('rp_desc').textContent = LANG === 'en'
       ? 'Get an alarm and notification when it\'s time for a dose, even while using other apps.'
@@ -3442,6 +3592,7 @@
     renderSchedule();
     updateReminderPermCard();
     document.getElementById('testAlarmBtn').hidden = !SCHEDULE.length;
+    document.getElementById('alarmPrefLink').hidden = !SCHEDULE.length;
     var detailBtn = document.getElementById('h_safetyDetailBtn');
     detailBtn.hidden = !activeMeds.length;
     detailBtn.textContent = LANG === 'en' ? '🛡️ See full safety check' : '🛡️ पूरी सुरक्षा जाँच देखें';
@@ -3571,6 +3722,8 @@
   function navInit(){ try { history.replaceState({ ps:'guard' }, ''); history.pushState({ ps:'home' }, ''); } catch(e){} }
   function closeTopOverlay(){
     var ask = document.getElementById('askOverlay'), al = document.getElementById('alarmOverlay'), sos = document.getElementById('sosOverlay');
+    var cf = document.getElementById('confirmOverlay');
+    if (cf && !cf.hidden){ closeConfirm(); return true; }
     if (sos && !sos.hidden){ closeSos(); return true; }
     if (ask && !ask.hidden){ closeAsk(); return true; }
     if (al && !al.hidden){ closeAlarm(); return true; }
@@ -3609,14 +3762,13 @@
     });
   });
 
-  /* schedule row tap-to-toggle (handy for demoing without waiting for real dose times) */
+  /* tapping a schedule row never changes anything by itself — it asks first, so a stray tap cannot mark a dose */
   document.getElementById('scheduleList').addEventListener('click', function(e){
     var row = e.target.closest('.schedule-row');
     if (!row) return;
     var id = row.dataset.doseId;
     if (!id) return;
-    if (isTaken(id)) unmarkTaken(id); else markTaken(id);
-    renderHome();
+    askConfirmDose(id);
   });
 
   var rpBtn = document.getElementById('rp_enableBtn');
@@ -3959,7 +4111,7 @@
         aiHead:'AI second opinion (unverified) — {name}:', aiLikely:'about {total} mg a day looks higher than the usual adult amount.', aiPossible:'about {total} mg a day may be higher than the usual adult amount.',
         aiTypical:'Reported usual adult maximum: {max}.', aiNote:'This is only a warning from an AI, not a check that any medicine is safe.',
         label:{ risk:'daily dose too high', warn:'check daily dose' } },
-      alm:{ title:'Time for your medicine', titleMany:'Time for your medicines', took:'✓ I took it', tookAll:'✓ I took them all', snooze:'Remind me in 10 min', skip:'Skip for today',
+      alm:{ title:'Time for your medicine', titleMany:'Time for your medicines', took:'✓ I took it', tookShort:'✓ Taken', tookAll:'✓ I took them all', snooze:'Remind me in 10 min', skip:'Skip for today',
         snoozed:'OK — I will remind you in 10 minutes.', allRx:'All prescriptions', forLabel:'for', dayOf:'Day {d} of {n}',
         diagMissing:'Saved without the illness — run backend/prescriptions_diagnosis.sql in Supabase to keep it.' },
       diag:{ title:'🔧 Check AI connection', intro:'Tests photo reading, dose check and prescription review, and tells you in plain words what is wrong. Uses a few AI requests.', run:'Check now', running:'Checking…',
@@ -4147,7 +4299,7 @@
         aiHead:'AI की दूसरी राय (असत्यापित) — {name}:', aiLikely:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा लगती है।', aiPossible:'रोज़ लगभग {total} mg वयस्कों की सामान्य मात्रा से ज़्यादा हो सकती है।',
         aiTypical:'बताई गई सामान्य वयस्क अधिकतम मात्रा: {max}।', aiNote:'यह केवल AI की चेतावनी है, किसी दवा के सुरक्षित होने की जाँच नहीं।',
         label:{ risk:'रोज़ की मात्रा बहुत अधिक', warn:'रोज़ की मात्रा जाँचें' } },
-      alm:{ title:'दवा लेने का समय हो गया', titleMany:'दवाइयाँ लेने का समय हो गया', took:'✓ मैंने ले ली', tookAll:'✓ मैंने सब ले लीं', snooze:'10 मिनट बाद याद दिलाएँ', skip:'आज छोड़ें',
+      alm:{ title:'दवा लेने का समय हो गया', titleMany:'दवाइयाँ लेने का समय हो गया', took:'✓ मैंने ले ली', tookShort:'✓ ली', tookAll:'✓ मैंने सब ले लीं', snooze:'10 मिनट बाद याद दिलाएँ', skip:'आज छोड़ें',
         snoozed:'ठीक है — 10 मिनट बाद याद दिलाऊँगा।', allRx:'सभी प्रिस्क्रिप्शन', forLabel:'कारण:', dayOf:'दिन {d} / {n}',
         diagMissing:'बीमारी के बिना सहेजा गया — इसे रखने के लिए Supabase में backend/prescriptions_diagnosis.sql चलाएँ।' },
       diag:{ title:'🔧 AI कनेक्शन जाँचें', intro:'फ़ोटो पढ़ना, खुराक जाँच और प्रिस्क्रिप्शन समीक्षा को टेस्ट करता है और सरल शब्दों में बताता है कि क्या गड़बड़ है। कुछ AI अनुरोध लगते हैं।', run:'अभी जाँचें', running:'जाँच हो रही है…',
