@@ -2541,10 +2541,12 @@
                duration:clean(m.duration), times:times, conf:conf, aiLow:low, include:!low };
     });
   }
+  /* name of the Supabase function that reads prescription photos (this project deployed it as "photokey") */
+  var PRESCRIPTION_FN = 'photokey';
   async function runAiRead(file){
     try {
       var b64 = await imageToBase64(file);
-      var r = await SB.functions.invoke('read-prescription', { body:{ image:b64, mediaType:'image/jpeg' } });
+      var r = await SB.functions.invoke(PRESCRIPTION_FN, { body:{ image:b64, mediaType:'image/jpeg' } });
       if (r.error || !r.data || !Array.isArray(r.data.medicines)) throw (r.error || new Error('no data'));
       return r.data;
     } catch(e){
