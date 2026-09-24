@@ -363,6 +363,20 @@
     .appheader{ padding-top:calc(12px + env(safe-area-inset-top,0px)); }
     .auth-overlay{ padding-top:calc(26px + env(safe-area-inset-top,0px)); }
   }
+  .ask-overlay{ position:absolute; inset:0; z-index:55; background:rgba(10,8,4,.55); display:flex; align-items:flex-end; }
+  .ask-card{ background:var(--surface); width:100%; max-height:90%; overflow-y:auto; border-radius:22px 22px 0 0; padding:16px 16px 20px; display:flex; flex-direction:column; gap:10px; box-shadow:var(--shadow); }
+  .ask-log{ display:flex; flex-direction:column; gap:8px; max-height:34vh; overflow-y:auto; }
+  .ask-msg{ padding:9px 12px; border-radius:14px; font-size:.86rem; line-height:1.45; max-width:90%; white-space:pre-wrap; }
+  .ask-msg.me{ align-self:flex-end; background:var(--accent-soft); color:var(--accent-ink); }
+  .ask-msg.bot{ align-self:flex-start; background:var(--surface-2); }
+  .ask-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .ask-chips button{ border:1px solid var(--border); background:var(--surface-2); border-radius:999px; padding:7px 12px; font-size:.78rem; font-weight:700; color:var(--text); cursor:pointer; }
+  .ask-mic{ align-self:center; width:64px; height:64px; border-radius:50%; border:none; background:var(--accent); color:var(--accent-ink); font-size:1.6rem; cursor:pointer; }
+  .ask-mic.on{ animation:askpulse 1s ease-in-out infinite; box-shadow:0 0 0 8px var(--accent-soft); }
+  @keyframes askpulse{ 50%{ transform:scale(1.08); } }
+  @media (prefers-reduced-motion: reduce){ .ask-mic.on{ animation:none; } }
+  .ask-input{ display:flex; gap:6px; }
+  .ask-input input{ flex:1; min-width:0; }
 </style>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -438,6 +452,8 @@
           <div class="wave" id="homeWave"></div>
           <span class="muted" style="font-size:.72rem" id="h_listenLabel">Listen</span>
         </div>
+
+        <button class="btn outline" type="button" onclick="openAsk()" id="h_askBtn">🎙&nbsp; Ask PharmaSaathi</button>
 
         <button class="btn primary" type="button" onclick="startScan()" id="h_scanBtn">📷&nbsp; Scan a new prescription</button>
 
@@ -634,6 +650,10 @@
 
     <div class="alarm-overlay" id="alarmOverlay" hidden>
       <div class="alarm-card" id="alarmCard"></div>
+    </div>
+
+    <div class="ask-overlay" id="askOverlay" hidden>
+      <div class="ask-card" id="askCard" role="dialog" aria-modal="true" aria-live="polite"></div>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
@@ -935,7 +955,7 @@
       priv:{ sections:[
         ['What we store','If you create an account: your email, the medicines and prescriptions you add, your dose schedule and taken/missed history, appointments, side-effect reports, coins and streak, and an optional caregiver contact. This is kept in a secured database and is visible only to you. If you just browse the sample data, nothing is saved.'],
         ['Prescription photos','By default, photos you scan are read on your own device and are not uploaded. If you are signed in and choose "Read with AI", that one photo is sent securely to an AI service (Anthropic or Google) to read the handwriting; PharmaSaathi does not store it. Only the medicine names you confirm are saved.'],
-        ['Third-party services','The app uses Supabase for sign-in and storage, loads fonts from Google Fonts and its text-reading engine from a public CDN, and may use your browser’s built-in voice engine for speech. Your data is not sold or used for advertising.'],
+        ['Third-party services','The app uses Supabase for sign-in and storage, loads fonts from Google Fonts and its text-reading engine from a public CDN, and may use your browser’s built-in voice engine for speech. If you speak a question to the assistant, your browser may send that audio to its own online speech-recognition service to turn it into text. Your data is not sold or used for advertising.'],
         ['Deleting your data','You can delete all your stored data from the Profile tab at any time. "Clear app data on this device" also removes everything saved in this browser.'],
         ['Not medical advice','The safety checks cover only a limited set of medicines and are informational. They do not replace your doctor or pharmacist — always confirm with them before changing any medicine.'],
         ['Contact','Questions about privacy: support@pharmasaathi.example']
@@ -1038,7 +1058,7 @@
       priv:{ sections:[
         ['हम क्या संग्रहीत करते हैं','खाता बनाने पर: आपका ईमेल, आपकी जोड़ी गई दवाइयाँ और प्रिस्क्रिप्शन, खुराक समय-सारणी व ली/छूटी खुराक का इतिहास, अपॉइंटमेंट, साइड-इफ़ेक्ट रिपोर्ट, कॉइन्स व स्ट्रीक, और वैकल्पिक देखभालकर्ता संपर्क। यह सुरक्षित डेटाबेस में रहता है और केवल आपको दिखता है। यदि आप सिर्फ़ नमूना डेटा देखते हैं, तो कुछ भी सहेजा नहीं जाता।'],
         ['प्रिस्क्रिप्शन फ़ोटो','सामान्यतः आपके स्कैन किए फ़ोटो आपके अपने डिवाइस पर पढ़े जाते हैं और अपलोड नहीं होते। यदि आप साइन इन हैं और "AI से पढ़ें" चुनते हैं, तो केवल वही फ़ोटो हस्तलिखित पढ़ने हेतु सुरक्षित रूप से एक AI सेवा (Anthropic या Google) को भेजी जाती है; PharmaSaathi उसे सहेजता नहीं है। केवल वे दवाइयों के नाम सहेजे जाते हैं जिन्हें आप पुष्टि करते हैं।'],
-        ['थर्ड-पार्टी सेवाएँ','ऐप साइन-इन और स्टोरेज हेतु Supabase का उपयोग करता है, Google Fonts से फ़ॉन्ट और सार्वजनिक CDN से टेक्स्ट-रीडिंग इंजन लोड करता है, और आवाज़ हेतु आपके ब्राउज़र का वॉइस इंजन उपयोग कर सकता है। आपका डेटा बेचा या विज्ञापन हेतु उपयोग नहीं किया जाता।'],
+        ['थर्ड-पार्टी सेवाएँ','ऐप साइन-इन और स्टोरेज हेतु Supabase का उपयोग करता है, Google Fonts से फ़ॉन्ट और सार्वजनिक CDN से टेक्स्ट-रीडिंग इंजन लोड करता है, और आवाज़ हेतु आपके ब्राउज़र का वॉइस इंजन उपयोग कर सकता है। यदि आप सहायक से बोलकर सवाल पूछते हैं, तो आपका ब्राउज़र उस आवाज़ को टेक्स्ट में बदलने के लिए अपनी ऑनलाइन स्पीच-रिकग्निशन सेवा को भेज सकता है। आपका डेटा बेचा या विज्ञापन हेतु उपयोग नहीं किया जाता।'],
         ['अपना डेटा हटाना','आप प्रोफ़ाइल टैब से कभी भी अपना सारा संग्रहीत डेटा हटा सकते हैं। "इस डिवाइस का ऐप डेटा साफ़ करें" इस ब्राउज़र में सहेजा सब कुछ भी हटा देता है।'],
         ['यह चिकित्सीय सलाह नहीं है','सुरक्षा जाँच केवल सीमित दवाइयों को कवर करती है और केवल जानकारी हेतु है। यह आपके डॉक्टर या फार्मासिस्ट का विकल्प नहीं है — कोई भी दवा बदलने से पहले उनसे पुष्टि करें।'],
         ['संपर्क','गोपनीयता संबंधी प्रश्न: support@pharmasaathi.example']
@@ -1160,7 +1180,7 @@
       '<div class="detail-block card"><span class="h">'+t.dHeadMoa+'</span><p>'+d.moa+'</p></div>' +
       '<div class="detail-block card"><span class="h">'+t.dHeadAntidote+'</span><p>'+d.antidote+'</p></div>' +
       '<div class="detail-block card"><span class="h">'+t.dHeadContra+'</span><ul>'+contraList+'</ul></div>' +
-      crossHtml + generalNote;
+      doseAlertsHtml([m.id]) + crossHtml + generalNote;
     el.insertAdjacentHTML('afterbegin', listenBtnHtml(m));
   }
 
@@ -1222,13 +1242,79 @@
   function medRxStatus(m){ return m.rxStatus || 'active'; }
   function activeMedIds(){ return MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; }).map(function(m){ return m.id; }); }
   window.activeMedIds = activeMedIds;
+  /* ---------- daily-dose check ----------
+     General adult reference amounts (mg per day) for a few common medicines: above `warn` is more
+     than most adults usually take, above `risk` is above the usual adult maximum. `gap` = the
+     shortest sensible hours between doses. Informational only — a doctor or pharmacist decides,
+     and these numbers are to be validated by a pharmacist before public launch. */
+  var DOSE_LIMITS = {
+    paracetamol:{ warn:3000, risk:4000, gap:4 },
+    ibuprofen:{ warn:1200, risk:2400, gap:4 },
+    metformin:{ warn:2550, risk:3000 },
+    amoxicillin:{ warn:3000, risk:6000 },
+    cetirizine:{ warn:10, risk:20 },
+    omeprazole:{ warn:40, risk:80 }
+  };
+  function doseToMg(text){
+    var d = parseDose(text || '');
+    if (!d) return 0;
+    var p = d.split(' '), v = parseFloat(p[0]);
+    return p[1] === 'mg' ? v : (p[1] === 'g' ? v * 1000 : (p[1] === 'mcg' ? v / 1000 : 0));
+  }
+  function qtyNumber(text){
+    var q = parseQty(text || '');
+    if (!q) return 1;
+    var n = q.split(' ')[0];
+    return n === '½' ? 0.5 : (parseFloat(n) || 1);
+  }
+  /* strength written on the paper (or, failing that, the catalog strength) x amount per dose x doses per day */
+  function evalDose(medId, doseText, times, catalogName){
+    var lim = DOSE_LIMITS[medId];
+    if (!lim || !times || !times.length) return null;
+    var per = doseToMg(doseText) || doseToMg(catalogName);
+    if (!per) return null;
+    var qty = qtyNumber(doseText), count = times.length, total = per * qty * count;
+    var level = total > lim.risk ? 'risk' : (total > lim.warn ? 'warn' : null);
+    var gapWarn = false;
+    if (lim.gap && count > 1){
+      var mins = times.map(minutesOf).sort(function(a, b){ return a - b; }), minGap = 1e9;
+      for (var i = 0; i < mins.length; i++) minGap = Math.min(minGap, ((mins[(i + 1) % mins.length] - mins[i]) + 1440) % 1440 || 1440);
+      gapWarn = minGap < lim.gap * 60;
+    }
+    if (!level && gapWarn) level = 'warn';
+    return level ? { medId:medId, level:level, total:total, per:per * qty, count:count, lim:lim, gapWarn:gapWarn } : null;
+  }
+  function doseAlertFor(m){
+    if (!m || m.custom || medRxStatus(m) === 'stopped') return null;
+    var times = SCHEDULE.filter(function(d){ return d.medId === m.id; }).map(function(d){ return d.time; });
+    var al = evalDose(m.id, m.doseNote || '', times, m.en.name);
+    if (al) al.name = m[LANG].name.split(' ')[0];
+    return al;
+  }
+  function doseAlertText(al, lang){
+    var d = T2[lang || LANG].dose, n = function(v){ return String(Math.round(v * 10) / 10); };
+    var out = d.perDay.replace('{name}', al.name).replace('{total}', n(al.total)).replace('{n}', al.count).replace('{per}', n(al.per));
+    if (al.total > al.lim.risk) out += ' ' + d.risk.replace('{max}', al.lim.risk);
+    else if (al.total > al.lim.warn) out += ' ' + d.warn.replace('{max}', al.lim.warn);
+    if (al.gapWarn) out += ' ' + d.gap.replace('{h}', al.lim.gap);
+    return out + ' ' + d.ask;
+  }
+  function doseAlertHtml(al){
+    return '<div class="callout ' + al.level + '"><span>' + (al.level === 'risk' ? '⛔' : '⚠️') + '</span><span>' + esc(doseAlertText(al)) + '</span></div>';
+  }
+  function doseAlertsHtml(ids){
+    return ids.map(function(id){ return doseAlertFor(medById(id)); }).filter(Boolean).map(doseAlertHtml).join('');
+  }
+
   /* safety level is DERIVED from the live interaction check — never a stored label — so it
      can't drift out of date. 'unknown' = not in the safety catalog, so nothing was checked. */
   function medSafety(m){
     if (m.custom) return 'unknown';
     var live = getInteractions(m.id);
-    if (!live.length) return 'good';
-    return live.some(function(x){ return x.severity === 'risk'; }) ? 'risk' : 'warn';
+    var lvl = !live.length ? 'good' : (live.some(function(x){ return x.severity === 'risk'; }) ? 'risk' : 'warn');
+    var da = doseAlertFor(m);
+    if (da && (da.level === 'risk' || lvl === 'good')) return da.level;
+    return lvl;
   }
   function needsAttention(m){
     var s = medSafety(m);
@@ -1247,6 +1333,8 @@
         out.push({ ids:x.pair, severity:x.severity,
           label:(a ? a[LANG].name.split(' ')[0] : x.pair[0]) + ' + ' + (b ? b[LANG].name.split(' ')[0] : x.pair[1]) });
       });
+      var da = doseAlertFor(m);
+      if (da) out.push({ ids:[m.id], severity:da.level, dose:true, label:da.name + ' (' + T2[LANG].dose.label[da.level] + ')' });
     });
     return out;
   }
@@ -1824,7 +1912,7 @@
       : '<div class="callout good"><span>✓</span><span>'+t.noInteractions+'</span></div>';
     document.getElementById('safetyCheckBody').innerHTML =
       '<div class="card"><span class="card-title">'+t.title+'</span><p class="muted" style="margin-top:4px">'+namesHtml+'</p></div>' +
-      checksHtml + warnHtml +
+      checksHtml + doseAlertsHtml(safetyCheckMedIds) + warnHtml +
       '<button class="btn primary" type="button" onclick="go(\'home\')">'+t.viewScheduleBtn+'</button>' +
       '<a class="btn outline" href="tel:'+CONTACTS.supportPhone+'">'+t.contactPharmacistBtn+'</a>';
   }
@@ -2619,7 +2707,7 @@
       '</label>';
     }).join('');
     el.innerHTML =
-      '<div class="card"><span class="card-title">'+t.title+'</span><p class="muted" style="margin-top:4px">'+t.newLabel+' '+newNames+'</p></div>' +
+      '<div class="card"><span class="card-title">'+t.title+'</span><p class="muted" style="margin-top:4px">'+t.newLabel+' '+newNames+'</p></div>' + doseAlertsHtml(pendingSafetyIds) +
       (otherIds.length
         ? '<p class="muted">'+t.intro+'</p><div style="display:flex;flex-direction:column;gap:8px">'+othersHtml+'</div>'
         : '<p class="muted">'+t.noneOther+'</p>') +
@@ -2700,6 +2788,7 @@
     document.getElementById('h_notifNotify').textContent = t.notify;
     document.getElementById('h_scheduleTitle').innerHTML = t.scheduleTitle;
     document.getElementById('h_listenLabel').textContent = t.listenLabel;
+    document.getElementById('h_askBtn').innerHTML = '🎙&nbsp; ' + X().ask.btn;
     document.getElementById('h_scanBtn').innerHTML = t.scanBtn;
     document.getElementById('h_safetyTitle').textContent = t.safetyTitle;
     document.getElementById('testAlarmBtn').textContent = LANG === 'en' ? '🔔 Test a reminder alarm now' : '🔔 अभी अलार्म टेस्ट करें';
@@ -2720,8 +2809,8 @@
     } else if (pairs.length){
       badgeEl.className = pairs.some(function(p){ return p.severity === 'risk'; }) ? 'badge risk' : 'badge warn';
       badgeEl.textContent = LANG === 'en'
-        ? pairs.length + (pairs.length === 1 ? ' combination to check' : ' combinations to check')
-        : pairs.length + ' संयोजन जाँचें';
+        ? pairs.length + (pairs.length === 1 ? ' thing to check' : ' things to check')
+        : pairs.length + ' बातें जाँचें';
       descEl.textContent = attentionSummary(pairs);
     } else {
       badgeEl.className = unchecked.length === activeMeds.length ? 'badge warn' : 'badge good';
@@ -2946,7 +3035,7 @@
   }
   /* speak in the app language when a voice exists; otherwise say so and read the English
      version, so the person is never left with silence or a wall of unreadable text */
-  async function speakBoth(enText, hiText, onEnd){
+  async function speakBoth(enText, hiText, onEnd, langOverride){
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!('speechSynthesis' in window)){
       toast(LANG === 'en' ? 'This browser cannot read aloud.' : 'यह ब्राउज़र आवाज़ में नहीं पढ़ सकता।');
@@ -2954,7 +3043,7 @@
     }
     window.speechSynthesis.cancel(); stopSpeakAnim();
     await voicesReady();
-    var lang = LANG, text = lang === 'hi' ? hiText : enText;
+    var lang = langOverride || LANG, text = lang === 'hi' ? hiText : enText;
     if (lang === 'hi' && !pickVoice('hi')){
       if (!pickVoice('en') && !cachedVoices.length){
         toast('यह डिवाइस आवाज़ नहीं दे रहा — सेटिंग्स में टेक्स्ट-टू-स्पीच आवाज़ इंस्टॉल करें।');
@@ -3181,6 +3270,19 @@
       hub:{ labSub:'Coming soon', adrName:'Side effects', adrSub:'{n} reported', docName:'Appointments', docSub:'Keep track of your doctor visits', histSub:'Prescriptions, changes & side effects' },
       subAccount:{ caregiver:'Your caregiver contact', adr:'Report a side effect' },
       times:{ title:'Reminder times', add:'Add', none:'No reminder times set.' },
+      dose:{ perDay:'{name}: about {total} mg a day ({n} × {per} mg).',
+        risk:'That is much more than the usual adult maximum ({max} mg a day) and could be dangerous.',
+        warn:'That is more than most adults usually take in a day (up to {max} mg).',
+        gap:'Some doses are less than {h} hours apart.',
+        ask:'Please check with your doctor or pharmacist before continuing.',
+        label:{ risk:'daily dose too high', warn:'check daily dose' } },
+      ask:{ btn:'Ask PharmaSaathi', title:'What do you need?', prompt:'What do you need?', mic:'Tap and speak', listening:'Listening… speak now', typePh:'Or type here…', send:'Send',
+        chips:['What is next?','Did I take my medicines?','My medicines','Any warnings?','I took my medicine'],
+        noMic:"This browser can't listen to your voice — please type your question or tap a button.",
+        micBlocked:'The microphone is blocked. Allow microphone access for this site in your browser, or type your question.',
+        noSpeech:"I didn't hear anything. Tap the microphone and try again.", netErr:'Voice recognition needs an internet connection. You can type instead.',
+        noDevice:'No microphone was found on this device.', generic:"Sorry, I couldn't listen just now. You can type instead.",
+        privacy:"Your browser may use an online service to turn speech into text.", close:'Close' },
       scanX:{
         tipsTitle:'For the best reading',
         tips:['Use good light and hold the phone directly above the paper.','Fill the frame with the prescription and keep it flat and in focus.','Printed or typed text reads best — handwriting is often misread, so check every name.'],
@@ -3239,13 +3341,16 @@
       },
       auth:{
         tag:'Understand · Remember · Stay safe',
-        signin:'Sign in', signup:'Create account', name:'Your name', email:'Email', password:'Password (6+ characters)', newPw:'New password',
+        signin:'Sign in', signup:'Create account', name:'Your name', email:'Email', password:'Password', newPw:'New password',
         toSignup:'New here? Create an account', toSignin:'Already have an account? Sign in', forgot:'Forgot password?',
         demo:'Try with sample data (nothing is saved)', savePw:'Save new password', recoverTitle:'Choose a new password', busy:'Please wait…',
         confirmSent:'Account created. We sent a confirmation link to {email} — open it, then sign in.',
         resetSent:'If {email} has an account, a password-reset link is on its way.', pwUpdated:'Password updated.',
         invalid:'Wrong email or password.', notConfirmed:'Please confirm your email first — check your inbox (and spam).',
-        exists:'This email is already registered. Try signing in.', weak:'Password must be at least 6 characters.', badEmail:'Enter a valid email address.',
+        exists:'This email is already registered. Try signing in.', weak:'Password must be at least 6 characters.', pwHint:'Tip: use 8 or more characters, mixing letters, numbers and a symbol (like @ or #).',
+        pwLen:'Use at least {n} characters.', pwNeed:'It also needs: {list}.', pwMix:'Mix lowercase and uppercase letters, numbers and symbols (like @ or #).',
+        pwLower:'a lowercase letter', pwUpper:'an uppercase letter', pwDigit:'a number', pwSymbol:'a symbol (like @ or #)',
+        pwPwned:'That password is too common or has appeared in a data leak — choose a different one.', samePw:'Choose a password different from your old one.', signupOff:'New sign-ups are switched off right now.', badEmail:'Enter a valid email address.',
         needName:'Enter your name.', needEmail:'Enter your email first.', rate:'Too many attempts, or too many emails sent. Please wait a few minutes and try again.',
         generic:'Something went wrong: ', noBackend:"Can't reach the sign-in service. Check your internet connection, or try the sample data.",
         loading:'Loading your health data…', loadFail:"We couldn't load your data.", dbMissing:'The database has not been set up yet (tables are missing).',
@@ -3285,6 +3390,19 @@
       hub:{ labSub:'जल्द आ रहा है', adrName:'साइड इफ़ेक्ट', adrSub:'{n} दर्ज', docName:'अपॉइंटमेंट्स', docSub:'अपने डॉक्टर के दौरे दर्ज रखें', histSub:'प्रिस्क्रिप्शन, बदलाव व साइड इफ़ेक्ट' },
       subAccount:{ caregiver:'आपका देखभालकर्ता संपर्क', adr:'साइड इफ़ेक्ट दर्ज करें' },
       times:{ title:'रिमाइंडर समय', add:'जोड़ें', none:'कोई रिमाइंडर समय नहीं है।' },
+      dose:{ perDay:'{name}: लगभग {total} mg प्रतिदिन ({n} × {per} mg)।',
+        risk:'यह वयस्कों की सामान्य अधिकतम मात्रा ({max} mg प्रतिदिन) से बहुत अधिक है और खतरनाक हो सकती है।',
+        warn:'यह ज़्यादातर वयस्कों की रोज़ की सामान्य मात्रा (अधिकतम {max} mg) से अधिक है।',
+        gap:'कुछ खुराकों के बीच {h} घंटे से कम का अंतर है।',
+        ask:'आगे लेने से पहले कृपया अपने डॉक्टर या फार्मासिस्ट से पूछें।',
+        label:{ risk:'रोज़ की मात्रा बहुत अधिक', warn:'रोज़ की मात्रा जाँचें' } },
+      ask:{ btn:'PharmaSaathi से पूछें', title:'आपको क्या चाहिए?', prompt:'आपको क्या चाहिए?', mic:'दबाएँ और बोलें', listening:'सुन रहा हूँ… अब बोलें', typePh:'या यहाँ लिखें…', send:'भेजें',
+        chips:['अगली दवा कब है?','क्या मैंने आज की दवाइयाँ ली?','मेरी दवाइयाँ','कोई चेतावनी?','मैंने दवा ले ली'],
+        noMic:'यह ब्राउज़र आपकी आवाज़ नहीं सुन सकता — कृपया सवाल लिखें या किसी बटन को दबाएँ।',
+        micBlocked:'माइक्रोफ़ोन बंद है। ब्राउज़र में इस साइट के लिए माइक्रोफ़ोन की अनुमति दें, या सवाल लिखें।',
+        noSpeech:'मुझे कुछ सुनाई नहीं दिया। माइक्रोफ़ोन दबाकर फिर से बोलें।', netErr:'आवाज़ पहचानने के लिए इंटरनेट चाहिए। आप लिखकर भी पूछ सकते हैं।',
+        noDevice:'इस डिवाइस पर माइक्रोफ़ोन नहीं मिला।', generic:'माफ़ कीजिए, अभी सुन नहीं पाया। आप लिखकर पूछ सकते हैं।',
+        privacy:'आपका ब्राउज़र बोली को टेक्स्ट में बदलने के लिए ऑनलाइन सेवा का उपयोग कर सकता है।', close:'बंद करें' },
       scanX:{
         tipsTitle:'बेहतर पढ़ाई के लिए',
         tips:['अच्छी रोशनी में फ़ोन को कागज़ के ठीक ऊपर पकड़ें।','प्रिस्क्रिप्शन को फ़्रेम में भरें, कागज़ सपाट और फ़ोकस में रखें।','छपा या टाइप किया टेक्स्ट सबसे अच्छा पढ़ा जाता है — हाथ की लिखावट अक्सर गलत पढ़ी जाती है, इसलिए हर नाम जाँचें।'],
@@ -3343,13 +3461,16 @@
       },
       auth:{
         tag:'समझें · याद रखें · सुरक्षित रहें',
-        signin:'साइन इन', signup:'खाता बनाएँ', name:'आपका नाम', email:'ईमेल', password:'पासवर्ड (6+ अक्षर)', newPw:'नया पासवर्ड',
+        signin:'साइन इन', signup:'खाता बनाएँ', name:'आपका नाम', email:'ईमेल', password:'पासवर्ड', newPw:'नया पासवर्ड',
         toSignup:'नए हैं? खाता बनाएँ', toSignin:'पहले से खाता है? साइन इन करें', forgot:'पासवर्ड भूल गए?',
         demo:'नमूना डेटा के साथ आज़माएँ (कुछ सहेजा नहीं जाता)', savePw:'नया पासवर्ड सहेजें', recoverTitle:'नया पासवर्ड चुनें', busy:'कृपया प्रतीक्षा करें…',
         confirmSent:'खाता बन गया। हमने {email} पर पुष्टि लिंक भेजा है — उसे खोलें, फिर साइन इन करें।',
         resetSent:'अगर {email} का खाता है, तो पासवर्ड रीसेट लिंक भेजा जा रहा है।', pwUpdated:'पासवर्ड अपडेट हो गया।',
         invalid:'ईमेल या पासवर्ड गलत है।', notConfirmed:'पहले अपना ईमेल पुष्ट करें — इनबॉक्स (और स्पैम) देखें।',
-        exists:'यह ईमेल पहले से पंजीकृत है। साइन इन करके देखें।', weak:'पासवर्ड कम से कम 6 अक्षर का होना चाहिए।', badEmail:'सही ईमेल पता डालें।',
+        exists:'यह ईमेल पहले से पंजीकृत है। साइन इन करके देखें।', weak:'पासवर्ड कम से कम 6 अक्षर का होना चाहिए।', pwHint:'सुझाव: 8 या अधिक अक्षर रखें, जिनमें अक्षर, अंक और एक चिह्न (जैसे @ या #) हों।',
+        pwLen:'कम से कम {n} अक्षर रखें।', pwNeed:'इसमें ये भी चाहिए: {list}।', pwMix:'छोटे और बड़े अक्षर, अंक और चिह्न (जैसे @ या #) मिलाकर रखें।',
+        pwLower:'एक छोटा अक्षर (a-z)', pwUpper:'एक बड़ा अक्षर (A-Z)', pwDigit:'एक अंक', pwSymbol:'एक चिह्न (जैसे @ या #)',
+        pwPwned:'यह पासवर्ड बहुत आम है या डेटा लीक में मिल चुका है — कोई दूसरा चुनें।', samePw:'अपने पुराने पासवर्ड से अलग पासवर्ड चुनें।', signupOff:'अभी नए साइन-अप बंद हैं।', badEmail:'सही ईमेल पता डालें।',
         needName:'अपना नाम लिखें।', needEmail:'पहले अपना ईमेल लिखें।', rate:'बहुत ज़्यादा प्रयास या ईमेल भेजे जा चुके हैं। कुछ मिनट रुककर दोबारा कोशिश करें।',
         generic:'कुछ गड़बड़ हुई: ', noBackend:'साइन-इन सेवा तक पहुँच नहीं हो पा रही। इंटरनेट जाँचें, या नमूना डेटा आज़माएँ।',
         loading:'आपका स्वास्थ्य डेटा लोड हो रहा है…', loadFail:'हम आपका डेटा लोड नहीं कर सके।', dbMissing:'डेटाबेस अभी सेट नहीं हुआ है (टेबल नहीं मिलीं)।',
@@ -3608,9 +3729,9 @@
     manualForm = { name:'', dose:'', doctor:'', n:1, times:MANUAL_DEFAULTS[1].slice() };
     renderAddMed(); go('add-med');
   }
-  function manualSet(k, v){ manualForm[k] = v; }
+  function manualSet(k, v){ manualForm[k] = v; if (k === 'name' || k === 'dose') updateManualPreview(); }
   function manualCount(n){ manualForm.n = n; manualForm.times = MANUAL_DEFAULTS[n].slice(); renderAddMed(); }
-  function manualTime(i, v){ manualForm.times[i] = v; }
+  function manualTime(i, v){ manualForm.times[i] = v; updateManualPreview(); }
   function renderAddMed(){
     var el = document.getElementById('addMedBody');
     if (!el || !manualForm) return;
@@ -3627,8 +3748,19 @@
       '<div class="field"><label for="mf_doc">'+m.doctor+'</label><input id="mf_doc" type="text" maxlength="80" autocomplete="off" placeholder="'+esc(m.doctorPh)+'" value="'+esc(manualForm.doctor)+'" oninput="manualSet(\'doctor\',this.value)"></div>' +
       '<div class="field"><label>'+m.freq+'</label><div class="seg">'+seg+'</div></div>' +
       '<div class="field"><label>'+m.times+'</label><div class="time-row">'+timeInputs+'</div></div>' +
+      '<div id="mf_preview"></div>' +
       '<p class="muted">'+m.note+'</p>' +
       '<button class="btn primary" type="button" onclick="submitManual()">'+m.save+'</button>';
+    updateManualPreview();
+  }
+  /* shows the daily total (and a warning if it is too high) as soon as name, dose and frequency are typed */
+  function updateManualPreview(){
+    var box = document.getElementById('mf_preview');
+    if (!box || !manualForm) return;
+    var hit = clean(manualForm.name) ? matchMedicinesFromText(clean(manualForm.name))[0] : null;
+    var al = hit ? evalDose(hit.med.id, manualForm.dose, manualForm.times, hit.med.en.name) : null;
+    if (al) al.name = hit.med[LANG].name.split(' ')[0];
+    box.innerHTML = al ? doseAlertHtml(al) : '';
   }
   async function submitManual(){
     if (manualBusy) return;
@@ -3845,11 +3977,12 @@
     var msg = authMsg ? '<div class="auth-msg '+(authMsg.type === 'ok' ? 'ok' : 'err')+'" role="alert">'+esc(authMsg.text)+'</div>' : '';
     var fields = '';
     if (isRec){
-      fields = '<div class="field"><label for="au_pw">'+a.newPw+'</label><input id="au_pw" type="password" autocomplete="new-password" minlength="6"></div>';
+      fields = '<div class="field"><label for="au_pw">'+a.newPw+'</label><input id="au_pw" type="password" autocomplete="new-password" minlength="6"></div><p class="muted" style="font-size:.74rem">'+a.pwHint+'</p>';
     } else {
       if (isUp) fields += '<div class="field"><label for="au_name">'+a.name+'</label><input id="au_name" type="text" maxlength="60" autocomplete="name" value="'+esc(authForm.name)+'"></div>';
       fields += '<div class="field"><label for="au_email">'+a.email+'</label><input id="au_email" type="email" inputmode="email" autocomplete="email" value="'+esc(authForm.email)+'"></div>' +
-        '<div class="field"><label for="au_pw">'+a.password+'</label><input id="au_pw" type="password" autocomplete="'+(isUp ? 'new-password' : 'current-password')+'" minlength="6"></div>';
+        '<div class="field"><label for="au_pw">'+a.password+'</label><input id="au_pw" type="password" autocomplete="'+(isUp ? 'new-password' : 'current-password')+'" minlength="6"></div>' +
+        (isUp ? '<p class="muted" style="font-size:.74rem;margin-top:-6px">'+a.pwHint+'</p>' : '');
     }
     var submitLabel = authBusy ? a.busy : (isRec ? a.savePw : (isUp ? a.signup : a.signin));
     el.innerHTML =
@@ -3873,13 +4006,38 @@
     var n = document.getElementById('au_name'), e = document.getElementById('au_email');
     if (n) authForm.name = n.value; if (e) authForm.email = e.value.trim();
   }
+  /* say WHAT is wrong with a rejected password (too short / missing character types / too common)
+     instead of a generic message */
+  function passwordProblem(e){
+    var a = X().auth, code = e && e.code, m = String((e && e.message) || '');
+    var reasons = (e && e.weak_password && e.weak_password.reasons) || [];
+    var isWeak = code === 'weak_password' || reasons.length > 0 || /password (should|must)|at least \d+ char|characters? of each|known to be weak|easy to guess|data breach/i.test(m);
+    if (!isWeak) return '';
+    var parts = [], lenM = m.match(/at least (\d+) char/i);
+    if (reasons.indexOf('length') !== -1 || lenM) parts.push(a.pwLen.replace('{n}', lenM ? lenM[1] : '8'));
+    if (reasons.indexOf('characters') !== -1 || /of each|abcdefghijklmnopqrstuvwxyz|ABCDEFGHIJKLMNOPQRSTUVWXYZ|0123456789/.test(m)){
+      var need = [];
+      if (/abcdefghijklmnopqrstuvwxyz/.test(m)) need.push(a.pwLower);
+      if (/ABCDEFGHIJKLMNOPQRSTUVWXYZ/.test(m)) need.push(a.pwUpper);
+      if (/0123456789/.test(m)) need.push(a.pwDigit);
+      if (/!@#\$|symbol|special/i.test(m)) need.push(a.pwSymbol);
+      parts.push(need.length ? a.pwNeed.replace('{list}', need.join(', ')) : a.pwMix);
+    }
+    if (reasons.indexOf('pwned') !== -1 || /known to be weak|easy to guess|data breach/i.test(m)) parts.push(a.pwPwned);
+    return parts.length ? parts.join(' ') : a.pwMix;
+  }
   function mapAuthError(e){
-    var a = X().auth, m = String((e && e.message) || e || '').toLowerCase();
-    if (m.indexOf('invalid login') !== -1) return a.invalid;
-    if (m.indexOf('not confirmed') !== -1) return a.notConfirmed;
-    if (m.indexOf('already') !== -1 && m.indexOf('regist') !== -1) return a.exists;
-    if (m.indexOf('rate limit') !== -1 || m.indexOf('too many') !== -1 || m.indexOf('security purposes') !== -1) return a.rate;
-    if (m.indexOf('password') !== -1 && (m.indexOf('least') !== -1 || m.indexOf('weak') !== -1 || m.indexOf('short') !== -1)) return a.weak;
+    var a = X().auth, code = e && e.code, m = String((e && e.message) || e || '').toLowerCase();
+    if (code === 'same_password' || m.indexOf('different from the old') !== -1) return a.samePw;
+    var pw = passwordProblem(e);
+    if (pw) return pw;
+    if (code === 'invalid_credentials' || m.indexOf('invalid login') !== -1) return a.invalid;
+    if (code === 'email_not_confirmed' || m.indexOf('not confirmed') !== -1) return a.notConfirmed;
+    if (code === 'user_already_exists' || (m.indexOf('already') !== -1 && m.indexOf('regist') !== -1)) return a.exists;
+    if (code === 'email_address_invalid' || m.indexOf('email address') !== -1 && m.indexOf('invalid') !== -1) return a.badEmail;
+    if (code === 'signup_disabled') return a.signupOff;
+    if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit' || m.indexOf('rate limit') !== -1 || m.indexOf('too many') !== -1 || m.indexOf('security purposes') !== -1) return a.rate;
+    if (m.indexOf('failed to fetch') !== -1 || m.indexOf('network') !== -1) return a.noBackend;
     return a.generic + ((e && e.message) || e);
   }
   async function authSubmit(){
@@ -3974,6 +4132,168 @@
     go('home');
   }
   window.enterDemo = enterDemo;
+
+  /* ---------- "Ask PharmaSaathi": a small voice + text assistant ----------
+     It answers from the patient's own data (no AI service): what's next, what was taken, the
+     medicine list, safety warnings, medicine info, and it can mark a dose as taken. */
+  var ASK = { log:[], listening:false, rec:null, draft:'' };
+  function askSupported(){ return !!(window.SpeechRecognition || window.webkitSpeechRecognition); }
+  function tt(en, hi){ return LANG === 'hi' ? hi : en; }
+  function askName(m){ return m[LANG].name; }
+  function askNorm(t){ return String(t).toLowerCase().replace(/[?!.,।]/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function activeMeds(){ return MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; }); }
+  function findMedIn(text){
+    var norm = askNorm(text), toks = tokensOf(norm), best = null;
+    activeMeds().forEach(function(m){
+      var first = String(m.en.name).split(' ')[0].toLowerCase(), hit = false;
+      if (first.length >= 4 && norm.indexOf(first) !== -1) hit = true;
+      else if (String(m.hi.name).split(' ')[0].length >= 3 && norm.indexOf(String(m.hi.name).split(' ')[0].toLowerCase()) !== -1) hit = true;
+      else if (!m.custom) hit = !!bestTermHit(toks, catalogTerms(m));
+      else hit = toks.some(function(t){ return t.length >= 4 && editDistance(t, first, 1) <= 1; });
+      if (hit && (!best || first.length > best.len)) best = { med:m, len:first.length };
+    });
+    return best ? best.med : null;
+  }
+  function askIntent(text){
+    var raw = String(text), n = askNorm(raw);
+    var isQ = /\b(did|have|has|do i|should|when|what|which|how)\b|क्या|कब|कौन|कितनी|\?/.test(raw.toLowerCase());
+    var takeVerb = /\b(took|taken|had|ate|swallowed|mark|done)\b|खा ली|खा लिया|खाई|ले ली|ले लिया|ली है|लिया है|\bली\b|\bलिया\b/.test(n);
+    var med = findMedIn(n);
+    if (takeVerb && !isQ) return { type:'mark', med:med };
+    if (/\b(safe|safety|risk|danger|dangerous|interaction|interactions|warning|warnings|overdose|side effect)\b|सुरक्षा|सुरक्षित|खतरा|जोखिम|चेतावनी|इंटरैक्शन|ओवरडोज़/.test(n)) return { type:'safety' };
+    if (med && /\b(what|why|use|used|for|about|tell|info|information)\b|क्या|किस|लिए|बारे/.test(n)) return { type:'info', med:med };
+    if (/\b(next|upcoming|when|what time)\b|कब|अगली|अगला|समय/.test(n)) return { type:'next' };
+    if (/\b(taken|missed|miss|status|remaining|left|today|did i|have i)\b|छूट|बाकी|आज|\bली\b|\bलिया\b/.test(n)) return { type:'status' };
+    if (/\b(list|medicines|medicine|medication|medications|tablets|pills|all)\b|दवाइयाँ|दवाइयां|दवा|सूची|सारी/.test(n)) return med ? { type:'info', med:med } : { type:'list' };
+    if (/\b(scan|photo|prescription)\b|पर्चा|प्रिस्क्रिप्शन|स्कैन/.test(n)) return { type:'scan' };
+    if (/\b(call|caregiver|emergency|doctor|pharmacist|help me)\b|कॉल|देखभाल|इमरजेंसी|डॉक्टर|फार्मासिस्ट/.test(n)) return { type:'care' };
+    return { type:'help' };
+  }
+  function doseNameOf(d){ var m = medById(d.medId); return m ? askName(m) : ''; }
+  function doseDesc(d){ return doseNameOf(d) + ' ' + tt('at ', '') + fmt12(d.time) + tt('', ' बजे'); }
+  function markAsked(intent){
+    var counted = dosesToday().filter(function(d){ return !isTaken(d.id); });
+    var pool = counted;
+    if (intent.med) pool = counted.filter(function(d){ return d.medId === intent.med.id; });
+    else pool = counted.filter(function(d){ return Math.abs(minutesOf(d.time) - minutesNow()) <= 120; });
+    if (!pool.length) return { done:null, reason:intent.med ? 'alldone' : 'none' };
+    pool.sort(function(a, b){ return Math.abs(minutesOf(a.time) - minutesNow()) - Math.abs(minutesOf(b.time) - minutesNow()); });
+    if (!intent.med && pool.length > 1) return { done:null, reason:'which', options:pool };
+    markTaken(pool[0].id);
+    renderHome();
+    return { done:pool[0] };
+  }
+  function askReply(intent, lang, markRes){
+    return inLang(lang, function(){
+      var counted = dosesToday(), taken = counted.filter(function(d){ return doseState(d) === 'taken'; });
+      var pending = counted.filter(function(d){ return doseState(d) === 'pending'; }).sort(function(a, b){ return minutesOf(a.time) - minutesOf(b.time); });
+      var missed = counted.filter(function(d){ return doseState(d) === 'missed'; });
+      if (!activeMeds().length && intent.type !== 'help' && intent.type !== 'scan' && intent.type !== 'care') return X().empty.speech;
+      switch (intent.type){
+        case 'mark':
+          if (markRes.done) return tt('Done. I marked ', 'ठीक है। मैंने ') + doseDesc(markRes.done) + tt(' as taken.', ' की खुराक ली हुई दर्ज कर दी।');
+          if (markRes.reason === 'alldone') return tt('All of today’s doses of ' + askName(intent.med) + ' are already marked as taken.', 'आज की ' + askName(intent.med) + ' की सारी खुराकें पहले से ली हुई दर्ज हैं।');
+          if (markRes.reason === 'which') return tt('Which one did you take? ', 'कौन सी दवा ली? ') + markRes.options.map(doseDesc).join(tt('; ', '; ')) + tt('. Say for example “I took ' + doseNameOf(markRes.options[0]) + '”.', '। जैसे बोलें “मैंने ' + doseNameOf(markRes.options[0]) + ' ले ली”।');
+          return tt('I could not find a dose due right now. Tell me the medicine name, for example “I took Metformin”.', 'अभी कोई खुराक बाकी नहीं मिली। दवा का नाम बताइए, जैसे “मैंने Metformin ले ली”।');
+        case 'next':
+          if (!pending.length) return missed.length
+            ? tt('No more doses are coming up today. You still have not taken: ', 'आज और कोई खुराक बाकी नहीं है। अब तक नहीं ली गई: ') + missed.map(doseDesc).join('; ') + tt('.', '।')
+            : tt('You have finished all of today’s doses. Well done!', 'आज की सारी खुराकें पूरी हो गईं। शाबाश!');
+          return tt('Your next medicine is ', 'आपकी अगली दवा है ') + doseDesc(pending[0]) + tt('.', '।') + (pending.length > 1 ? tt(' After that: ', ' उसके बाद: ') + pending.slice(1, 3).map(doseDesc).join('; ') + tt('.', '।') : '');
+        case 'status':
+          if (!counted.length) return tt('You have no doses scheduled today.', 'आज आपकी कोई खुराक तय नहीं है।');
+          return tt('You have taken ' + taken.length + ' of ' + counted.length + ' doses today.', 'आपने आज ' + counted.length + ' में से ' + taken.length + ' खुराक ली हैं।') +
+            (missed.length ? tt(' Not taken yet: ', ' अभी तक नहीं ली: ') + missed.map(doseDesc).join('; ') + tt('.', '।') : '') +
+            (pending.length ? tt(' Still to come: ', ' आगे बाकी: ') + pending.map(doseDesc).join('; ') + tt('.', '।') : '');
+        case 'list':
+          return tt('You are taking ' + activeMeds().length + ' medicines: ', 'आप ' + activeMeds().length + ' दवाइयाँ ले रहे हैं: ') +
+            activeMeds().map(function(m){
+              var c = SCHEDULE.filter(function(d){ return d.medId === m.id; }).length;
+              return askName(m) + (c ? ' (' + c + tt(' a day)', ' बार रोज़)') : '');
+            }).join('; ') + tt('.', '।');
+        case 'safety':
+          var pairs = attentionPairs(), unchecked = activeMeds().filter(function(m){ return m.custom; });
+          var out = pairs.length ? attentionSummary(pairs) : tt('No interactions or high doses found among your medicines.', 'आपकी दवाइयों में कोई इंटरैक्शन या ज़्यादा मात्रा नहीं मिली।');
+          if (unchecked.length) out += ' ' + X().uncheckedHome.replace('{n}', unchecked.length);
+          return out;
+        case 'info':
+          var m = intent.med, times = SCHEDULE.filter(function(d){ return d.medId === m.id; }).map(function(d){ return d.time; });
+          return medSpeech(m, lang);
+        case 'scan':
+          return tt('Opening the prescription scanner.', 'प्रिस्क्रिप्शन स्कैनर खोल रहा हूँ।');
+        case 'care':
+          return tt('Opening the Care tab, where you can reach your caregiver. For an emergency, call your local emergency number.', 'देखभाल टैब खोल रहा हूँ, जहाँ आप अपने देखभालकर्ता से संपर्क कर सकते हैं। आपात स्थिति में अपना स्थानीय आपातकालीन नंबर मिलाएँ।');
+        default:
+          return tt('I can tell you what is next, whether you have taken today’s medicines, list your medicines, check for safety warnings, or mark a dose as taken. Try “What is next?”', 'मैं बता सकता हूँ कि अगली दवा कौन सी है, आज की दवाइयाँ ली या नहीं, आपकी दवाइयों की सूची, सुरक्षा चेतावनियाँ, या खुराक ली हुई दर्ज कर सकता हूँ। बोलकर देखें “अगली दवा कब है?”');
+      }
+    });
+  }
+  function handleAsk(text){
+    text = clean(text);
+    if (!text) return;
+    ASK.log.push({ who:'me', text:text }); ASK.draft = '';
+    var intent = askIntent(text), markRes = intent.type === 'mark' ? markAsked(intent) : null;
+    var en = askReply(intent, 'en', markRes), hi = askReply(intent, 'hi', markRes);
+    var spoken = /[ऀ-ॿ]/.test(text) ? 'hi' : LANG;      // answer in the language the person spoke
+    ASK.log.push({ who:'bot', text: spoken === 'hi' ? hi : en });
+    renderAsk();
+    if (intent.type === 'scan'){ closeAsk(); startScan(); return; }
+    if (intent.type === 'care'){ speakBoth(en, hi, null, spoken); setTimeout(function(){ closeAsk(); go('caregiver'); }, 400); return; }
+    speakBoth(en, hi, null, spoken);
+  }
+  function askVoice(){
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition, a = X().ask;
+    if (!SR){ ASK.log.push({ who:'bot', text:a.noMic }); renderAsk(); return; }
+    if (ASK.listening && ASK.rec){ try { ASK.rec.stop(); } catch(e){} return; }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    var r = new SR(), heard = false;
+    r.lang = LANG === 'hi' ? 'hi-IN' : 'en-IN'; r.interimResults = false; r.maxAlternatives = 1; r.continuous = false;
+    r.onstart = function(){ ASK.listening = true; renderAsk(); };
+    r.onresult = function(e){ heard = true; handleAsk(e.results[0][0].transcript); };
+    r.onerror = function(e){
+      ASK.listening = false;
+      var msg = { 'not-allowed':a.micBlocked, 'service-not-allowed':a.micBlocked, 'no-speech':a.noSpeech, 'network':a.netErr, 'audio-capture':a.noDevice }[e.error] || a.generic;
+      if (e.error !== 'aborted'){ ASK.log.push({ who:'bot', text:msg }); }
+      renderAsk();
+    };
+    r.onend = function(){ ASK.listening = false; if (!heard) renderAsk(); };
+    ASK.rec = r;
+    try { r.start(); } catch(e){ ASK.log.push({ who:'bot', text:a.generic }); renderAsk(); }
+  }
+  function renderAsk(){
+    var a = X().ask, el = document.getElementById('askCard');
+    if (!el) return;
+    var log = ASK.log.map(function(m){ return '<div class="ask-msg '+m.who+'">'+esc(m.text)+'</div>'; }).join('');
+    el.innerHTML =
+      '<div class="row"><span class="card-title">'+a.title+'</span><button class="btn outline sm" type="button" onclick="closeAsk()" aria-label="'+esc(a.close)+'">✕</button></div>' +
+      '<div class="ask-log" id="askLog">'+log+'</div>' +
+      '<div class="ask-chips">'+a.chips.map(function(c, i){ return '<button type="button" onclick="askChip('+i+')">'+esc(c)+'</button>'; }).join('')+'</div>' +
+      (askSupported()
+        ? '<button class="ask-mic'+(ASK.listening ? ' on' : '')+'" type="button" onclick="askVoice()" aria-label="'+esc(a.mic)+'">🎙</button>' +
+          '<p class="muted" style="text-align:center;font-size:.78rem">'+(ASK.listening ? a.listening : a.mic)+'</p>'
+        : '<p class="muted" style="text-align:center;font-size:.78rem">'+a.noMic+'</p>') +
+      '<form class="ask-input" onsubmit="askSend();return false;"><div class="field" style="flex:1"><input id="askText" type="text" maxlength="120" autocomplete="off" placeholder="'+esc(a.typePh)+'" value="'+esc(ASK.draft)+'" oninput="askDraft(this.value)"></div>' +
+      '<button class="btn primary sm" type="submit">'+a.send+'</button></form>' +
+      (askSupported() ? '<p class="muted" style="text-align:center;font-size:.68rem">'+a.privacy+'</p>' : '');
+    var lg = document.getElementById('askLog'); if (lg) lg.scrollTop = lg.scrollHeight;
+  }
+  function openAsk(){
+    ASK.log = [{ who:'bot', text:X().ask.prompt }]; ASK.draft = ''; ASK.listening = false;
+    renderAsk();
+    document.getElementById('askOverlay').hidden = false;
+    speakBoth(T2.en.ask.prompt, T2.hi.ask.prompt);
+  }
+  function closeAsk(){
+    try { if (ASK.rec) ASK.rec.abort(); } catch(e){}
+    ASK.listening = false;
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    stopSpeakAnim();
+    document.getElementById('askOverlay').hidden = true;
+  }
+  function askChip(i){ handleAsk(X().ask.chips[i]); }
+  function askDraft(v){ ASK.draft = v; }
+  function askSend(){ handleAsk(ASK.draft); }
+  window.openAsk = openAsk; window.closeAsk = closeAsk; window.askChip = askChip; window.askVoice = askVoice; window.askDraft = askDraft; window.askSend = askSend;
 
   /* ---------- local storage hygiene ---------- */
   var STORAGE_VERSION = '4';
