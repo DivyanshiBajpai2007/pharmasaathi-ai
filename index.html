@@ -916,7 +916,7 @@
         verifyWarning:'AI read this from your photo — please verify each name against the paper prescription before adding.',
         alreadyTaking:'Already in your medicine list',
         ocrFailed:'The OCR engine couldn\'t load (check your internet connection) — nothing was read from this photo.',
-        noMatch:'PharmaSaathi couldn\'t recognize any known medicine name in this photo. Try a clearer, well-lit photo of the printed text, or a different prescription.',
+        noMatch:'PharmaSaathi couldn\'t recognize any known medicine name in this photo. Handwriting — especially joined-up cursive — is hard to read automatically. Try a straight-on, well-lit photo with the paper filling the frame, or add the medicines manually.',
         rawTextLabel:'What PharmaSaathi actually read from the photo',
         addBtn:'➕&nbsp; Add selected to my medicines',
         retakeBtn:'↻ Scan a different prescription',
@@ -1019,7 +1019,7 @@
         verifyWarning:'AI ने यह आपकी फ़ोटो से पढ़ा है — जोड़ने से पहले हर नाम कागज़ी प्रिस्क्रिप्शन से मिलाकर पुष्टि करें।',
         alreadyTaking:'पहले से आपकी दवा सूची में है',
         ocrFailed:'OCR इंजन लोड नहीं हो सका (इंटरनेट कनेक्शन जाँचें) — इस फ़ोटो से कुछ नहीं पढ़ा जा सका।',
-        noMatch:'PharmaSaathi इस फ़ोटो में किसी ज्ञात दवा का नाम नहीं पहचान सका। छपे हुए टेक्स्ट की स्पष्ट, अच्छी रोशनी वाली फ़ोटो लें, या कोई अन्य प्रिस्क्रिप्शन आज़माएँ।',
+        noMatch:'PharmaSaathi इस फ़ोटो में किसी ज्ञात दवा का नाम नहीं पहचान सका। हाथ की लिखावट — खासकर जुड़े हुए अक्षर — अपने-आप पढ़ना कठिन है। कागज़ को फ़्रेम में भरकर, सीधी और अच्छी रोशनी में फ़ोटो लें, या दवाइयाँ खुद जोड़ें।',
         rawTextLabel:'PharmaSaathi ने फ़ोटो से वास्तव में क्या पढ़ा',
         addBtn:'➕&nbsp; चुनी गई दवाइयाँ जोड़ें',
         retakeBtn:'↻ दूसरा प्रिस्क्रिप्शन स्कैन करें',
@@ -2184,6 +2184,12 @@
     s = s.replace(/^[A-Za-z0-9]\s+(?=[A-Za-z]{3,})/, '');                 // stray character from a misread list number
     s = s.replace(/[^A-Za-z0-9\s\-\.]/g, ' ').replace(/\s+/g, ' ').replace(/^[\s.\-]+|[\s.\-]+$/g, '');
     s = s.replace(/(\d+(?:\.\d+)?\s?(?:mg|mcg|ml|g|iu))$/i, '').trim();
+    var words = s.split(' '), keep = [];
+    for (var wi = 0; wi < words.length; wi++){
+      if ((/^[A-Za-z][A-Za-z\-]{2,}$/.test(words[wi]) || (wi > 0 && /^[A-Za-z]\d{1,2}$/.test(words[wi]))) && !/^(?:tab|tabs|cap|caps|bid|tid|qid|tds|bd|od|hs|prn|sos)$/i.test(words[wi]) && wi < 3) keep.push(words[wi]);
+      else break;
+    }
+    if (keep.length) s = keep.join(' ');
     return titleCase(s.slice(0, 40));
   }
   function strengthOf(text){
@@ -2404,6 +2410,16 @@
     return [ { canvas:toCanvas(gray8), psm:'6' }, { canvas:toCanvas(bin), psm:'6' } ];
   }
 
+  /* rotate about the centre onto a white canvas big enough to hold the whole page */
+  function rotateCanvas(src, deg){
+    var rad = deg * Math.PI / 180, cs = Math.abs(Math.cos(rad)), sn = Math.abs(Math.sin(rad));
+    var rc = document.createElement('canvas');
+    rc.width = Math.round(src.width * cs + src.height * sn); rc.height = Math.round(src.width * sn + src.height * cs);
+    var rg = rc.getContext('2d');
+    rg.fillStyle = '#fff'; rg.fillRect(0, 0, rc.width, rc.height);
+    rg.translate(rc.width / 2, rc.height / 2); rg.rotate(rad); rg.drawImage(src, -src.width / 2, -src.height / 2);
+    return rc;
+  }
   var ocrWorker = null, ocrProgressCb = null;
   async function getOcrWorker(){
     if (!ocrWorker){
@@ -2448,18 +2464,14 @@
         found = mergeCandidates(texts.map(extractCandidates));
         await worker.setParameters({ tessedit_pageseg_mode:'6', preserve_interword_spaces:'1' });
       }
-      var degrees = [90, 270, 180];
+      var degrees = [-15, 15, 90, 270, 180, -30, 30];
       for (var d = 0; d < degrees.length && strongCount(found) < 2; d++){
-        scanStep = variants.length + d + 1; scanStepTotal = variants.length + degrees.length; scanProgressPct = 0; renderScan();
-        var rc = document.createElement('canvas'), src = variants[0].canvas, quarter = degrees[d] !== 180;
-        rc.width = quarter ? src.height : src.width; rc.height = quarter ? src.width : src.height;
-        var rg = rc.getContext('2d');
-        rg.translate(rc.width / 2, rc.height / 2); rg.rotate(degrees[d] * Math.PI / 180); rg.drawImage(src, -src.width / 2, -src.height / 2);
-        var rr = await worker.recognize(rc);
+        scanStep = variants.length + 1 + d; scanStepTotal = variants.length + 1 + degrees.length; scanProgressPct = 0; renderScan();
+        var rr = await worker.recognize(rotateCanvas(variants[0].canvas, degrees[d]));
         var rt = (rr && rr.data && rr.data.text) || '';
         texts.push(rt);
         var attempt = mergeCandidates([extractCandidates(rt)]);
-        if (strongCount(attempt) > strongCount(found)) found = attempt;
+        if (strongCount(attempt) > strongCount(found) || (strongCount(attempt) === strongCount(found) && attempt.length > found.length)) found = attempt;
       }
       ocrProgressCb = null;
       scanRawText = texts.join('\n');
