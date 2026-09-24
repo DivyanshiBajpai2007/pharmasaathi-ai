@@ -518,7 +518,8 @@
 
       <!-- SCAN PRESCRIPTION -->
       <section class="screen" id="screen-scan" hidden>
-        <input type="file" id="scanFileInput" accept="image/*" capture="environment" hidden>
+        <input type="file" id="scanFileInput" accept="image/*" hidden>
+        <input type="file" id="scanCameraInput" accept="image/*" capture="environment" hidden>
         <div id="scanBody"></div>
       </section>
 
@@ -928,9 +929,9 @@
                 ['📊','Population-level safety insights','Aggregated, de-identified ADR trends to support pharmacovigilance and early signal detection.'],
                 ['🔮','Predictive medicine availability','Forecast which nearby pharmacies are likely to have a medicine in stock before the patient travels.'] ] },
       scan:{
-        dropTitle:'Take a photo or upload your prescription',
+        dropTitle:'Take a photo or choose one from your gallery',
         dropHint:'JPG or PNG · read on your device unless you choose AI reading',
-        chooseBtn:'📷&nbsp; Choose photo',
+        takeBtn:'📷&nbsp; Take a photo now', chooseBtn:'🖼️&nbsp; Choose from gallery / files',
         analyzing:'Reading your prescription…',
         extractedTitle:'Medicines recognized',
         matchesFound:' matched', confHigh:'✓ Match', confMedium:'⚠ Check name',
@@ -1033,9 +1034,9 @@
                 ['📊','जनसंख्या-स्तरीय सुरक्षा जानकारी','फार्माकोविजिलेंस और शुरुआती संकेत पहचान में मदद हेतु समग्र, पहचान-रहित ADR रुझान।'],
                 ['🔮','दवा उपलब्धता का पूर्वानुमान','मरीज़ के जाने से पहले अनुमान — आस-पास किस फार्मेसी में दवा मिलने की संभावना अधिक है।'] ] },
       scan:{
-        dropTitle:'अपने प्रिस्क्रिप्शन की फ़ोटो लें या अपलोड करें',
+        dropTitle:'फ़ोटो खींचें या गैलरी से चुनें',
         dropHint:'JPG या PNG · जब तक आप AI से पढ़ना न चुनें, आपके डिवाइस पर ही पढ़ी जाती है',
-        chooseBtn:'📷&nbsp; फ़ोटो चुनें',
+        takeBtn:'📷&nbsp; अभी फ़ोटो खींचें', chooseBtn:'🖼️&nbsp; गैलरी / फ़ाइलों से चुनें',
         analyzing:'आपका प्रिस्क्रिप्शन पढ़ा जा रहा है…',
         extractedTitle:'पहचानी गई दवाइयाँ',
         matchesFound:' मिलान', confHigh:'✓ मिलान', confMedium:'⚠ नाम जाँचें',
@@ -2465,8 +2466,7 @@
     scanItems = [];
     scanRawText = '';
     scanProgressPct = 0;
-    var input = document.getElementById('scanFileInput');
-    if (input) input.value = '';
+    ['scanFileInput', 'scanCameraInput'].forEach(function(id){ var input = document.getElementById(id); if (input) input.value = ''; });
     renderScan();
     go('scan');
   }
@@ -2812,7 +2812,8 @@
         '<div class="scan-drop" onclick="document.getElementById(\'scanFileInput\').click()">' +
           '<span class="ic">📷</span><strong>'+s.dropTitle+'</strong><span class="hint">'+s.dropHint+'</span>' +
         '</div>' +
-        '<button class="btn primary" type="button" onclick="document.getElementById(\'scanFileInput\').click()">'+s.chooseBtn+'</button>' +
+        '<button class="btn primary" type="button" onclick="document.getElementById(\'scanCameraInput\').click()">'+s.takeBtn+'</button>' +
+        '<button class="btn outline" type="button" onclick="document.getElementById(\'scanFileInput\').click()">'+s.chooseBtn+'</button>' +
         '<div class="card flat" style="background:var(--surface-2)"><span class="card-title">'+sx.tipsTitle+'</span><ul class="muted" style="margin:6px 0 0;padding-left:18px;line-height:1.6">' +
           sx.tips.map(function(t){ return '<li>'+t+'</li>'; }).join('') + '</ul></div>' +
         (isAccount() ? '<div class="callout good"><span>🤖</span><span>'+sx.aiOn+'</span></div>' : '<div class="callout warn"><span>🔒</span><span>'+sx.aiNeedsAccount+'</span></div>') +
@@ -3048,12 +3049,15 @@
     b.addEventListener('click', function(){ go(b.dataset.tab); });
   });
 
-  var scanFileInput = document.getElementById('scanFileInput');
-  if (scanFileInput){
-    scanFileInput.addEventListener('change', function(e){
+  /* gallery/files input has NO "capture" attribute, so a phone offers the gallery (and the camera);
+     the camera input keeps "capture" so one tap opens the camera directly */
+  ['scanFileInput', 'scanCameraInput'].forEach(function(id){
+    var inp = document.getElementById(id);
+    if (inp) inp.addEventListener('change', function(e){
       handleScanFile(e.target.files && e.target.files[0]);
+      e.target.value = '';                    // picking the same photo again must still trigger a change
     });
-  }
+  });
 
   /* schedule row tap-to-toggle (handy for demoing without waiting for real dose times) */
   document.getElementById('scheduleList').addEventListener('click', function(e){
