@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="only light">
+<title>PharmaSaathi for pharmacists</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>
+  :root{ color-scheme:light; --bg:#FEFCF8; --surface:#FFFFFF; --surface-2:#F8F2E6; --text:#1C2333; --muted:#847D6C; --accent:#EF9F1C; --accent-ink:#5B3A00; --accent-soft:#FCEFD4; --good:#2E8B62; --good-soft:#E5F5EC; --warn:#B5750A; --warn-soft:#FCEFD4; --risk:#C4483C; --risk-soft:#FCE9E6; --border:#EEE6D6; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Manrope',-apple-system,Segoe UI,Arial,sans-serif; line-height:1.5; }
+  header{ background:var(--surface); border-bottom:1px solid var(--border); padding:12px 20px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1{ font-size:1.05rem; margin:0; }
+  .who{ margin-left:auto; font-size:.85rem; color:var(--muted); }
+  .preview{ background:var(--warn-soft); color:var(--warn); padding:8px 20px; font-size:.82rem; font-weight:700; }
+  nav{ display:flex; gap:6px; padding:12px 20px 0; flex-wrap:wrap; }
+  nav button{ font:inherit; font-weight:700; border:1px solid var(--border); background:var(--surface); border-radius:10px; padding:8px 16px; cursor:pointer; }
+  nav button.on{ background:var(--accent-soft); color:var(--accent-ink); border-color:var(--accent); }
+  main{ max-width:920px; margin:0 auto; padding:16px 20px 60px; display:flex; flex-direction:column; gap:14px; }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px 16px; }
+  .row{ display:flex; align-items:center; gap:10px; justify-content:space-between; flex-wrap:wrap; }
+  .muted{ color:var(--muted); font-size:.85rem; }
+  .chip{ font-size:.72rem; font-weight:800; border-radius:8px; padding:3px 9px; background:var(--surface-2); color:var(--muted); }
+  .chip.warn{ background:var(--warn-soft); color:var(--warn); } .chip.ok{ background:var(--good-soft); color:var(--good); } .chip.bad{ background:var(--risk-soft); color:var(--risk); }
+  button.b{ font:inherit; font-weight:800; border:1px solid var(--border); background:var(--surface); border-radius:10px; padding:9px 16px; cursor:pointer; }
+  button.b.primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  button.b.danger{ color:var(--risk); }
+  input[type=text]{ font:inherit; padding:9px 11px; border:1px solid var(--border); border-radius:10px; width:100%; }
+  .grid{ display:grid; grid-template-columns:minmax(0,240px) minmax(0,1fr); gap:16px; }
+  @media (max-width:700px){ .grid{ grid-template-columns:1fr; } }
+  .photo{ background:var(--surface-2); border:1px dashed var(--border); border-radius:12px; min-height:220px; display:flex; align-items:center; justify-content:center; overflow:hidden; color:var(--muted); font-size:.85rem; text-align:center; padding:8px; }
+  .photo img{ max-width:100%; max-height:420px; border-radius:8px; }
+  .item{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:10px; margin-top:6px; }
+  .item.unclear{ border-color:var(--warn); background:var(--warn-soft); }
+  .qrbox{ background:#fff; padding:14px; border-radius:14px; display:inline-block; border:1px solid var(--border); }
+  .err{ color:var(--risk); font-size:.82rem; margin-top:4px; }
+</style>
+<header>
+  <h1>PharmaSaathi for pharmacists</h1>
+  <span class="who">Rajesh Kumar · ABC Pharmacy · <span class="chip ok">✓ Verified pharmacist</span></span>
+</header>
+<div class="preview">Preview only: this page shares this browser's storage with the PharmaSaathi app, so you can try the whole flow. It is not connected to the real system yet.</div>
+<nav>
+  <button data-tab="req" class="on">Requests</button>
+  <button data-tab="conn">Connect a patient</button>
+  <button data-tab="pts">My patients</button>
+</nav>
+<main id="main"></main>
+<script>
+(function(){
+  var PRO = { id:'pro-rajesh', name:'Rajesh Kumar', org:'ABC Pharmacy', role:'pharmacist' };
+  var CK = { req:'ps_care_requests', con:'ps_care_connections', log:'ps_care_log', qr:'ps_care_qr' };
+  var tab = 'req', openId = null, sendErr = '';
+  function get(k, d){ try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch(e){ return d; } }
+  function set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){ alert('Storage is full'); } }
+  function esc(x){ return String(x == null ? '' : x).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+  function reqs(){ return get(CK.req, []); }
+  function update(id, patch){ var l = reqs(); l.forEach(function(r){ if (r.id === id) Object.assign(r, patch); }); set(CK.req, l); }
+  function addLog(action){ var l = get(CK.log, []); l.unshift({ at:new Date().toISOString(), who:PRO.name, org:PRO.org, action:action }); set(CK.log, l.slice(0, 50)); }
+  function ago(iso){ var m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000)); return m < 1 ? 'just now' : (m < 60 ? m + ' min' : Math.round(m / 60) + ' h'); }
+
+  /* my QR code: a random token only, never patient data */
+  function myCode(force){
+    var m = get(CK.qr, {}), cur = null;
+    Object.keys(m).forEach(function(k){ if (m[k] && m[k].id === PRO.id && !force) cur = k; });
+    if (cur && String(m[cur].exp || '0') > String(Date.now() - 1)) return cur;
+    Object.keys(m).forEach(function(k){ if (m[k] && m[k].id === PRO.id) delete m[k]; });
+    var code = 'PS-' + String(Math.floor(100000 + Math.random() * 900000));
+    m[code] = { id:PRO.id, name:PRO.name, org:PRO.org, role:PRO.role, exp:Date.now() + 120000 };
+    set(CK.qr, m); return code;
+  }
+
+  function queueHtml(){
+    var l = reqs().filter(function(r){ return r.status === 'waiting' || (r.status === 'accepted' && r.acceptedBy === PRO.id); });
+    var html = '<div class="row"><strong>Waiting for you: ' + l.length + '</strong><span class="muted">Only the language, area and time are shown until you open a request.</span></div>';
+    if (!l.length) return html + '<div class="card muted">No requests right now.</div>';
+    return html + l.map(function(r){
+      var mine = r.status === 'accepted';
+      return '<div class="card"><div class="row"><div><strong>Request #' + esc(r.id.slice(-4).toUpperCase()) + '</strong> ' + (mine ? '<span class="chip warn">you are checking this</span>' : '<span class="chip warn">waiting ' + ago(r.createdAt) + '</span>') +
+        '<div class="muted">' + (r.language === 'hi' ? 'Hindi' : 'English') + (r.region ? ' · ' + esc(r.region) : '') + ' · ' + (r.items || []).length + ' medicines</div></div>' +
+        '<button class="b primary" data-open="' + esc(r.id) + '">' + (mine ? 'Continue' : 'Open') + '</button></div></div>';
+    }).join('');
+  }
+
+  function reviewHtml(r){
+    var un = r.unclear || [];
+    return '<div class="row"><button class="b" data-back="1">← Back to requests</button><span class="muted">Request #' + esc(r.id.slice(-4).toUpperCase()) + ' · your access ends when you answer</span></div>' +
+      '<div class="grid"><div><div class="photo">' + (r.image ? '<img alt="Prescription photo" src="' + r.image + '">' : 'No photo in this preview') + '</div></div><div>' +
+      '<div class="muted">What the AI read</div>' + (r.items || []).map(function(it, i){
+        var u = un.indexOf(i) !== -1;
+        return '<div class="item' + (u ? ' unclear' : '') + '"><span><strong>' + (i + 1) + '.</strong> ' + esc(it.raw || it.name) + (it.dose ? ' · ' + esc(it.dose) : '') + '</span><span class="chip ' + (u ? 'warn' : 'ok') + '">' + (u ? 'unclear' : 'ok') + '</span></div>';
+      }).join('') +
+      '<div class="card" style="margin-top:12px;background:var(--surface-2)"><div class="muted">Current medicines</div>' + (((r.context || {}).meds || []).map(esc).join(', ') || '—') +
+      '<div class="muted" style="margin-top:8px">Allergies</div>' + ((((r.context || {}).allergies) || []).length ? '<strong style="color:var(--risk)">' + r.context.allergies.map(esc).join(', ') + '</strong>' : 'None recorded') + '</div>' +
+      un.map(function(i){ return '<div style="margin-top:12px"><label class="muted" for="ra' + i + '">Medicine ' + (i + 1) + ' is read as</label><input type="text" id="ra' + i + '" data-ra="' + i + '" maxlength="80" placeholder="For example: Amoxicillin 500 mg"></div>'; }).join('') +
+      (sendErr ? '<div class="err">' + esc(sendErr) + '</div>' : '') +
+      '<div class="row" style="margin-top:14px;justify-content:flex-start"><button class="b primary" data-send="1">Send answer</button><button class="b" data-unable="1">Unable to read</button><button class="b" data-clearer="1">Needs a clearer photo</button><button class="b danger" data-release="1">Hand back</button></div>' +
+      '<div class="muted" style="margin-top:8px">You can only say what you read. You cannot change the prescription.</div></div></div>';
+  }
+
+  function connectHtml(){
+    var code = myCode(false), t;
+    try { var q = qrcode(0, 'M'); q.addData('PSCONNECT:' + code); q.make(); t = q.createSvgTag(5, 0); } catch(e){ t = '<div class="muted">QR could not be drawn</div>'; }
+    return '<div class="card" style="text-align:center"><div class="muted">Ask the patient to open PharmaSaathi → Care → My care team → Add pharmacist, and scan this code.</div><div style="margin:14px 0"><span class="qrbox">' + t + '</span></div>' +
+      '<div><strong style="font-size:1.4rem;letter-spacing:.06em">' + esc(code) + '</strong></div><div class="muted">Or type this code. It contains a random code only, no patient data. It changes every 2 minutes.</div>' +
+      '<div style="margin-top:12px"><button class="b" data-newcode="1">New code</button></div></div>';
+  }
+  function patientsHtml(){
+    var c = get(CK.con, []).filter(function(x){ return x.proId === PRO.id; });
+    if (!c.length) return '<div class="card muted">No patients connected yet.</div>';
+    return c.map(function(x){ return '<div class="card"><div class="row"><strong>Patient ' + esc((reqs()[0] && reqs()[0].patient) || '') + '</strong><span class="chip ok">connected ' + ago(x.since) + ' ago</span></div>' +
+      '<div class="muted" style="margin-top:6px">You can see: current medicines and prescriptions<br>You cannot see: reports, personal details</div></div>'; }).join('');
+  }
+  function render(){
+    var m = document.getElementById('main'), r = openId ? reqs().filter(function(x){ return x.id === openId; })[0] : null;
+    if (tab === 'req'){
+      if (r && r.status === 'accepted' && r.acceptedBy === PRO.id) m.innerHTML = reviewHtml(r);
+      else {
+        openId = null;
+        m.innerHTML = queueHtml();
+      }
+    } else if (tab === 'conn') m.innerHTML = connectHtml();
+    else m.innerHTML = patientsHtml();
+    document.querySelectorAll('nav button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === tab); });
+  }
+  function keepInputs(){ var o = {}; document.querySelectorAll('[data-ra]').forEach(function(i){ o[i.id] = i.value; }); return o; }
+  function restore(o){ Object.keys(o).forEach(function(id){ var e = document.getElementById(id); if (e) e.value = o[id]; }); }
+  document.addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.tab){ tab = b.dataset.tab; render(); return; }
+    if (b.dataset.open){
+      var r = reqs().filter(function(x){ return x.id === b.dataset.open; })[0];
+      if (!r || (r.status !== 'waiting' && !(r.status === 'accepted' && r.acceptedBy === PRO.id))){ alert('This request is no longer available.'); render(); return; }
+      if (r.status === 'waiting'){ update(r.id, { status:'accepted', acceptedBy:PRO.id, acceptedAt:new Date().toISOString() }); addLog('read'); }
+      openId = r.id; sendErr = ''; render(); return;
+    }
+    if (b.dataset.back){ openId = null; render(); return; }
+    if (b.dataset.newcode){ myCode(true); render(); return; }
+    var r2 = openId ? reqs().filter(function(x){ return x.id === openId; })[0] : null;
+    if (!r2) return;
+    if (b.dataset.send){
+      var items = [], bad = false;
+      (r2.unclear || []).forEach(function(i){ var v = String((document.getElementById('ra' + i) || {}).value || '').replace(/[<>]/g, '').trim(); if (v.length < 2 || v.length > 80) bad = true; else items.push({ index:i, read_as:v }); });
+      if (bad || !items.length){ var keep = keepInputs(); sendErr = 'Write what you read for every unclear medicine (2 to 80 characters).'; render(); restore(keep); return; }
+      update(r2.id, { status:'answered', answeredAt:new Date().toISOString(), answer:{ type:'read_as', items:items, note:'', by:{ name:PRO.name, org:PRO.org } } });
+      addLog('answered'); openId = null; sendErr = ''; render(); return;
+    }
+    if (b.dataset.unable || b.dataset.clearer){
+      update(r2.id, { status:'answered', answeredAt:new Date().toISOString(), answer:{ type:b.dataset.unable ? 'unable' : 'clearer_photo', items:[], note:'', by:{ name:PRO.name, org:PRO.org } } });
+      addLog('answered'); openId = null; render(); return;
+    }
+    if (b.dataset.release){ update(r2.id, { status:'waiting', acceptedBy:null, acceptedAt:null }); openId = null; render(); return; }
+  });
+  setInterval(function(){ if (tab === 'req' && openId) return; render(); }, 3000);
+  window.addEventListener('storage', function(){ if (!(tab === 'req' && openId)) render(); });
+  render();
+})();
+</script>

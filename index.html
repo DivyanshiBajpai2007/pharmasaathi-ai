@@ -214,6 +214,15 @@
   .btn.sm .ic-mic, .btn.sm .ic-stop{ width:15px; height:15px; display:inline-block; vertical-align:-3px; margin-right:4px; }
   .btn.sm .ic-stop{ display:none; }
   .btn.sm.speaking .ic-stop{ display:inline-block; }
+  .care-say{ display:flex; gap:10px; align-items:flex-start; background:var(--accent-soft); color:var(--accent-ink); border-radius:16px; padding:14px; font-size:1.05rem; font-weight:600; line-height:1.5; }
+  .care-big{ width:100%; padding:16px 12px; font-size:1.05rem; font-weight:800; border-radius:16px; border:none; cursor:pointer; font-family:inherit; }
+  .care-big.yes{ background:var(--accent); color:var(--accent-ink); }
+  .care-big.no{ background:var(--surface-2); color:var(--text); border:1px solid var(--border); }
+  .care-pro{ display:flex; gap:12px; align-items:center; background:var(--surface-2); border:1px solid var(--border); border-radius:16px; padding:12px; }
+  .care-pro .av{ width:44px; height:44px; border-radius:50%; background:var(--good-soft); color:var(--good); display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex:0 0 auto; }
+  .care-chip{ font-size:.7rem; font-weight:800; border-radius:8px; padding:3px 8px; background:var(--surface-3); color:var(--text-muted); }
+  .care-chip.ok{ background:var(--good-soft); color:var(--good); } .care-chip.warn{ background:var(--warn-soft); color:var(--warn); } .care-chip.bad{ background:var(--risk-soft); color:var(--risk); }
+  .care-video{ width:100%; border-radius:16px; background:#000; aspect-ratio:1/1; object-fit:cover; }
   .how-chips{ display:flex; flex-wrap:wrap; gap:5px; margin-top:5px; }
   .how-chip{ font-size:.68rem; font-weight:700; background:var(--surface-2); border:1px solid var(--border); border-radius:999px; padding:2px 8px; white-space:nowrap; }
   .rx-tag{ font:inherit; cursor:pointer; text-align:left; }
@@ -435,6 +444,7 @@
       <!-- HOME -->
       <section class="screen" id="screen-home">
         <button class="sos-btn" type="button" id="h_sosBtn" onclick="openSos()"><span class="sos-tag">SOS</span><span id="h_sosLabel">Emergency help</span></button>
+        <div id="careBanner" hidden></div>
 
         <div class="notif" id="missedDoseNotif" hidden>
           <span class="ic">⏰</span>
@@ -582,7 +592,18 @@
 
       <!-- CAREGIVER -->
       <section class="screen" id="screen-caregiver" hidden>
+        <button class="medcard" type="button" id="careTeamBtn" onclick="go('careteam')">
+          <span class="pill-ic">👩‍⚕️</span><span class="mid"><span class="mname" id="careTeamName">My care team</span><span class="mdose" id="careTeamSub"></span></span><span class="chev">›</span>
+        </button>
         <div id="cgBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <section class="screen" id="screen-careteam" hidden>
+        <div id="careTeamBody" style="display:flex;flex-direction:column;gap:14px"></div>
+      </section>
+
+      <section class="screen" id="screen-care-scan" hidden>
+        <div id="careScanBody" style="display:flex;flex-direction:column;gap:14px"></div>
       </section>
 
       <!-- PROFILE -->
@@ -660,6 +681,10 @@
 
     <div class="alarm-overlay" id="alarmOverlay" hidden>
       <div class="alarm-card" id="alarmCard"></div>
+    </div>
+
+    <div class="sos-overlay" id="careOverlay" hidden style="z-index:72">
+      <div class="sos-card" id="careCard" role="dialog" aria-modal="true"></div>
     </div>
 
     <div class="sos-overlay" id="sosOverlay" hidden>
@@ -899,7 +924,7 @@
         noneOther:'You have no other active medicines to cross-check against.', fromPrefix:'From:',
         continueBtn:'🛡️ Continue to safety check' },
       screenTitles:{ home:['Home','Namaste, Rajesh ji'], medicines:['Medicines','4 active'], 'med-detail':['',''], reports:['Health','Reports · History · Appointments'], lab:['Lab report','Kidney function panel'], adr:['ADR report','Adverse reaction log'], ivr:['IVR check-in','Automated side-effect call'], caregiver:['Care','Caregiver & family support'], future:['Profile','Rewards, help & settings'], scan:['Scan prescription','Point camera or upload a photo'],
-        'rx-detail':['Prescription',''], 'safety-check':['Safety check','Medicine safety review'], 'merge-check':['Confirm medicines',''], 'add-med':['Add a medicine','Type it in — no scan needed'],
+        'rx-detail':['Prescription',''], 'safety-check':['Safety check','Medicine safety review'], 'merge-check':['Confirm medicines',''], careteam:['My care team','Pharmacist and medicine checks'], 'care-scan':['Add pharmacist','Scan the pharmacist’s code'], 'add-med':['Add a medicine','Type it in — no scan needed'],
         diagnostics:['Diagnostic reports','All reports'], 'diag-detail':['',''], doctor:['Book appointment','Choose a doctor'], 'doctor-book':['Choose a slot',''], history:['Medical history','Full timeline'], rewards:['Rewards','Coins & streaks'], settings:['Settings',''], help:['Help & support','FAQs and contact'], privacy:['Privacy policy','How your data is handled'] },
       notifTitle:'Missed dose alert', notifDesc:'Metformin 500mg · 2:00 PM dose not marked taken',
       markTaken:'Mark as taken', notify:'Notify caregiver',
@@ -1005,7 +1030,7 @@
         noneOther:'तुलना के लिए आपकी कोई अन्य सक्रिय दवा नहीं है।', fromPrefix:'स्रोत:',
         continueBtn:'🛡️ सुरक्षा जाँच जारी रखें' },
       screenTitles:{ home:['होम','नमस्ते, राजेश जी'], medicines:['दवाइयाँ','4 सक्रिय'], 'med-detail':['',''], reports:['हेल्थ','रिपोर्ट · हिस्ट्री · अपॉइंटमेंट्स'], lab:['लैब रिपोर्ट','किडनी फंक्शन पैनल'], adr:['ADR रिपोर्ट','प्रतिकूल प्रतिक्रिया लॉग'], ivr:['IVR चेक-इन','स्वचालित साइड-इफ़ेक्ट कॉल'], caregiver:['केयर','देखभाल व पारिवारिक सहयोग'], future:['प्रोफ़ाइल','रिवॉर्ड्स, सहायता व सेटिंग्स'], scan:['प्रिस्क्रिप्शन स्कैन करें','कैमरा या फ़ोटो अपलोड करें'],
-        'rx-detail':['प्रिस्क्रिप्शन',''], 'safety-check':['सुरक्षा जाँच','दवा सुरक्षा समीक्षा'], 'merge-check':['दवाइयों की पुष्टि करें',''], 'add-med':['दवा जोड़ें','हाथ से लिखें — स्कैन ज़रूरी नहीं'],
+        'rx-detail':['प्रिस्क्रिप्शन',''], 'safety-check':['सुरक्षा जाँच','दवा सुरक्षा समीक्षा'], 'merge-check':['दवाइयों की पुष्टि करें',''], careteam:['मेरी केयर टीम','फ़ार्मासिस्ट और दवा की जाँच'], 'care-scan':['फ़ार्मासिस्ट जोड़ें','फ़ार्मासिस्ट का कोड स्कैन करें'], 'add-med':['दवा जोड़ें','हाथ से लिखें — स्कैन ज़रूरी नहीं'],
         diagnostics:['डायग्नोस्टिक रिपोर्ट','सभी रिपोर्ट'], 'diag-detail':['',''], doctor:['अपॉइंटमेंट बुक करें','डॉक्टर चुनें'], 'doctor-book':['स्लॉट चुनें',''], history:['मेडिकल हिस्ट्री','पूरी समयरेखा'], rewards:['रिवॉर्ड्स','कॉइन्स व स्ट्रीक'], settings:['सेटिंग्स',''], help:['सहायता','FAQ और संपर्क'], privacy:['प्राइवेसी पॉलिसी','आपका डेटा कैसे संभाला जाता है'] },
       notifTitle:'छूटी हुई खुराक की चेतावनी', notifDesc:'Metformin 500mg · दोपहर 2:00 बजे की खुराक अभी दर्ज नहीं है',
       markTaken:'ली हुई दर्ज करें', notify:'देखभालकर्ता को सूचित करें',
@@ -1100,13 +1125,13 @@
   var openMedId = null;
 
   var screens = ['home','medicines','med-detail','reports','lab','adr','ivr','caregiver','future','scan',
-    'diagnostics','diag-detail','doctor','doctor-book','history','rewards','help','privacy','rx-detail','safety-check','merge-check','add-med'];
+    'diagnostics','diag-detail','doctor','doctor-book','history','rewards','help','privacy','rx-detail','safety-check','merge-check','add-med','careteam','care-scan'];
   var tabOf = { home:'home', medicines:'medicines', 'med-detail':'medicines', reports:'reports', lab:'reports', adr:'reports', ivr:'caregiver', caregiver:'caregiver', future:'future', scan:'home',
     diagnostics:'reports', 'diag-detail':'reports', doctor:'reports', 'doctor-book':'reports', history:'reports', rewards:'future',
-    'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines', 'add-med':'medicines' };
+    'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines', 'add-med':'medicines', careteam:'caregiver', 'care-scan':'caregiver' };
   var backTarget = { 'med-detail':'medicines', lab:'reports', adr:'reports', ivr:'caregiver', scan:'home',
     diagnostics:'reports', 'diag-detail':'diagnostics', doctor:'reports', 'doctor-book':'doctor', history:'reports', rewards:'future',
-    help:'future', privacy:'future', 'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines', 'add-med':'medicines' };
+    help:'future', privacy:'future', 'rx-detail':'medicines', 'safety-check':'medicines', 'merge-check':'medicines', 'add-med':'medicines', careteam:'caregiver', 'care-scan':'careteam' };
 
   function badgeClass(s){ return s === 'good' ? 'good' : (s === 'risk' ? 'risk' : 'warn'); }
   function badgeLabel(t,s){ return s === 'good' ? t.badgeGood : (s === 'risk' ? t.badgeRisk : (s === 'unknown' ? X().badgeUnknown : t.badgeWarn)); }
@@ -1904,7 +1929,9 @@
     el.innerHTML = html;
     lastStageSig = stageSig();
     setTimeout(fillUnknownPurposes, 600);
+    renderCareBanner();
     setTimeout(syncPush, 900);
+    renderCareBanner();
     var takenCount = counted.filter(function(d){ return doseState(d) === 'taken'; }).length;
     badgeEl.textContent = LANG === 'en'
       ? takenCount+' of '+counted.length+' taken'
@@ -3930,7 +3957,7 @@
       el.innerHTML = preview +
         '<div class="report-doc"><div class="row"><h3 style="margin:0">'+s.extractedTitle+'</h3><span class="badge good">'+scanItems.length+'</span></div><hr>' +
         '<p class="muted">'+(scanUsedAi ? sx.editHintAi : sx.editHint)+'</p>' + (scanFromCache ? '<p class="muted" style="font-size:.74rem">♻️ '+sx.fromCache+'</p>' : '') +
-        speakBtnHtml(sx.readAloud, 'speakScan()', 'margin-top:8px')+'</div>' + aiNoteHtml() + missedHtml() + rows + rxMetaHtml() + reviewHtml() + rawBlock +
+        speakBtnHtml(sx.readAloud, 'speakScan()', 'margin-top:8px')+'</div>' + aiNoteHtml() + missedHtml() + careAskHtml() + rows + rxMetaHtml() + reviewHtml() + rawBlock +
         '<button class="btn primary" type="button" onclick="addScannedMeds()">'+s.addBtn+'</button>' +
         '<button class="btn ghost" type="button" onclick="openAddMed()">✍️&nbsp; '+sx.addMissing+'</button>' +
         '<button class="btn ghost" type="button" onclick="startScan(true)">'+s.retakeBtn+'</button>' +
@@ -4097,7 +4124,302 @@
     future: renderFuture,
     'merge-check': renderMergeCheck
   };
+
+  /* =====================================================================
+     CARE TEAM + PHARMACIST CHECK  (front end)
+     CARE_MOCK = true: everything is kept on THIS phone (localStorage), so the whole flow can be seen and tried, and the
+     pharmacist.html page (same browser) plays the pharmacist. Nothing is sent to a real pharmacist yet.
+     To go live, only CareAPI below is replaced by calls to the database functions in backend/care_network.sql.
+     ===================================================================== */
+  var CARE_MOCK = true;
+  var CK = { req:'ps_care_requests', con:'ps_care_connections', log:'ps_care_log', qr:'ps_care_qr', allergy:'ps_allergies' };
+  function cGet(k, d){ try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return v == null ? d : v; } catch(e){ return d; } }
+  function cSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){ toast('Storage is full'); } }
+  function cId(){ return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  var CareAPI = {
+    requests: function(){ return cGet(CK.req, []).sort(function(a, b){ return a.createdAt < b.createdAt ? 1 : -1; }); },
+    requestById: function(id){ return CareAPI.requests().filter(function(r){ return r.id === id; })[0] || null; },
+    saveRequests: function(list){ cSet(CK.req, list.slice(0, 12)); },
+    createRequest: function(r){ var l = cGet(CK.req, []); r.id = cId(); r.status = 'waiting'; r.createdAt = new Date().toISOString(); r.expiresAt = new Date(Date.now() + 86400000).toISOString(); r.answer = null; r.decision = null; l.unshift(r); CareAPI.saveRequests(l); return r.id; },
+    update: function(id, patch){ var l = cGet(CK.req, []); l.forEach(function(r){ if (r.id === id) Object.assign(r, patch); }); CareAPI.saveRequests(l); },
+    connections: function(){ return cGet(CK.con, []); },
+    lookupPro: function(codeOrToken){ var m = cGet(CK.qr, {}), t = String(codeOrToken || '').replace(/^PSCONNECT:/i, '').trim().toUpperCase(); return m[t] || m[t.replace(/^PS-?/, 'PS-')] || null; },
+    connect: function(pro){ var l = CareAPI.connections().filter(function(c){ return c.proId !== pro.id; }); l.unshift({ id:cId(), proId:pro.id, name:pro.name, org:pro.org, role:'pharmacist', since:new Date().toISOString() }); cSet(CK.con, l);
+      var log = cGet(CK.log, []); log.unshift({ at:new Date().toISOString(), who:pro.name, org:pro.org, action:'connected' }); cSet(CK.log, log.slice(0, 50)); },
+    disconnect: function(id){ var l = CareAPI.connections(), c = l.filter(function(x){ return x.id === id; })[0]; cSet(CK.con, l.filter(function(x){ return x.id !== id; }));
+      if (c){ var log = cGet(CK.log, []); log.unshift({ at:new Date().toISOString(), who:c.name, org:c.org, action:'disconnected' }); cSet(CK.log, log.slice(0, 50)); } },
+    log: function(){ return cGet(CK.log, []); },
+    allergies: function(){ return cGet(CK.allergy, []); },
+    setAllergies: function(a){ cSet(CK.allergy, a); }
+  };
+
+  var C_T = {
+    en:{ preview:'Preview only: this works inside this phone and is not sent to a real pharmacist yet.', team:'My care team', teamSub:'Pharmacist and medicine checks', none:'No pharmacist connected yet.',
+      add:'➕ Add pharmacist', canSee:'Can see', canSeeV:'Your medicines and prescriptions', cannotSee:'Cannot see', cannotSeeV:'Reports and personal details', disc:'Disconnect', discAsk:'Disconnect {name}? They will stop seeing your information.',
+      verified:'Verified pharmacist', checks:'My medicine checks', noChecks:'No checks yet. If a scan has a medicine that cannot be read, you can ask a pharmacist to check it.', stWaiting:'Waiting for a pharmacist', stAccepted:'A pharmacist is checking', stAnswered:'Answered', stCancelled:'Cancelled', stExpired:'Expired',
+      allergyT:'My allergies', allergyH:'This helps a pharmacist check safely. Tap to switch on or off.', allergyOpts:['Penicillin', 'Sulfa', 'Aspirin'], logT:'Who looked at my data', noLog:'Nobody has looked at your data.',
+      actConnected:'Connected with you', actDisconnected:'Disconnected', actRead:'Read your prescription', actAnswered:'Answered your medicine check',
+      scanH:'Point the camera at the pharmacist’s code', manual:'Or type the code', manualPh:'PS-123456', go:'Connect', noCam:'This phone cannot scan codes here. Type the code instead.', demoPro:'Preview: use a demo pharmacist', badCode:'That code was not found. Check it and try again.',
+      connectAsk:'You are connecting with {name} from {org}. Allow this pharmacist to help with your medicines?', yes:'Yes', no:'No', yesSend:'Yes, send it', yesAdd:'Yes, add it', close:'Close', cancelReq:'Cancel this request',
+      askCallout:'I could not read {n} medicine(s) clearly.', askBtn:'Ask a pharmacist to check',
+      ask1:'I couldn’t read {n} medicine clearly. Should a pharmacist check it?', askN:'I couldn’t read {n} medicines clearly. Should a pharmacist check them?',
+      consent:'Your prescription photo goes to a pharmacist. Only they can see it. It is deleted after 30 days.', sent:'Sent. A pharmacist will check it. You can close the app. We’ll tell you.',
+      answerRead:'The pharmacist read this medicine as {x}. Add it?', unable:'The pharmacist could not read this medicine. Please ask your doctor, or scan a clearer photo.', clearer:'The pharmacist needs a clearer photo. Please scan the prescription again.',
+      rescan:'Scan again', added:'Added: {x}', allergyWarn:'You told us you are allergic to {a}. {x} may be related. Ask your doctor or pharmacist before taking it.',
+      bAnswered:'The pharmacist answered your medicine check.', bWaiting:'A pharmacist is checking your medicine…', bSee:'See the answer', notifTitle:'PharmaSaathi', tookLong:'A pharmacist has not picked this up yet. It stays open for 24 hours.',
+      itemsUnclear:'Not clear:', sentTo:'Sent to a verified pharmacist', previewBadge:'PREVIEW' },
+    hi:{ preview:'सिर्फ़ नमूना: यह इसी फ़ोन में चलता है, अभी किसी असली फ़ार्मासिस्ट को नहीं जाता।', team:'मेरी केयर टीम', teamSub:'फ़ार्मासिस्ट और दवा की जाँच', none:'अभी कोई फ़ार्मासिस्ट जुड़ा नहीं है।',
+      add:'➕ फ़ार्मासिस्ट जोड़ें', canSee:'देख सकते हैं', canSeeV:'आपकी दवाएँ और प्रिस्क्रिप्शन', cannotSee:'नहीं देख सकते', cannotSeeV:'रिपोर्ट और निजी जानकारी', disc:'जुड़ाव हटाएँ', discAsk:'{name} को हटाएँ? वे आपकी जानकारी देखना बंद कर देंगे।',
+      verified:'सत्यापित फ़ार्मासिस्ट', checks:'मेरी दवा की जाँच', noChecks:'अभी कोई जाँच नहीं। अगर स्कैन में कोई दवा पढ़ी न जाए, तो आप फ़ार्मासिस्ट से जाँच करवा सकते हैं।', stWaiting:'फ़ार्मासिस्ट का इंतज़ार', stAccepted:'फ़ार्मासिस्ट देख रहे हैं', stAnswered:'जवाब मिला', stCancelled:'रद्द', stExpired:'समय समाप्त',
+      allergyT:'मेरी एलर्जी', allergyH:'इससे फ़ार्मासिस्ट सुरक्षित जाँच कर पाते हैं। चालू या बंद करने के लिए दबाएँ।', allergyOpts:['Penicillin', 'Sulfa', 'Aspirin'], logT:'मेरा डेटा किसने देखा', noLog:'किसी ने आपका डेटा नहीं देखा।',
+      actConnected:'आपसे जुड़े', actDisconnected:'जुड़ाव हटाया गया', actRead:'आपका प्रिस्क्रिप्शन पढ़ा', actAnswered:'आपकी दवा की जाँच का जवाब दिया',
+      scanH:'कैमरा फ़ार्मासिस्ट के कोड की ओर करें', manual:'या कोड लिखें', manualPh:'PS-123456', go:'जोड़ें', noCam:'यह फ़ोन यहाँ कोड स्कैन नहीं कर सकता। कोड लिखें।', demoPro:'नमूना: डेमो फ़ार्मासिस्ट इस्तेमाल करें', badCode:'यह कोड नहीं मिला। जाँचकर फिर कोशिश करें।',
+      connectAsk:'आप {org} के {name} से जुड़ रहे हैं। क्या ये फ़ार्मासिस्ट आपकी दवाओं में मदद कर सकते हैं?', yes:'हाँ', no:'नहीं', yesSend:'हाँ, भेजें', yesAdd:'हाँ, जोड़ें', close:'बंद करें', cancelReq:'यह अनुरोध रद्द करें',
+      askCallout:'मुझे {n} दवा साफ़ नहीं पढ़ी गई।', askBtn:'फ़ार्मासिस्ट से जाँच करवाएँ',
+      ask1:'मुझे {n} दवा साफ़ नहीं पढ़ी गई। क्या फ़ार्मासिस्ट इसे देखें?', askN:'मुझे {n} दवाएँ साफ़ नहीं पढ़ी गईं। क्या फ़ार्मासिस्ट इन्हें देखें?',
+      consent:'आपके प्रिस्क्रिप्शन की फ़ोटो एक फ़ार्मासिस्ट को जाएगी। सिर्फ़ वही देख सकते हैं। 30 दिन बाद यह हट जाएगी।', sent:'भेज दिया। फ़ार्मासिस्ट देखेंगे। आप ऐप बंद कर सकते हैं। हम बताएँगे।',
+      answerRead:'फ़ार्मासिस्ट ने यह दवा {x} पढ़ी है। जोड़ें?', unable:'फ़ार्मासिस्ट यह दवा नहीं पढ़ पाए। कृपया अपने डॉक्टर से पूछें, या साफ़ फ़ोटो स्कैन करें।', clearer:'फ़ार्मासिस्ट को साफ़ फ़ोटो चाहिए। कृपया प्रिस्क्रिप्शन फिर से स्कैन करें।',
+      rescan:'फिर से स्कैन करें', added:'जोड़ी गई: {x}', allergyWarn:'आपने बताया था कि आपको {a} से एलर्जी है। {x} उससे जुड़ी हो सकती है। लेने से पहले डॉक्टर या फ़ार्मासिस्ट से पूछें।',
+      bAnswered:'फ़ार्मासिस्ट ने आपकी दवा की जाँच का जवाब दिया।', bWaiting:'फ़ार्मासिस्ट आपकी दवा देख रहे हैं…', bSee:'जवाब देखें', notifTitle:'PharmaSaathi', tookLong:'किसी फ़ार्मासिस्ट ने अभी इसे नहीं उठाया। यह 24 घंटे खुला रहता है।',
+      itemsUnclear:'साफ़ नहीं:', sentTo:'सत्यापित फ़ार्मासिस्ट को भेजा गया', previewBadge:'नमूना' }
+  };
+  function CT(){ return C_T[LANG]; }
+  function careFmt(t, o){ Object.keys(o || {}).forEach(function(k){ t = t.split('{' + k + '}').join(o[k]); }); return t; }
+
+  /* allergy words (general, not exhaustive): a hit only ever shows "ask your doctor or pharmacist" */
+  var ALLERGY_WORDS = { Penicillin:'penicillin amoxicillin amoxycillin ampicillin augmentin clavam mox novamox cloxacillin dicloxacillin flucloxacillin piperacillin', Sulfa:'sulfa sulfamethoxazole cotrimoxazole septran bactrim sulfasalazine', Aspirin:'aspirin ecosprin disprin' };
+  function allergyHit(name){
+    var w = firstWordLower(name), mine = CareAPI.allergies(), hit = null;
+    mine.forEach(function(a){ if ((' ' + (ALLERGY_WORDS[a] || '') + ' ').indexOf(' ' + w + ' ') !== -1) hit = a; });
+    return hit;
+  }
+
+  /* ---------- scan screen: offer the check ---------- */
+  function unclearIdx(){
+    var out = [];
+    scanItems.forEach(function(it, i){ if (it.aiLow || (CONF_RANK[it.conf] || 0) < 3) out.push(i); });
+    return out;
+  }
+  function careAskHtml(){
+    var u = unclearIdx(); if (!scanItems.length || !u.length) return '';
+    var sent = CareAPI.requests().some(function(r){ return r.scanKey === scanKeyNow() && r.status !== 'cancelled'; });
+    var t = CT();
+    return '<div class="callout warn"><span>🩺</span><div style="flex:1"><div><strong>' + careFmt(t.askCallout, { n:u.length }) + '</strong></div>' +
+      (sent ? '<div class="muted" style="margin-top:6px">' + t.sentTo + '</div>' : '<button class="btn primary sm" style="margin-top:8px" type="button" onclick="careStartAsk()">' + t.askBtn + '</button>') + '</div></div>';
+  }
+  function scanKeyNow(){ return scanItems.map(function(i){ return i.name; }).join('|').slice(0, 200); }
+
+  /* ---------- the spoken flow (one question per screen) ---------- */
+  var careUi = { step:'', id:null, pro:null };
+  function careOpen(){ document.getElementById('careOverlay').hidden = false; }
+  function careClose(){ var o = document.getElementById('careOverlay'); if (o) o.hidden = true; careUi.step = ''; if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+  function careCloseBtn(){ careClose(); }
+  function careSpeak(key, o){ try { speakBoth(careFmt(C_T.en[key], o), careFmt(C_T.hi[key], o), null); } catch(e){} }
+  function proCardHtml(name, org){
+    return '<div class="care-pro"><div class="av">🛡️</div><div><div style="font-weight:800">' + esc(name) + '</div><div class="muted" style="font-size:.8rem">' + esc(org) + '</div><div style="font-size:.74rem;font-weight:800;color:var(--good);margin-top:2px">✓ ' + CT().verified + '</div></div></div>';
+  }
+  function careShow(html){ document.getElementById('careCard').innerHTML = (CARE_MOCK ? '<div class="care-chip warn" style="align-self:flex-start">' + CT().previewBadge + '</div>' : '') + html; careOpen(); }
+  function sayHtml(text){ return '<div class="care-say"><span style="font-size:1.4rem">🔊</span><span>' + esc(text) + '</span></div>'; }
+
+  function careStartAsk(){
+    var u = unclearIdx(), t = CT(); if (!u.length) return;
+    careUi = { step:'ask', id:null };
+    var key = u.length === 1 ? 'ask1' : 'askN';
+    careShow(sayHtml(careFmt(t[key], { n:u.length })) +
+      '<div class="card flat" style="background:var(--surface-2)"><div class="muted" style="font-size:.78rem">' + t.itemsUnclear + '</div>' + u.map(function(i){ return '<div style="font-weight:700">' + esc(scanItems[i].raw || scanItems[i].name) + '</div>'; }).join('') + '</div>' +
+      '<button class="care-big yes" type="button" onclick="careConsent()">👍 ' + t.yes + '</button><button class="care-big no" type="button" onclick="careCloseBtn()">✋ ' + t.no + '</button>');
+    careSpeak(key, { n:u.length });
+  }
+  function careConsent(){
+    var t = CT(); careUi.step = 'consent';
+    careShow(sayHtml(t.consent) + '<button class="care-big yes" type="button" onclick="careSend()">👍 ' + t.yesSend + '</button><button class="care-big no" type="button" onclick="careCloseBtn()">✋ ' + t.no + '</button>');
+    careSpeak('consent');
+  }
+  async function makeThumb(file){
+    try {
+      var im = await loadImageFile(file), k = Math.min(1, 900 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas');
+      c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      return c.toDataURL('image/jpeg', 0.6);
+    } catch(e){ return null; }
+  }
+  async function careSend(){
+    var u = unclearIdx(), t = CT();
+    var img = lastScanFile ? await makeThumb(lastScanFile) : null;
+    var cur = MEDS.filter(function(m){ return medRxStatus(m) !== 'stopped'; }).map(function(m){ return m.en.name; });
+    var id = CareAPI.createRequest({
+      patient:patientLabel(), language:LANG, region:'', scanKey:scanKeyNow(), image:img, unclear:u, rxMeta:{ doctor:scanRxMeta.doctor, diagnosis:scanRxMeta.diagnosis },
+      items:scanItems.map(function(it){ return { name:it.name, raw:it.raw, dose:it.dose, qty:it.qty, food:it.food, duration:it.duration, times:it.times, confidence:it.aiLow ? 'low' : (it.conf || ''), medId:it.medId }; }),
+      context:{ meds:cur.slice(0, 20), allergies:CareAPI.allergies() }
+    });
+    careUi = { step:'sent', id:id };
+    careShow(sayHtml(t.sent) + '<div class="muted" style="text-align:center;font-size:.8rem">' + t.tookLong + '</div>' +
+      '<button class="care-big no" type="button" onclick="careCloseBtn()">' + t.close + '</button><button class="rx-del" type="button" onclick="careCancel(\'' + id + '\')">' + t.cancelReq + '</button>');
+    careSpeak('sent'); renderScan(); renderCareBanner();
+  }
+  function careCancel(id){ CareAPI.update(id, { status:'cancelled' }); careCloseBtn(); renderScan(); renderCareBanner(); if (currentScreen === 'careteam') renderCareTeam(); }
+
+  /* the pharmacist's answer */
+  function careOpenRequest(id){
+    var r = CareAPI.requestById(id), t = CT(); if (!r) return;
+    careUi = { step:'answer', id:id };
+    if (r.status !== 'answered'){
+      careShow(sayHtml(r.status === 'accepted' ? t.stAccepted + '…' : t.stWaiting + '…') + '<div class="muted" style="text-align:center;font-size:.8rem">' + t.tookLong + '</div>' +
+        '<button class="care-big no" type="button" onclick="careCloseBtn()">' + t.close + '</button>' + (r.status === 'waiting' ? '<button class="rx-del" type="button" onclick="careCancel(\'' + id + '\')">' + t.cancelReq + '</button>' : ''));
+      return;
+    }
+    var a = r.answer || {}, by = a.by || { name:'Pharmacist', org:'' };
+    if (a.type !== 'read_as'){
+      var k = a.type === 'clearer_photo' ? 'clearer' : 'unable';
+      careShow(proCardHtml(by.name, by.org) + sayHtml(t[k]) + '<button class="care-big yes" type="button" onclick="careCloseBtn();startScan()">📷 ' + t.rescan + '</button><button class="care-big no" type="button" onclick="careDecide(\'' + id + '\',\'declined\')">' + t.close + '</button>');
+      careSpeak(k); return;
+    }
+    var names = (a.items || []).map(function(x){ return x.read_as; }).join(', ');
+    var warn = (a.items || []).map(function(x){ var h = allergyHit(x.read_as); return h ? careFmt(t.allergyWarn, { a:h, x:x.read_as }) : ''; }).filter(Boolean)[0];
+    careShow(proCardHtml(by.name, by.org) + sayHtml(careFmt(t.answerRead, { x:names })) +
+      (warn ? '<div class="callout risk"><span>⚠️</span><span><strong>' + esc(warn) + '</strong></span></div>' : '') +
+      '<button class="care-big yes" type="button" onclick="careAddAnswer(\'' + id + '\')">👍 ' + t.yesAdd + '</button><button class="care-big no" type="button" onclick="careDecide(\'' + id + '\',\'declined\')">✋ ' + t.no + '</button>');
+    careSpeak('answerRead', { x:names });
+  }
+  function careDecide(id, d){ CareAPI.update(id, { decision:d }); careCloseBtn(); renderCareBanner(); if (currentScreen === 'careteam') renderCareTeam(); }
+  async function careAddAnswer(id){
+    var r = CareAPI.requestById(id); if (!r || !r.answer) return;
+    var t = CT(), items = [], added = [];
+    (r.answer.items || []).forEach(function(x){
+      var src = r.items[x.index] || {}, hit = matchMedicinesFromText(x.read_as)[0], medId = hit && hit.confidence === 'high' ? hit.med.id : null;
+      var times = src.times ? src.times : (medId ? scheduleTimesFor(catalogMed(medId).en.doseLine) : ['08:00']);
+      var note = [src.dose, src.qty, src.food, src.duration ? 'for ' + src.duration : ''].filter(Boolean).join(' · ');
+      items.push({ medId:medId, customName:x.read_as, customDose:note, times:times }); added.push(x.read_as);
+    });
+    try {
+      await persistPrescription({ doctorName:(r.rxMeta && r.rxMeta.doctor) || '', diagnosis:(r.rxMeta && r.rxMeta.diagnosis) || '', source:'scanned', items:items });
+    } catch(e){ dbFail(e); return; }
+    CareAPI.update(id, { decision:'added' });
+    renderMedList(); renderRxList(); renderHome(); renderCareBanner();
+    var warn = added.map(function(n){ var h = allergyHit(n); return h ? careFmt(t.allergyWarn, { a:h, x:n }) : ''; }).filter(Boolean)[0];
+    careUi = { step:'added', id:id };
+    careShow('<div style="text-align:center;font-size:2.4rem">✅</div><div class="care-say"><span>' + esc(careFmt(t.added, { x:added.join(', ') })) + '</span></div>' +
+      (warn ? '<div class="callout risk"><span>⚠️</span><span><strong>' + esc(warn) + '</strong></span></div>' : '') +
+      '<button class="care-big yes" type="button" onclick="careCloseBtn()">' + t.close + '</button>');
+  }
+
+  /* ---------- Home banner + updates ---------- */
+  var careSig = '';
+  function renderCareBanner(){
+    var el = document.getElementById('careBanner'); if (!el) return;
+    var rs = CareAPI.requests(), t = CT();
+    var ans = rs.filter(function(r){ return r.status === 'answered' && !r.decision; })[0];
+    var wait = rs.filter(function(r){ return r.status === 'waiting' || r.status === 'accepted'; })[0];
+    if (ans){ el.hidden = false; el.innerHTML = '<div class="callout good" style="align-items:center"><span>🩺</span><div style="flex:1"><strong>' + t.bAnswered + '</strong><button class="btn primary sm" style="margin-top:8px;width:auto" type="button" onclick="careOpenRequest(\'' + ans.id + '\')">' + t.bSee + '</button></div></div>'; }
+    else if (wait){ el.hidden = false; el.innerHTML = '<div class="callout warn"><span>⏳</span><div style="flex:1"><span>' + t.bWaiting + '</span> <button class="btn ghost sm" style="width:auto" type="button" onclick="careOpenRequest(\'' + wait.id + '\')">›</button></div></div>'; }
+    else { el.hidden = true; el.innerHTML = ''; }
+    var sub = document.getElementById('careTeamSub'), nm = document.getElementById('careTeamName');
+    if (nm) nm.textContent = t.team;
+    if (sub){ var n = CareAPI.connections().length; sub.textContent = (n ? n + ' · ' : '') + t.teamSub; }
+  }
+  function careTick(){
+    var sig = JSON.stringify(CareAPI.requests().map(function(r){ return r.id + r.status + (r.decision || ''); })) + CareAPI.connections().length + CareAPI.log().length;
+    if (sig === careSig) return;
+    var firstRun = careSig === '';
+    var before = careSig; careSig = sig;
+    renderCareBanner();
+    if (currentScreen === 'careteam') renderCareTeam();
+    if (!firstRun){
+      var justAnswered = CareAPI.requests().filter(function(r){ return r.status === 'answered' && !r.decision; })[0];
+      if (justAnswered && before.indexOf(justAnswered.id + 'answered') === -1){
+        toast(CT().bAnswered);
+        try { if ('Notification' in window && Notification.permission === 'granted' && document.hidden) new Notification(CT().notifTitle, { body:CT().bAnswered, icon:'icon.svg' }); } catch(e){}
+      }
+    }
+  }
+  setInterval(careTick, 3000);
+  window.addEventListener('storage', function(){ careTick(); });
+
+  /* ---------- My care team screen ---------- */
+  function fmtWhen(iso){ var d = new Date(iso); return isNaN(d.getTime()) ? '' : d.toLocaleDateString(LANG === 'hi' ? 'hi-IN' : 'en-IN', { day:'numeric', month:'short' }) + ', ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
+  function renderCareTeam(){
+    var el = document.getElementById('careTeamBody'); if (!el) return;
+    var t = CT(), cons = CareAPI.connections(), rs = CareAPI.requests(), log = CareAPI.log(), al = CareAPI.allergies();
+    var stName = { waiting:t.stWaiting, accepted:t.stAccepted, answered:t.stAnswered, cancelled:t.stCancelled, expired:t.stExpired };
+    var stCls = { waiting:'warn', accepted:'warn', answered:'ok', cancelled:'', expired:'' };
+    var actName = { connected:t.actConnected, disconnected:t.actDisconnected, read:t.actRead, answered:t.actAnswered };
+    var html = (CARE_MOCK ? '<div class="callout warn"><span>ℹ️</span><span>' + t.preview + '</span></div>' : '');
+    html += cons.length ? cons.map(function(c){
+      return '<div class="card">' + proCardHtml(c.name, c.org) + '<div style="margin-top:10px;font-size:.84rem"><span class="muted">' + t.canSee + ':</span> ' + t.canSeeV + '<br><span class="muted">' + t.cannotSee + ':</span> ' + t.cannotSeeV + '</div>' +
+        '<button class="btn danger sm" style="margin-top:10px;width:100%" type="button" onclick="careDisconnect(\'' + c.id + '\')">' + t.disc + '</button></div>';
+    }).join('') : '<div class="card" style="text-align:center"><div style="font-size:2rem">👥</div><p class="muted" style="margin-top:6px">' + t.none + '</p></div>';
+    html += '<button class="care-big yes" type="button" onclick="go(\'care-scan\')">' + t.add + '</button>';
+    html += '<p class="section-label">' + t.checks + '</p>' + (rs.length ? rs.map(function(r){
+      var n = (r.unclear || []).length;
+      return '<button class="medcard" type="button" onclick="careOpenRequest(\'' + r.id + '\')"><span class="pill-ic">🩺</span><span class="mid"><span class="mname">' + esc((r.items[(r.unclear || [])[0]] || {}).raw || (r.items[0] || {}).name || '') + (n > 1 ? ' +' + (n - 1) : '') + '</span><span class="mdose">' + fmtWhen(r.createdAt) + '</span></span><span class="care-chip ' + (stCls[r.status] || '') + '">' + (stName[r.status] || r.status) + '</span></button>';
+    }).join('') : '<p class="muted">' + t.noChecks + '</p>');
+    html += '<div class="card"><span class="card-title">' + t.allergyT + '</span><p class="muted" style="margin:4px 0 8px;font-size:.8rem">' + t.allergyH + '</p><div class="rx-chips">' +
+      t.allergyOpts.map(function(a){ return '<button type="button" class="chip' + (al.indexOf(a) !== -1 ? ' on' : '') + '" onclick="careToggleAllergy(\'' + a + '\')">' + a + '</button>'; }).join('') + '</div></div>';
+    html += '<p class="section-label">' + t.logT + '</p>' + (log.length ? log.slice(0, 12).map(function(l){
+      return '<div class="card" style="padding:10px 12px"><div style="font-weight:700">' + esc(l.who) + '<span class="muted" style="font-weight:500"> · ' + esc(l.org || '') + '</span></div><div class="muted" style="font-size:.8rem">' + (actName[l.action] || l.action) + ' · ' + fmtWhen(l.at) + '</div></div>';
+    }).join('') : '<p class="muted">' + t.noLog + '</p>');
+    el.innerHTML = html;
+  }
+  function careToggleAllergy(a){ var l = CareAPI.allergies(), i = l.indexOf(a); if (i === -1) l.push(a); else l.splice(i, 1); CareAPI.setAllergies(l); renderCareTeam(); }
+  function careDisconnect(id){
+    var c = CareAPI.connections().filter(function(x){ return x.id === id; })[0]; if (!c) return;
+    var t = CT(), card = document.getElementById('confirmCard');
+    card.innerHTML = '<h3>' + esc(careFmt(t.discAsk, { name:c.name })) + '</h3><button class="btn danger" type="button" onclick="careDisconnectYes(\'' + id + '\')">' + t.disc + '</button><button class="btn primary" type="button" data-cf="no">' + t.no + '</button>';
+    document.getElementById('confirmOverlay').hidden = false;
+  }
+  function careDisconnectYes(id){ closeConfirm(); CareAPI.disconnect(id); renderCareTeam(); renderCareBanner(); }
+
+  /* ---------- scan the pharmacist's QR code ---------- */
+  var careStream = null, careScanTimer = null;
+  function careStopCamera(){
+    if (careScanTimer){ clearInterval(careScanTimer); careScanTimer = null; }
+    if (careStream){ careStream.getTracks().forEach(function(tr){ tr.stop(); }); careStream = null; }
+  }
+  function renderCareScan(){
+    var el = document.getElementById('careScanBody'); if (!el) return;
+    var t = CT();
+    el.innerHTML = (CARE_MOCK ? '<div class="callout warn"><span>ℹ️</span><span>' + t.preview + '</span></div>' : '') +
+      '<div class="care-say"><span style="font-size:1.4rem">📷</span><span>' + t.scanH + '</span></div>' +
+      '<video id="careVideo" class="care-video" playsinline muted></video><div id="careScanMsg" class="muted" style="font-size:.8rem"></div>' +
+      '<div class="card"><div class="field"><label for="careCode">' + t.manual + '</label><input id="careCode" type="text" maxlength="20" placeholder="' + t.manualPh + '" autocomplete="off"></div>' +
+      '<button class="btn outline" type="button" style="margin-top:8px" onclick="careConnectCode(document.getElementById(\'careCode\').value)">' + t.go + '</button></div>' +
+      (CARE_MOCK ? '<button class="btn ghost sm" type="button" onclick="careDemoPro()">' + t.demoPro + '</button>' : '');
+    careStartCamera();
+  }
+  async function careStartCamera(){
+    var msg = document.getElementById('careScanMsg'), v = document.getElementById('careVideo'), t = CT();
+    if (!v) return;
+    if (!('BarcodeDetector' in window) || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ v.style.display = 'none'; if (msg) msg.textContent = t.noCam; return; }
+    try {
+      var det = new BarcodeDetector({ formats:['qr_code'] });
+      careStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' } });
+      v.srcObject = careStream; await v.play();
+      careScanTimer = setInterval(async function(){
+        try { var codes = await det.detect(v); if (codes && codes.length){ var raw = codes[0].rawValue; careStopCamera(); careConnectCode(raw); } } catch(e){}
+      }, 450);
+    } catch(e){ v.style.display = 'none'; if (msg) msg.textContent = t.noCam; }
+  }
+  function careConnectCode(raw){
+    var t = CT(), pro = CareAPI.lookupPro(raw);
+    if (!pro){ toast(t.badCode); return; }
+    careStopCamera();
+    careUi = { step:'connect', pro:pro };
+    careShow(proCardHtml(pro.name, pro.org) + sayHtml(careFmt(t.connectAsk, { name:pro.name, org:pro.org })) +
+      '<button class="care-big yes" type="button" onclick="careConnectYes()">👍 ' + t.yes + '</button><button class="care-big no" type="button" onclick="careCloseBtn()">✋ ' + t.no + '</button>');
+    careSpeak('connectAsk', { name:pro.name, org:pro.org });
+  }
+  function careConnectYes(){ var pro = careUi.pro; if (!pro) return; CareAPI.connect(pro); careCloseBtn(); go('careteam'); renderCareBanner(); }
+  function careDemoPro(){
+    var m = cGet(CK.qr, {}); var pro = { id:'demo-pro', name:'Rajesh Kumar', org:'ABC Pharmacy', role:'pharmacist' }; m['PS-000000'] = pro; cSet(CK.qr, m); careConnectCode('PS-000000');
+  }
+  window.careStartAsk = careStartAsk; window.careConsent = careConsent; window.careSend = careSend; window.careCancel = careCancel; window.careCloseBtn = careCloseBtn;
+  window.careOpenRequest = careOpenRequest; window.careDecide = careDecide; window.careAddAnswer = careAddAnswer; window.careToggleAllergy = careToggleAllergy;
+  window.careDisconnect = careDisconnect; window.careDisconnectYes = careDisconnectYes; window.careConnectCode = careConnectCode; window.careConnectYes = careConnectYes; window.careDemoPro = careDemoPro;
+  screenRenderers.careteam = renderCareTeam; screenRenderers['care-scan'] = renderCareScan;
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) careTick(); });
+
   function go(name, opts){
+    if (name !== 'care-scan') careStopCamera();
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     stopSpeakAnim();
     screens.forEach(function(s){ document.getElementById('screen-'+s).hidden = (s !== name); });
@@ -4118,8 +4440,9 @@
   function navInit(){ try { history.replaceState({ ps:'guard' }, ''); history.pushState({ ps:'home' }, ''); } catch(e){} }
   function closeTopOverlay(){
     var ask = document.getElementById('askOverlay'), al = document.getElementById('alarmOverlay'), sos = document.getElementById('sosOverlay');
-    var cf = document.getElementById('confirmOverlay');
+    var cf = document.getElementById('confirmOverlay'), co = document.getElementById('careOverlay');
     if (cf && !cf.hidden){ closeConfirm(); return true; }
+    if (co && !co.hidden){ careClose(); return true; }
     if (sos && !sos.hidden){ closeSos(); return true; }
     if (ask && !ask.hidden){ closeAsk(); return true; }
     if (al && !al.hidden){ closeAlarm(); return true; }
