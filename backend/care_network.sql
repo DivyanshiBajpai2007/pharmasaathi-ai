@@ -378,22 +378,25 @@ begin
 end $$;
 
 -- ============================================================ who may call what
-revoke all on function create_verification_request(jsonb, jsonb, jsonb, text, text, text, text, uuid) from public;
-revoke all on function cancel_verification(uuid) from public;
-revoke all on function decide_verification(uuid, text) from public;
-revoke all on function revoke_grant(uuid) from public;
-revoke all on function patient_pro_card(uuid) from public;
-revoke all on function pharmacist_queue() from public;
-revoke all on function pharmacist_accept(uuid) from public;
-revoke all on function pharmacist_answer(uuid, jsonb) from public;
-revoke all on function pharmacist_release(uuid) from public;
-revoke all on function pharmacist_can_read_image(text) from public;
-revoke all on function admin_set_professional_status(uuid, text, text, date) from public;
-revoke all on function care_expire_stale() from public;
-revoke all on function care_purge_old(int) from public;
-revoke all on function has_grant(uuid, text, text) from public;
-revoke all on function is_verified_pro(text) from public;
-revoke all on function is_care_admin() from public;
+-- Supabase grants EXECUTE on new functions to anon and authenticated by default, so revoking from
+-- public alone is not enough. Revoke from all three, then grant back only what the app needs below.
+-- care_expire_stale / care_purge_old are maintenance jobs: only the service role / scheduler may run them.
+revoke all on function create_verification_request(jsonb, jsonb, jsonb, text, text, text, text, uuid) from public, anon, authenticated;
+revoke all on function cancel_verification(uuid) from public, anon, authenticated;
+revoke all on function decide_verification(uuid, text) from public, anon, authenticated;
+revoke all on function revoke_grant(uuid) from public, anon, authenticated;
+revoke all on function patient_pro_card(uuid) from public, anon, authenticated;
+revoke all on function pharmacist_queue() from public, anon, authenticated;
+revoke all on function pharmacist_accept(uuid) from public, anon, authenticated;
+revoke all on function pharmacist_answer(uuid, jsonb) from public, anon, authenticated;
+revoke all on function pharmacist_release(uuid) from public, anon, authenticated;
+revoke all on function pharmacist_can_read_image(text) from public, anon, authenticated;
+revoke all on function admin_set_professional_status(uuid, text, text, date) from public, anon, authenticated;
+revoke all on function care_expire_stale() from public, anon, authenticated;
+revoke all on function care_purge_old(int) from public, anon, authenticated;
+revoke all on function has_grant(uuid, text, text) from public, anon, authenticated;
+revoke all on function is_verified_pro(text) from public, anon, authenticated;
+revoke all on function is_care_admin() from public, anon, authenticated;
 
 grant execute on function create_verification_request(jsonb, jsonb, jsonb, text, text, text, text, uuid) to authenticated;
 grant execute on function cancel_verification(uuid) to authenticated;
