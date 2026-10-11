@@ -1,0 +1,4 @@
+.env
+*.env
+vapid_private_key.txt
+node_modules/
